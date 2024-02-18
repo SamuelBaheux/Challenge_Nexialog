@@ -52,7 +52,7 @@ class Genetic_Numerical_Discretisation():
 
     def genetic_discretisation(self, train_set, variable, nb_classes_max):
         temp = train_set[[variable, 'TARGET']].copy()
-        NB_GEN = 15
+        NB_GEN = 5
         POP_SIZE = 100
         CXPB, MUTPB = 0.5, 0.2
 
@@ -97,7 +97,7 @@ class Genetic_Numerical_Discretisation():
 
             intervalles = self.train.groupby(f'{variable}_disc')[variable].agg(['min', 'max'])
 
-            dict_renommage = {modalite: f'[{round(row["min"], 2)}-{round(row["max"], 2)}]' for modalite, row in
+            dict_renommage = {modalite: f'[{round(row["min"], 2)};{round(row["max"], 2)}]' for modalite, row in
                               intervalles.iterrows()}
 
             self.train[f'{variable}_disc_int'] = self.train[f'{variable}_disc'].map(dict_renommage)
