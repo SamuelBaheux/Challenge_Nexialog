@@ -1,13 +1,14 @@
-import pandas as pd
-import numpy as np
 from deap import base, creator, tools, algorithms
-from functools import  partial
+import warnings
+from functools import partial
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from deap import base, creator, tools, algorithms
 from scipy.stats import chi2_contingency
-import warnings
 from tqdm import tqdm
+
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="deap.creator")
 
 
@@ -110,10 +111,11 @@ class Genetic_Numerical_Discretisation():
 
 
 class DataPreparation():
-    def __init__(self, train, test, nan_treshold) :
+    def __init__(self, train, test, nan_treshold, plot = False) :
         self.train = train
         self.test = test
         self.nan_treshold = nan_treshold
+        self.plot = plot
 
     def convert_type(self):
         for var in self.train.columns :
@@ -160,7 +162,7 @@ class DataPreparation():
         for var in var_2_bins :
             dict_variable[var] = 2
 
-        discretizer = Genetic_Numerical_Discretisation(self.train, self.test, dict_variable)
+        discretizer = Genetic_Numerical_Discretisation(self.train, self.test, dict_variable, self.plot)
         self.train, self.test = discretizer.run_discretisation()
 
         print("Variables numériques discrétisées ✅")
