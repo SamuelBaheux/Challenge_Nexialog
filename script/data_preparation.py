@@ -265,7 +265,6 @@ class DataPreparation():
                                                           default='low_skilled')
 
         #### CODE GENDER ####
-
         mode_gender = self.train["CODE_GENDER"].mode()[0]
         self.train['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
         self.test['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
