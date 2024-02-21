@@ -107,6 +107,6 @@ class GridScore():
         score_card = self.calculate_contribution(score_card)
 
         score_card = score_card[
-            ['Variable', "Modality", 'Coefficient', 'P-Value', "Score", "Pcentage_Défaut", "Pcentage_Classe"]]
+            ['Variable', "Modality", 'Coefficient', 'P-Value', "Score", "Contribution", "Pcentage_Défaut", "Pcentage_Classe"]]
 
         return score_card
