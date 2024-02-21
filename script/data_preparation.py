@@ -10,7 +10,7 @@ from scipy.stats import chi2_contingency
 from tqdm import tqdm
 
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="deap.creator")
-
+warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 
 class Genetic_Numerical_Discretisation():
     def __init__(self, train, test, variables_dict, plot = False):
@@ -35,19 +35,34 @@ class Genetic_Numerical_Discretisation():
         return chi2,
 
     def plot_stability(self, variable):
-        stability_df = self.train.groupby(['date_trimestrielle', variable])['TARGET'].mean().unstack()
-        stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 5))
 
-        plt.figure(figsize=(10, 5))
+        stability_volume_df = self.train.groupby(['date_trimestrielle', variable]).size().unstack()
 
-        for class_label in stability_df.drop('stability', axis=1).columns:
-            values = stability_df[class_label]
-            plt.plot(stability_df.index, values, label=f'Classe {class_label}', marker='o')
+        for class_label in stability_volume_df.columns:
+            values = stability_volume_df[class_label]
+            axes[0].plot(stability_volume_df.index, values, label=f'Classe {class_label}', marker='o')
 
-        plt.title(f'Stabilité de l\'impact sur la cible pour {variable}')
-        plt.xlabel('Date')
-        plt.ylabel('Proportion de la cible TARGET')
-        plt.legend(title=f'Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
+        axes[0].set_title(f'Stabilité de volume pour {variable}')
+        axes[0].set_xlabel('Date')
+        axes[0].set_ylabel('Nombre d\'observations')
+        axes[0].legend(title='Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
+        axes[0].tick_params(axis='x', rotation=45)
+
+        stability_taux_df = self.train.groupby(['date_trimestrielle', variable])['TARGET'].mean().unstack()
+        stability_taux_df['stability'] = stability_taux_df.std(axis=1) / stability_taux_df.mean(axis=1)
+
+        for class_label in stability_taux_df.drop('stability', axis=1).columns:
+            values = stability_taux_df[class_label]
+            axes[1].plot(stability_taux_df.index, values, label=f'Classe {class_label}', marker='o')
+
+        axes[1].set_title(f'Stabilité de taux pour {variable}')
+        axes[1].set_xlabel('Date')
+        axes[1].set_ylabel('Proportion de la cible TARGET')
+        axes[1].legend(title='Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
+        axes[1].tick_params(axis='x', rotation=45)
+
+        plt.tight_layout()
         plt.show()
 
     def genetic_discretisation(self, train_set, variable, nb_classes_max):
@@ -169,8 +184,7 @@ class DataPreparation():
                       "AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
                       "DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",
                       "OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
-                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"
-                      ]
+                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
 
         dict_variable = {}
 
@@ -250,6 +264,12 @@ class DataPreparation():
                                                           ['low_skilled', 'high_skilled'],
                                                           default='low_skilled')
 
+        #### CODE GENDER ####
+
+        mode_gender = self.train["CODE_GENDER"].mode()[0]
+        self.train['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
+        self.test['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
+
 
         print("Variables catégorielles discrétisées ✅")
 
@@ -263,7 +283,7 @@ class DataPreparation():
         categoricals = [var for var in self.train.columns if '_discret' in var]
         already_prepared = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
                             'REGION_RATING_CLIENT_W_CITY', "FLAG_WORK_PHONE", "FLAG_PHONE", "LIVE_CITY_NOT_WORK_CITY",
-                            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY']
+                            'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CODE_GENDER']
         other = ["date_mensuelle"]
 
         final_features_test = other + numericals + categoricals + already_prepared
