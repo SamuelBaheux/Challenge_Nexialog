@@ -11,9 +11,8 @@ class GridScore():
     def __init__(self, df, model):
         self.df = df
         self.model = model
-        self.variable_pattern = r'C\(([^,]+)'
-        self.modality_pattern = r'\[T\.([^\]]+\])'
-        self.reference_pattern = r'reference="([^"]+)"'
+        self.variable_pattern = r'C\(\s*([^,]+?)(?=,|\))'
+        self.reference_pattern = r'Treatment\(reference="([^"]+)"\)'
 
     def calculate_percentage_default(self, row, data_frame):
         variable = row['Variable']
@@ -64,6 +63,18 @@ class GridScore():
         denominateur = sum(self.max[key] - self.min[key] for key in self.min)
         return ((num / denominateur) * 1000)
 
+    def extract_modality(self, reference_string):
+        modality_pattern = r'\[T\.([^\]]+\]?)'
+        match = re.search(modality_pattern, reference_string)
+
+        if match:
+            modality = match.group(1)
+            if modality[-1] == "]" and not re.search(r'\d+\]$', modality):
+                return modality[:-1]
+            return modality
+        else:
+            return 'N/A'
+
     def compute_grid_score(self):
         results_summary_frame = self.model.summary2().tables[1]
 
@@ -73,7 +84,7 @@ class GridScore():
         score_card = pd.DataFrame(columns=['Variable', 'Modality', 'Coefficient', 'P-Value'])
         score_card.loc[len(score_card)] = [coefs.index[0], '-', coefs[0], p_values[0]]
 
-        previous_reference = None
+        previous_var_name = None
         for variable in coefs.index[1:]:
             coef = round(coefs[variable], 2)
             p_value = round(p_values[variable], 4)
@@ -84,14 +95,13 @@ class GridScore():
             variable_name_match = re.search(self.variable_pattern, variable)
             variable_name = variable_name_match.group(1) if variable_name_match else variable
 
-            if reference != previous_reference:
+            if variable_name != previous_var_name:
                 score_card.loc[len(score_card)] = [variable_name, reference + '_ref', 0, 0]
 
-            modality_match = re.search(self.modality_pattern, variable)
-            modality = modality_match.group(1) if modality_match else "N/A"
+            modality = self.extract_modality(variable)
 
             score_card.loc[len(score_card)] = [variable_name, modality, coef, p_value]
-            previous_reference = reference
+            previous_var_name = variable_name
 
         self.max = score_card.groupby("Variable")["Coefficient"].max().to_dict()
         self.min = score_card.groupby("Variable")["Coefficient"].min().to_dict()
