@@ -131,6 +131,14 @@ class DataPreparation():
         self.nan_treshold = nan_treshold
         self.plot = plot
 
+    def add_bureau_features(self):
+        train_bureau = pd.read_csv('../data/bureau.csv')
+        train_bureau = train_bureau[['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM', 'SK_ID_CURR']]
+        train_bureau = train_bureau.groupby('SK_ID_CURR').mean()
+        train_bureau.reset_index(inplace=True)
+        self.train = self.train.merge(train_bureau[['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM', 'SK_ID_CURR']],
+                                              on='SK_ID_CURR', how='left')
+
     def convert_type(self):
         for var in self.train.columns:
             if self.train[var].nunique() < 30:
@@ -142,7 +150,8 @@ class DataPreparation():
     def remove_and_impute_nan(self):
         ### Exceptions ####
         impute_0 = ["OWN_CAR_AGE", "EXT_SOURCE_1", "YEARS_BEGINEXPLUATATION_MEDI",
-                    "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
+                    "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG",
+                    'AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM']
 
         for var in impute_0:
             self.train[var].fillna(0, inplace=True)
@@ -177,13 +186,13 @@ class DataPreparation():
 
     def numericals_discretisation(self):
         print("Discrétisation des variables numériques en cours ... ")
-        var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2", "EXT_SOURCE_1"]
+        var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2", "EXT_SOURCE_1", "AMT_CREDIT_SUM_DEBT"]
 
         var_2_bins = ["AMT_GOODS_PRICE", "DAYS_REGISTRATION", "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3",
                       "AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
                       "DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",
                       "OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
-                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
+                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG", "AMT_CREDIT_SUM"]
 
         dict_variable = {}
 
@@ -271,11 +280,28 @@ class DataPreparation():
 
         print("Variables catégorielles discrétisées ✅")
 
+    def rename_categories(self):
+        var_num_to_str = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY',
+                          'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
+                          'REGION_RATING_CLIENT_W_CITY', 'FLAG_WORK_PHONE',
+                          'FLAG_PHONE', 'LIVE_CITY_NOT_WORK_CITY', "AMT_CREDIT_SUM_disc_int",
+                          "AMT_CREDIT_SUM_DEBT_disc_int"]
+
+        replacement_dict = {1: 'un', 0: 'zero', 2: 'deux', 3: 'trois'}
+
+        for var in var_num_to_str :
+            self.train[var] = self.train[var].replace(replacement_dict)
+            self.test[var] = self.test[var].replace(replacement_dict)
+
+        self.train["TARGET"] = self.train["TARGET"].astype("int")
+
     def get_prepared_data(self):
+        self.add_bureau_features()
         self.convert_type()
         self.remove_and_impute_nan()
         self.numericals_discretisation()
         self.categorical_discretisation()
+        self.rename_categories()
 
         numericals = [var for var in self.train.columns if '_disc_int' in var]
         categoricals = [var for var in self.train.columns if '_discret' in var]
@@ -287,18 +313,5 @@ class DataPreparation():
 
         final_features_test = other + numericals + categoricals + already_prepared
         final_features_train = ["TARGET"] + final_features_test
-
-        var_num_to_str = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY',
-                          'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
-                          'REGION_RATING_CLIENT_W_CITY', 'FLAG_WORK_PHONE',
-                          'FLAG_PHONE', 'LIVE_CITY_NOT_WORK_CITY']
-
-        replacement_dict = {1: 'un', 0: 'zero', 2: 'deux', 3: 'trois'}
-
-        for var in var_num_to_str :
-            self.train[var] = self.train[var].replace(replacement_dict)
-            self.test[var] = self.test[var].replace(replacement_dict)
-
-        self.train["TARGET"] = self.train["TARGET"].astype("int")
 
         return (self.train[final_features_train], self.test[final_features_test])
