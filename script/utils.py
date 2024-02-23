@@ -1,7 +1,8 @@
-import pandas as pd
-import numpy as np
 import re
 import warnings
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings('ignore', category=FutureWarning,
                         message="Series.__getitem__ treating keys as positions is deprecated")
@@ -16,12 +17,14 @@ class GridScore():
 
     def calculate_percentage_default(self, row, data_frame):
         variable = row['Variable']
+
         if variable == "Intercept":
             return (0)
 
         modality = row['Modality']
         if modality.isdigit():
             modality = int(modality)
+
         if '_ref' in modality:
             modality = modality.split('_ref')[0]
 
@@ -116,7 +119,33 @@ class GridScore():
 
         score_card = self.calculate_contribution(score_card)
 
-        score_card = score_card[
-            ['Variable', "Modality", 'Coefficient', 'P-Value', "Score", "Contribution", "Pcentage_Défaut", "Pcentage_Classe"]]
+        self.score_card = score_card[['Variable', "Modality", 'Coefficient', 'P-Value', "Score",
+                                 "Contribution", "Pcentage_Défaut", "Pcentage_Classe"]]
 
-        return score_card
+        return self.score_card
+
+    def compute_individual_score(self, row, features):
+        score = 0
+        for var in features :
+            modality = row[var]
+            score += self.score_dict[var][modality]
+        return (score)
+
+    def get_individual_score(self):
+        self.score_dict = {}
+        for index, row in self.score_card.iterrows():
+            var = row["Variable"]
+            mod = row["Modality"].split("_ref")[0]
+            score = row["Score"]
+
+            if var not in self.score_dict:
+                self.score_dict[var] = {}
+            self.score_dict[var][mod] = score
+
+        features = list(self.score_dict.keys())
+        features.remove("Intercept")
+
+        df_score = self.df.copy()
+        df_score["Score_ind"] = 0
+        df_score["Score_ind"] = df_score.apply(lambda row: self.compute_individual_score(row, features), axis=1)
+        return (df_score)

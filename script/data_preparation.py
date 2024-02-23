@@ -1,4 +1,3 @@
-from deap import base, creator, tools, algorithms
 import warnings
 from functools import partial
 
@@ -12,8 +11,9 @@ from tqdm import tqdm
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="deap.creator")
 warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 
+
 class Genetic_Numerical_Discretisation():
-    def __init__(self, train, test, variables_dict, plot = False):
+    def __init__(self, train, test, variables_dict, plot=False):
         self.train = train
         self.test = test
         self.variables_dict = variables_dict
@@ -124,51 +124,50 @@ class Genetic_Numerical_Discretisation():
         return (self.train, self.test)
 
 
-
 class DataPreparation():
-    def __init__(self, train, test, nan_treshold, plot = False) :
+    def __init__(self, train, test, nan_treshold, plot=False):
         self.train = train
         self.test = test
         self.nan_treshold = nan_treshold
         self.plot = plot
 
     def convert_type(self):
-        for var in self.train.columns :
-            if self.train[var].nunique() < 30 :
+        for var in self.train.columns:
+            if self.train[var].nunique() < 30:
                 self.train[var] = self.train[var].astype("object")
-                if var != "TARGET" :
+                if var != "TARGET":
                     self.test[var] = self.test[var].astype("object")
         print("Type des variables convertis ✅")
 
     def remove_and_impute_nan(self):
         ### Exceptions ####
         impute_0 = ["OWN_CAR_AGE", "EXT_SOURCE_1", "YEARS_BEGINEXPLUATATION_MEDI",
-                     "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
+                    "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
 
-        for var in impute_0 :
-            self.train[var].fillna(0, inplace = True)
+        for var in impute_0:
+            self.train[var].fillna(0, inplace=True)
             self.test[var].fillna(0, inplace=True)
 
         impute_mod = ["OCCUPATION_TYPE"]
 
         ### Others ####
-        for var in impute_mod :
-            self.train[var].fillna(self.train[var].mode()[0], inplace = True)
+        for var in impute_mod:
+            self.train[var].fillna(self.train[var].mode()[0], inplace=True)
             self.test[var].fillna(self.train[var].mode()[0], inplace=True)
 
-        for var in self.train.columns :
-            pcentage_nan = self.train[var].isna().sum()/self.train.shape[0]
+        for var in self.train.columns:
+            pcentage_nan = self.train[var].isna().sum() / self.train.shape[0]
 
-            if pcentage_nan != 0 :
-                if pcentage_nan > self.nan_treshold :
-                    self.train.drop(columns = [var], inplace = True)
-                    self.test.drop(columns = [var], inplace=True)
-                else :
-                    if self.train[var].dtype != 'object' :
+            if pcentage_nan != 0:
+                if pcentage_nan > self.nan_treshold:
+                    self.train.drop(columns=[var], inplace=True)
+                    self.test.drop(columns=[var], inplace=True)
+                else:
+                    if self.train[var].dtype != 'object':
                         mean = self.train[var].mean()
-                        self.train[var].fillna(mean, inplace =True)
+                        self.train[var].fillna(mean, inplace=True)
                         self.test[var].fillna(mean, inplace=True)
-                    else :
+                    else:
                         mode = self.train[var].mode()
                         self.train[var].fillna(mode[0], inplace=True)
                         self.test[var].fillna(mode[0], inplace=True)
@@ -191,7 +190,7 @@ class DataPreparation():
         for var in var_3_bins:
             dict_variable[var] = 3
 
-        for var in var_2_bins :
+        for var in var_2_bins:
             dict_variable[var] = 2
 
         discretizer = Genetic_Numerical_Discretisation(self.train, self.test, dict_variable, self.plot)
@@ -213,10 +212,10 @@ class DataPreparation():
                                                            default='other')
 
         self.test['NAME_INCOME_TYPE_discret'] = np.select([self.test['NAME_INCOME_TYPE'].isin(low_income),
-                                                            self.test['NAME_INCOME_TYPE'].isin(high_income),
-                                                            self.test['NAME_INCOME_TYPE'].isin(other)],
-                                                           ['low_income', 'high_income', 'other'],
-                                                           default='other')
+                                                           self.test['NAME_INCOME_TYPE'].isin(high_income),
+                                                           self.test['NAME_INCOME_TYPE'].isin(other)],
+                                                          ['low_income', 'high_income', 'other'],
+                                                          default='other')
 
         #### NAME EDUCATION TYPE ####
         lower = ["Lower_education", "Secondary / secondary special", "Incomplete higher"]
@@ -228,13 +227,14 @@ class DataPreparation():
                                                               default='lower')
 
         self.test['NAME_EDUCATION_TYPE_discret'] = np.select([self.test['NAME_EDUCATION_TYPE'].isin(lower),
-                                                               self.test['NAME_EDUCATION_TYPE'].isin(higher)],
-                                                              ['lower', 'higher'],
-                                                              default='lower')
+                                                              self.test['NAME_EDUCATION_TYPE'].isin(higher)],
+                                                             ['lower', 'higher'],
+                                                             default='lower')
 
         #### NAME FAMILY STATUS ###
 
-        alone = ["Single / not married", "Separated", "Widow", "Security staff", "Laborers", "Unknown","Civil marriage"]
+        alone = ["Single / not married", "Separated", "Widow", "Security staff", "Laborers", "Unknown",
+                 "Civil marriage"]
         couple = ["Married"]
 
         self.train['NAME_FAMILY_STATUS_discret'] = np.select([self.train['NAME_FAMILY_STATUS'].isin(alone),
@@ -243,9 +243,9 @@ class DataPreparation():
                                                              default='couple')
 
         self.test['NAME_FAMILY_STATUS_discret'] = np.select([self.test['NAME_FAMILY_STATUS'].isin(alone),
-                                                              self.test['NAME_FAMILY_STATUS'].isin(couple)],
-                                                             ['alone', 'couple'],
-                                                             default='couple')
+                                                             self.test['NAME_FAMILY_STATUS'].isin(couple)],
+                                                            ['alone', 'couple'],
+                                                            default='couple')
 
         #### OCCUPATION TYPE ###
 
@@ -260,15 +260,14 @@ class DataPreparation():
                                                           default='low_skilled')
 
         self.test['OCCUPATION_TYPE_discret'] = np.select([self.test['OCCUPATION_TYPE'].isin(low_skilled),
-                                                           self.test['OCCUPATION_TYPE'].isin(high_skilled)],
-                                                          ['low_skilled', 'high_skilled'],
-                                                          default='low_skilled')
+                                                          self.test['OCCUPATION_TYPE'].isin(high_skilled)],
+                                                         ['low_skilled', 'high_skilled'],
+                                                         default='low_skilled')
 
         #### CODE GENDER ####
         mode_gender = self.train["CODE_GENDER"].mode()[0]
         self.train['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
         self.test['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
-
 
         print("Variables catégorielles discrétisées ✅")
 
@@ -280,7 +279,8 @@ class DataPreparation():
 
         numericals = [var for var in self.train.columns if '_disc_int' in var]
         categoricals = [var for var in self.train.columns if '_discret' in var]
-        already_prepared = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
+        already_prepared = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY',
+                            'REGION_RATING_CLIENT',
                             'REGION_RATING_CLIENT_W_CITY', "FLAG_WORK_PHONE", "FLAG_PHONE", "LIVE_CITY_NOT_WORK_CITY",
                             'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CODE_GENDER']
         other = ["date_mensuelle"]
@@ -288,9 +288,17 @@ class DataPreparation():
         final_features_test = other + numericals + categoricals + already_prepared
         final_features_train = ["TARGET"] + final_features_test
 
-        return(self.train[final_features_train], self.test[final_features_test])
+        var_num_to_str = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY',
+                          'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
+                          'REGION_RATING_CLIENT_W_CITY', 'FLAG_WORK_PHONE',
+                          'FLAG_PHONE', 'LIVE_CITY_NOT_WORK_CITY']
 
+        replacement_dict = {1: 'un', 0: 'zero', 2: 'deux', 3: 'trois'}
 
+        for var in var_num_to_str :
+            self.train[var] = self.train[var].replace(replacement_dict)
+            self.test[var] = self.test[var].replace(replacement_dict)
 
+        self.train["TARGET"] = self.train["TARGET"].astype("int")
 
-
+        return (self.train[final_features_train], self.test[final_features_test])
