@@ -1,13 +1,14 @@
-import pandas as pd
-import numpy as np
 from deap import base, creator, tools, algorithms
-from functools import  partial
+import warnings
+from functools import partial
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from deap import base, creator, tools, algorithms
 from scipy.stats import chi2_contingency
-import warnings
 from tqdm import tqdm
+
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="deap.creator")
 
 
@@ -51,7 +52,7 @@ class Genetic_Numerical_Discretisation():
 
     def genetic_discretisation(self, train_set, variable, nb_classes_max):
         temp = train_set[[variable, 'TARGET']].copy()
-        NB_GEN = 15
+        NB_GEN = 5
         POP_SIZE = 100
         CXPB, MUTPB = 0.5, 0.2
 
@@ -96,7 +97,7 @@ class Genetic_Numerical_Discretisation():
 
             intervalles = self.train.groupby(f'{variable}_disc')[variable].agg(['min', 'max'])
 
-            dict_renommage = {modalite: f'[{round(row["min"], 2)}-{round(row["max"], 2)}]' for modalite, row in
+            dict_renommage = {modalite: f'[{round(row["min"], 2)};{round(row["max"], 2)}]' for modalite, row in
                               intervalles.iterrows()}
 
             self.train[f'{variable}_disc_int'] = self.train[f'{variable}_disc'].map(dict_renommage)
@@ -110,10 +111,11 @@ class Genetic_Numerical_Discretisation():
 
 
 class DataPreparation():
-    def __init__(self, train, test, nan_treshold) :
+    def __init__(self, train, test, nan_treshold, plot = False) :
         self.train = train
         self.test = test
         self.nan_treshold = nan_treshold
+        self.plot = plot
 
     def convert_type(self):
         for var in self.train.columns :
@@ -124,6 +126,21 @@ class DataPreparation():
         print("Type des variables convertis ✅")
 
     def remove_and_impute_nan(self):
+        ### Exceptions ####
+        impute_0 = ["OWN_CAR_AGE", "EXT_SOURCE_1", "YEARS_BEGINEXPLUATATION_MEDI",
+                     "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
+
+        for var in impute_0 :
+            self.train[var].fillna(0, inplace = True)
+            self.test[var].fillna(0, inplace=True)
+
+        impute_mod = ["OCCUPATION_TYPE"]
+
+        ### Others ####
+        for var in impute_mod :
+            self.train[var].fillna(self.train[var].mode()[0], inplace = True)
+            self.test[var].fillna(self.train[var].mode()[0], inplace=True)
+
         for var in self.train.columns :
             pcentage_nan = self.train[var].isna().sum()/self.train.shape[0]
 
@@ -146,11 +163,14 @@ class DataPreparation():
 
     def numericals_discretisation(self):
         print("Discrétisation des variables numériques en cours ... ")
-        var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2"]
+        var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2", "EXT_SOURCE_1"]
 
         var_2_bins = ["AMT_GOODS_PRICE", "DAYS_REGISTRATION", "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3",
                       "AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
-                      "DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",]
+                      "DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",
+                      "OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
+                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"
+                      ]
 
         dict_variable = {}
 
@@ -160,7 +180,7 @@ class DataPreparation():
         for var in var_2_bins :
             dict_variable[var] = 2
 
-        discretizer = Genetic_Numerical_Discretisation(self.train, self.test, dict_variable)
+        discretizer = Genetic_Numerical_Discretisation(self.train, self.test, dict_variable, self.plot)
         self.train, self.test = discretizer.run_discretisation()
 
         print("Variables numériques discrétisées ✅")
@@ -213,6 +233,24 @@ class DataPreparation():
                                                              ['alone', 'couple'],
                                                              default='couple')
 
+        #### OCCUPATION TYPE ###
+
+        low_skilled = ["Low-skill Laborers", "Drivers", "Waiters/barmen staff", "Security staff", "Laborers",
+                       "Sales staff", "Cooking staff", "Cleaning staff", "Realty agents", "Secretaries"]
+        high_skilled = ["Medicine staff", "IT staff", "Private service staff", "Managers", "Core staff", "HR staff",
+                        "Accountants", "High skilled tech staff"]
+
+        self.train['OCCUPATION_TYPE_discret'] = np.select([self.train['OCCUPATION_TYPE'].isin(low_skilled),
+                                                           self.train['OCCUPATION_TYPE'].isin(high_skilled)],
+                                                          ['low_skilled', 'high_skilled'],
+                                                          default='low_skilled')
+
+        self.test['OCCUPATION_TYPE_discret'] = np.select([self.test['OCCUPATION_TYPE'].isin(low_skilled),
+                                                           self.test['OCCUPATION_TYPE'].isin(high_skilled)],
+                                                          ['low_skilled', 'high_skilled'],
+                                                          default='low_skilled')
+
+
         print("Variables catégorielles discrétisées ✅")
 
     def get_prepared_data(self):
@@ -225,11 +263,11 @@ class DataPreparation():
         categoricals = [var for var in self.train.columns if '_discret' in var]
         already_prepared = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
                             'REGION_RATING_CLIENT_W_CITY', "FLAG_WORK_PHONE", "FLAG_PHONE", "LIVE_CITY_NOT_WORK_CITY",
-                            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY']
+                            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',"SK_ID_CURR"]
         other = ["date_mensuelle"]
 
         final_features_test = other + numericals + categoricals + already_prepared
-        final_features_train = ["TARGET"] + final_features_test
+        final_features_train = ["TARGET","SK_ID_CURR"] + final_features_test
 
         return(self.train[final_features_train], self.test[final_features_test])
 
