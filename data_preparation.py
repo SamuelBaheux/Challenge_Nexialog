@@ -1,4 +1,3 @@
-from deap import base, creator, tools, algorithms
 import warnings
 from functools import partial
 
@@ -10,12 +9,12 @@ from scipy.stats import chi2_contingency
 from tqdm import tqdm
 
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="deap.creator")
+warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 
 
 class Genetic_Numerical_Discretisation():
-    def __init__(self, train, test, variables_dict, plot = False):
+    def __init__(self, train, variables_dict, plot=False):
         self.train = train
-        self.test = test
         self.variables_dict = variables_dict
         self.plot = plot
 
@@ -35,19 +34,34 @@ class Genetic_Numerical_Discretisation():
         return chi2,
 
     def plot_stability(self, variable):
-        stability_df = self.train.groupby(['date_trimestrielle', variable])['TARGET'].mean().unstack()
-        stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 5))
 
-        plt.figure(figsize=(10, 5))
+        stability_volume_df = self.train.groupby(['date_trimestrielle', variable]).size().unstack()
 
-        for class_label in stability_df.drop('stability', axis=1).columns:
-            values = stability_df[class_label]
-            plt.plot(stability_df.index, values, label=f'Classe {class_label}', marker='o')
+        for class_label in stability_volume_df.columns:
+            values = stability_volume_df[class_label]
+            axes[0].plot(stability_volume_df.index, values, label=f'Classe {class_label}', marker='o')
 
-        plt.title(f'Stabilité de l\'impact sur la cible pour {variable}')
-        plt.xlabel('Date')
-        plt.ylabel('Proportion de la cible TARGET')
-        plt.legend(title=f'Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
+        axes[0].set_title(f'Stabilité de volume pour {variable}')
+        axes[0].set_xlabel('Date')
+        axes[0].set_ylabel('Nombre d\'observations')
+        axes[0].legend(title='Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
+        axes[0].tick_params(axis='x', rotation=45)
+
+        stability_taux_df = self.train.groupby(['date_trimestrielle', variable])['TARGET'].mean().unstack()
+        stability_taux_df['stability'] = stability_taux_df.std(axis=1) / stability_taux_df.mean(axis=1)
+
+        for class_label in stability_taux_df.drop('stability', axis=1).columns:
+            values = stability_taux_df[class_label]
+            axes[1].plot(stability_taux_df.index, values, label=f'Classe {class_label}', marker='o')
+
+        axes[1].set_title(f'Stabilité de taux pour {variable}')
+        axes[1].set_xlabel('Date')
+        axes[1].set_ylabel('Proportion de la cible TARGET')
+        axes[1].legend(title='Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
+        axes[1].tick_params(axis='x', rotation=45)
+
+        plt.tight_layout()
         plt.show()
 
     def genetic_discretisation(self, train_set, variable, nb_classes_max):
@@ -93,7 +107,6 @@ class Genetic_Numerical_Discretisation():
             seuils_uniques = np.unique(seuils)
 
             self.train[f'{variable}_disc'] = np.digitize(self.train[variable], seuils_uniques)
-            self.test[f'{variable}_disc'] = np.digitize(self.test[variable], seuils_uniques)
 
             intervalles = self.train.groupby(f'{variable}_disc')[variable].agg(['min', 'max'])
 
@@ -101,75 +114,85 @@ class Genetic_Numerical_Discretisation():
                               intervalles.iterrows()}
 
             self.train[f'{variable}_disc_int'] = self.train[f'{variable}_disc'].map(dict_renommage)
-            self.test[f'{variable}_disc_int'] = self.test[f'{variable}_disc'].map(dict_renommage)
 
             if self.plot:
                 self.plot_stability(f'{variable}_disc')
 
-        return (self.train, self.test)
-
+        return (self.train)
 
 
 class DataPreparation():
-    def __init__(self, train, test, nan_treshold, plot = False) :
+    def __init__(self, train, nan_treshold, plot=False):
         self.train = train
-        self.test = test
         self.nan_treshold = nan_treshold
         self.plot = plot
 
+    def add_bureau_features(self):
+        train_bureau = pd.read_csv('../data/bureau.csv')
+        train_bureau = train_bureau[['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM', 'SK_ID_CURR']]
+        train_bureau = train_bureau.groupby('SK_ID_CURR').mean()
+
+        compte_par_id = train_bureau.groupby(['SK_ID_CURR']).size().reset_index(name='Nombre_Occurrences')
+        bureau_sorted = compte_par_id.sort_values(by=['SK_ID_CURR', 'Nombre_Occurrences'],
+                                                  ascending=[True, False])
+        bureau_temp2 = bureau_sorted.drop_duplicates(subset=['SK_ID_CURR'], keep='first')
+        bureau = train_bureau.merge(bureau_temp2, on='SK_ID_CURR')
+        self.train = self.train.merge(bureau[['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM', 'SK_ID_CURR']],
+                                              on='SK_ID_CURR', how='left')
+
     def convert_type(self):
-        for var in self.train.columns :
-            if self.train[var].nunique() < 30 :
+        for var in self.train.columns:
+            if self.train[var].nunique() < 30:
                 self.train[var] = self.train[var].astype("object")
-                if var != "TARGET" :
-                    self.test[var] = self.test[var].astype("object")
         print("Type des variables convertis ✅")
 
     def remove_and_impute_nan(self):
         ### Exceptions ####
-        impute_0 = ["OWN_CAR_AGE", "EXT_SOURCE_1", "YEARS_BEGINEXPLUATATION_MEDI",
-                     "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
+        impute_0 = ["OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
+                    "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
 
-        for var in impute_0 :
-            self.train[var].fillna(0, inplace = True)
-            self.test[var].fillna(0, inplace=True)
+        for var in impute_0:
+            self.train[var].fillna(0, inplace=True)
 
-        impute_mod = ["OCCUPATION_TYPE"]
+        for var in ['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM']:
+            self.train[var].fillna(self.train[var].median(), inplace = True)
+
+        #### EXT_SOURCE ####
+        self.train['EXT_SOURCE_1'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
+        self.train['EXT_SOURCE_1'].fillna(self.train["EXT_SOURCE_1"].mean(), inplace=True)
+        self.train['EXT_SOURCE_3'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
+        self.train['EXT_SOURCE_3'].fillna(self.train["EXT_SOURCE_3"].mean(), inplace=True)
 
         ### Others ####
-        for var in impute_mod :
-            self.train[var].fillna(self.train[var].mode()[0], inplace = True)
-            self.test[var].fillna(self.train[var].mode()[0], inplace=True)
+        impute_mod = ["OCCUPATION_TYPE"]
+        for var in impute_mod:
+            self.train[var].fillna(self.train[var].mode()[0], inplace=True)
 
-        for var in self.train.columns :
-            pcentage_nan = self.train[var].isna().sum()/self.train.shape[0]
+        for var in self.train.columns:
+            pcentage_nan = self.train[var].isna().sum() / self.train.shape[0]
 
-            if pcentage_nan != 0 :
-                if pcentage_nan > self.nan_treshold :
-                    self.train.drop(columns = [var], inplace = True)
-                    self.test.drop(columns = [var], inplace=True)
-                else :
-                    if self.train[var].dtype != 'object' :
+            if pcentage_nan != 0:
+                if pcentage_nan > self.nan_treshold:
+                    self.train.drop(columns=[var], inplace=True)
+                else:
+                    if self.train[var].dtype != 'object':
                         mean = self.train[var].mean()
-                        self.train[var].fillna(mean, inplace =True)
-                        self.test[var].fillna(mean, inplace=True)
-                    else :
+                        self.train[var].fillna(mean, inplace=True)
+                    else:
                         mode = self.train[var].mode()
                         self.train[var].fillna(mode[0], inplace=True)
-                        self.test[var].fillna(mode[0], inplace=True)
 
-        assert (self.train.isna().sum().sum() == 0) and (self.test.isna().sum().sum() == 0)
+        assert (self.train.isna().sum().sum() == 0)
         print("Valeurs manquantes traitées ✅")
 
     def numericals_discretisation(self):
         print("Discrétisation des variables numériques en cours ... ")
-        var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2", "EXT_SOURCE_1"]
+        var_3_bins = []
 
-        var_2_bins = ["AMT_GOODS_PRICE", "DAYS_REGISTRATION", "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3",
-                      "AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
-                      "DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",
-                      "OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
-                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"
+        var_2_bins = [
+                      'REGION_RATING_CLIENT_W_CITY',
+                      'EXT_SOURCE_2', 'DAYS_CREDIT_ENDDATE', 'CNT_PAYMENT',
+                      'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT'
                       ]
 
         dict_variable = {}
@@ -177,11 +200,11 @@ class DataPreparation():
         for var in var_3_bins:
             dict_variable[var] = 3
 
-        for var in var_2_bins :
+        for var in var_2_bins:
             dict_variable[var] = 2
 
-        discretizer = Genetic_Numerical_Discretisation(self.train, self.test, dict_variable, self.plot)
-        self.train, self.test = discretizer.run_discretisation()
+        discretizer = Genetic_Numerical_Discretisation(self.train, dict_variable, self.plot)
+        self.train = discretizer.run_discretisation()
 
         print("Variables numériques discrétisées ✅")
 
@@ -198,41 +221,6 @@ class DataPreparation():
                                                            ['low_income', 'high_income', 'other'],
                                                            default='other')
 
-        self.test['NAME_INCOME_TYPE_discret'] = np.select([self.test['NAME_INCOME_TYPE'].isin(low_income),
-                                                            self.test['NAME_INCOME_TYPE'].isin(high_income),
-                                                            self.test['NAME_INCOME_TYPE'].isin(other)],
-                                                           ['low_income', 'high_income', 'other'],
-                                                           default='other')
-
-        #### NAME EDUCATION TYPE ####
-        lower = ["Lower_education", "Secondary / secondary special", "Incomplete higher"]
-        higher = ["Higher education", "Academic degree"]
-
-        self.train['NAME_EDUCATION_TYPE_discret'] = np.select([self.train['NAME_EDUCATION_TYPE'].isin(lower),
-                                                               self.train['NAME_EDUCATION_TYPE'].isin(higher)],
-                                                              ['lower', 'higher'],
-                                                              default='lower')
-
-        self.test['NAME_EDUCATION_TYPE_discret'] = np.select([self.test['NAME_EDUCATION_TYPE'].isin(lower),
-                                                               self.test['NAME_EDUCATION_TYPE'].isin(higher)],
-                                                              ['lower', 'higher'],
-                                                              default='lower')
-
-        #### NAME FAMILY STATUS ###
-
-        alone = ["Single / not married", "Separated", "Widow", "Security staff", "Laborers", "Unknown","Civil marriage"]
-        couple = ["Married"]
-
-        self.train['NAME_FAMILY_STATUS_discret'] = np.select([self.train['NAME_FAMILY_STATUS'].isin(alone),
-                                                              self.train['NAME_FAMILY_STATUS'].isin(couple)],
-                                                             ['alone', 'couple'],
-                                                             default='couple')
-
-        self.test['NAME_FAMILY_STATUS_discret'] = np.select([self.test['NAME_FAMILY_STATUS'].isin(alone),
-                                                              self.test['NAME_FAMILY_STATUS'].isin(couple)],
-                                                             ['alone', 'couple'],
-                                                             default='couple')
-
         #### OCCUPATION TYPE ###
 
         low_skilled = ["Low-skill Laborers", "Drivers", "Waiters/barmen staff", "Security staff", "Laborers",
@@ -245,33 +233,49 @@ class DataPreparation():
                                                           ['low_skilled', 'high_skilled'],
                                                           default='low_skilled')
 
-        self.test['OCCUPATION_TYPE_discret'] = np.select([self.test['OCCUPATION_TYPE'].isin(low_skilled),
-                                                           self.test['OCCUPATION_TYPE'].isin(high_skilled)],
-                                                          ['low_skilled', 'high_skilled'],
-                                                          default='low_skilled')
 
+        #### NAME_EDUCATION_TYPE ####
+        low_degree = ['Lower secondary', 'Secondary / secondary special', 'Incomplete higher', 'Higher education']
+        high_degree = ['Academic degree']
 
-        print("Variables catégorielles discrétisées ✅")
+        self.train['NAME_EDUCATION_TYPE_discret'] = np.select([self.train['NAME_EDUCATION_TYPE'].isin(low_degree),
+                                                           self.train['NAME_EDUCATION_TYPE'].isin(high_degree)],
+                                                          ['low_degree', 'high_degree'],
+                                                          default='low_degree')
+
+    def rename_categories(self):
+        var_num_to_str = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY',
+                          'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
+                          'REGION_RATING_CLIENT_W_CITY', 'FLAG_WORK_PHONE',
+                          'FLAG_PHONE', 'LIVE_CITY_NOT_WORK_CITY', "AMT_CREDIT_SUM_disc_int",
+                          "AMT_CREDIT_SUM_DEBT_disc_int"]
+
+        replacement_dict = {1: 'un', 0: 'zero', 2: 'deux', 3: 'trois'}
+
+        for var in var_num_to_str :
+            self.train[var] = self.train[var].replace(replacement_dict)
+
+        self.train["TARGET"] = self.train["TARGET"].astype("int")
 
     def get_prepared_data(self):
+        self.add_bureau_features()
         self.convert_type()
         self.remove_and_impute_nan()
         self.numericals_discretisation()
         self.categorical_discretisation()
+        self.rename_categories()
 
         numericals = [var for var in self.train.columns if '_disc_int' in var]
         categoricals = [var for var in self.train.columns if '_discret' in var]
-        already_prepared = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
+        already_prepared = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY',
+                            'REGION_RATING_CLIENT',
                             'REGION_RATING_CLIENT_W_CITY', "FLAG_WORK_PHONE", "FLAG_PHONE", "LIVE_CITY_NOT_WORK_CITY",
-                            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',"SK_ID_CURR"]
-        other = ["date_mensuelle"]
+                            'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CODE_GENDER']
+        other = ["date_mensuelle", "TARGET"]
 
-        final_features_test = other + numericals + categoricals + already_prepared
-        final_features_train = ["TARGET","SK_ID_CURR"] + final_features_test
+        final_features = other + numericals + categoricals + already_prepared
 
-        return(self.train[final_features_train], self.test[final_features_test])
+        self.train_bis = self.train.iloc[:280000, :]
+        self.test = self.train.iloc[280000:, :]
 
-
-
-
-
+        return (self.train_bis[final_features], self.test[final_features])
