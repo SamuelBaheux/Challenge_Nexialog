@@ -127,18 +127,23 @@ class DataPreparation():
         self.nan_treshold = nan_treshold
         self.plot = plot
 
-    def add_bureau_features(self):
-        train_bureau = pd.read_csv('../data/bureau.csv')
-        train_bureau = train_bureau[['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM', 'SK_ID_CURR']]
-        train_bureau = train_bureau.groupby('SK_ID_CURR').mean()
+    def add_external_features(self):
+        df_bur = pd.read_csv('../data/bureau.csv')
+        df_bur_group = df_bur[['DAYS_CREDIT_ENDDATE', 'SK_ID_CURR']].groupby('SK_ID_CURR').sum()
+        df_bur_group.reset_index(inplace=True)
 
-        compte_par_id = train_bureau.groupby(['SK_ID_CURR']).size().reset_index(name='Nombre_Occurrences')
-        bureau_sorted = compte_par_id.sort_values(by=['SK_ID_CURR', 'Nombre_Occurrences'],
-                                                  ascending=[True, False])
-        bureau_temp2 = bureau_sorted.drop_duplicates(subset=['SK_ID_CURR'], keep='first')
-        bureau = train_bureau.merge(bureau_temp2, on='SK_ID_CURR')
-        self.train = self.train.merge(bureau[['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM', 'SK_ID_CURR']],
-                                              on='SK_ID_CURR', how='left')
+        df_prev = pd.read_csv('../data/previous_application.csv')
+        df_prev_group = df_prev[['SK_ID_CURR', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT']].groupby(
+            'SK_ID_CURR').sum()
+        df_prev_group.reset_index(inplace=True)
+
+        df_ins = pd.read_csv('../data/installments_payments.csv')
+        df_ins_group = df_ins[['SK_ID_CURR', 'AMT_PAYMENT']].groupby('SK_ID_CURR').sum()
+        df_ins_group.reset_index(inplace=True)
+
+        self.train = self.train.merge(df_bur_group, on='SK_ID_CURR', how='left')
+        self.train = self.train.merge(df_prev_group, on='SK_ID_CURR', how='left')
+        self.train = self.train.merge(df_ins_group, on='SK_ID_CURR', how='left')
 
     def convert_type(self):
         for var in self.train.columns:
@@ -148,14 +153,12 @@ class DataPreparation():
 
     def remove_and_impute_nan(self):
         ### Exceptions ####
-        impute_0 = ["OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
-                    "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
+        impute_0 = ["OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI","YEARS_BEGINEXPLUATATION_MODE",
+                    "YEARS_BEGINEXPLUATATION_AVG", "DAYS_CREDIT_ENDDATE",
+                    "DAYS_FIRST_DRAWING", "RATE_DOWN_PAYMENT", "AMT_PAYMENT"]
 
         for var in impute_0:
             self.train[var].fillna(0, inplace=True)
-
-        for var in ['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM']:
-            self.train[var].fillna(self.train[var].median(), inplace = True)
 
         #### EXT_SOURCE ####
         self.train['EXT_SOURCE_1'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
@@ -187,18 +190,20 @@ class DataPreparation():
 
     def numericals_discretisation(self):
         print("Discrétisation des variables numériques en cours ... ")
-        var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2", "EXT_SOURCE_1"]
+        #var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2", "EXT_SOURCE_1"]
 
-        var_2_bins = ["AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "AMT_GOODS_PRICE", "DAYS_REGISTRATION", "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3",
-                      "AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
-                      "DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",
-                      "OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
-                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG"]
+        #var_2_bins = ["AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "AMT_GOODS_PRICE", "DAYS_REGISTRATION", "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3",
+                      #"AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
+                      #"DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",
+                      #"OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
+                      #"YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG", 'REGION_RATING_CLIENT_W_CITY',
+                      #'EXT_SOURCE_2', 'DAYS_CREDIT_ENDDATE', 'CNT_PAYMENT',
+                      #'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT']
+
+        var_2_bins = ['DAYS_CREDIT_ENDDATE', 'DAYS_FIRST_DRAWING',
+                      'RATE_DOWN_PAYMENT', 'AMT_PAYMENT']
 
         dict_variable = {}
-
-        for var in var_3_bins:
-            dict_variable[var] = 3
 
         for var in var_2_bins:
             dict_variable[var] = 2
@@ -211,14 +216,12 @@ class DataPreparation():
     def categorical_discretisation(self):
         print("Discrétisation des variables catégorielles en cours ... ")
         #### NAME INCOME TYPE ####
-        low_income = ['Maternity leave', 'Unemployed']
         high_income = ["Working", "Commercial associate", "Businessman"]
-        other = ['State servant', 'Pensioner', 'Student']
+        other = ['State servant', 'Pensioner', 'Student', 'Maternity leave', 'Unemployed']
 
-        self.train['NAME_INCOME_TYPE_discret'] = np.select([self.train['NAME_INCOME_TYPE'].isin(low_income),
-                                                            self.train['NAME_INCOME_TYPE'].isin(high_income),
+        self.train['NAME_INCOME_TYPE_discret'] = np.select([self.train['NAME_INCOME_TYPE'].isin(high_income),
                                                             self.train['NAME_INCOME_TYPE'].isin(other)],
-                                                           ['low_income', 'high_income', 'other'],
+                                                           ['high_income', 'other'],
                                                            default='other')
 
         #### NAME EDUCATION TYPE ####
@@ -260,14 +263,17 @@ class DataPreparation():
         mode_gender = self.train["CODE_GENDER"].mode()[0]
         self.train['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
 
+        ### REGION_RATING_CLIENT_W_CITY ###
+        self.train['REGION_RATING_CLIENT_W_CITY'].replace(1, 2, inplace=True)
+        self.train['REGION_RATING_CLIENT_W_CITY'].replace(2, "un_deux", inplace=True)
+
         print("Variables catégorielles discrétisées ✅")
 
     def rename_categories(self):
         var_num_to_str = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY',
                           'REG_CITY_NOT_WORK_CITY', 'REGION_RATING_CLIENT',
                           'REGION_RATING_CLIENT_W_CITY', 'FLAG_WORK_PHONE',
-                          'FLAG_PHONE', 'LIVE_CITY_NOT_WORK_CITY', "AMT_CREDIT_SUM_disc_int",
-                          "AMT_CREDIT_SUM_DEBT_disc_int"]
+                          'FLAG_PHONE', 'LIVE_CITY_NOT_WORK_CITY']
 
         replacement_dict = {1: 'un', 0: 'zero', 2: 'deux', 3: 'trois'}
 
@@ -277,7 +283,7 @@ class DataPreparation():
         self.train["TARGET"] = self.train["TARGET"].astype("int")
 
     def get_prepared_data(self):
-        self.add_bureau_features()
+        self.add_external_features()
         self.convert_type()
         self.remove_and_impute_nan()
         self.numericals_discretisation()
@@ -287,14 +293,12 @@ class DataPreparation():
         numericals = [var for var in self.train.columns if '_disc_int' in var]
         categoricals = [var for var in self.train.columns if '_discret' in var]
         already_prepared = ['FLAG_EMP_PHONE', 'REG_CITY_NOT_LIVE_CITY', 'REG_CITY_NOT_WORK_CITY',
-                            'REGION_RATING_CLIENT',
-                            'REGION_RATING_CLIENT_W_CITY', "FLAG_WORK_PHONE", "FLAG_PHONE", "LIVE_CITY_NOT_WORK_CITY",
-                            'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CODE_GENDER']
+                            'REGION_RATING_CLIENT','REGION_RATING_CLIENT_W_CITY', "FLAG_WORK_PHONE",
+                            "FLAG_PHONE", "LIVE_CITY_NOT_WORK_CITY",'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR',
+                            'FLAG_OWN_REALTY', 'CODE_GENDER']
+
         other = ["date_mensuelle", "TARGET"]
 
         final_features = other + numericals + categoricals + already_prepared
 
-        self.train_bis = self.train.iloc[:280000, :]
-        self.test = self.train.iloc[280000:, :]
-
-        return (self.train_bis[final_features], self.test[final_features])
+        return (self.train[final_features])
