@@ -129,7 +129,7 @@ class DataPreparation():
 
     def add_external_features(self):
         df_bur = pd.read_csv('../../data/bureau.csv')
-        df_bur_group = df_bur[['DAYS_CREDIT_ENDDATE', 'SK_ID_CURR']].groupby('SK_ID_CURR').sum()
+        df_bur_group = df_bur[['DAYS_CREDIT_ENDDATE', "AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", 'SK_ID_CURR']].groupby('SK_ID_CURR').sum()
         df_bur_group.reset_index(inplace=True)
 
         df_prev = pd.read_csv('../../data/previous_application.csv')
@@ -161,6 +161,15 @@ class DataPreparation():
         for var in impute_0:
             self.train[var].fillna(0, inplace=True)
 
+        for var in ['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM']:
+            self.train[var].fillna(self.train[var].median(), inplace=True)
+
+        #### EXT_SOURCE ####
+        self.train['EXT_SOURCE_1'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
+        self.train['EXT_SOURCE_1'].fillna(self.train["EXT_SOURCE_1"].mean(), inplace=True)
+        self.train['EXT_SOURCE_3'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
+        self.train['EXT_SOURCE_3'].fillna(self.train["EXT_SOURCE_3"].mean(), inplace=True)
+
         ### Others ####
         impute_mod = ["OCCUPATION_TYPE"]
         for var in impute_mod:
@@ -191,7 +200,7 @@ class DataPreparation():
 
     def numericals_discretisation(self):
         print("Discrétisation des variables numériques en cours ... ")
-        #var_3_bins = ["DAYS_BIRTH", "EXT_SOURCE_2", "EXT_SOURCE_1"]
+        var_3_bins = ["EXT_SOURCE_2", "EXT_SOURCE_1"]
 
         #var_2_bins = ["AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "AMT_GOODS_PRICE", "DAYS_REGISTRATION", "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3",
                       #"AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
@@ -201,13 +210,16 @@ class DataPreparation():
                       #'EXT_SOURCE_2', 'DAYS_CREDIT_ENDDATE', 'CNT_PAYMENT',
                       #'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT']
 
-        var_2_bins = ['DAYS_CREDIT_ENDDATE', 'DAYS_FIRST_DRAWING',
-                      'RATE_DOWN_PAYMENT', 'AMT_PAYMENT']
+        var_2_bins = ['DAYS_CREDIT_ENDDATE', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT',
+                      "AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "DAYS_EMPLOYED", "EXT_SOURCE_3"]
 
         dict_variable = {}
 
         for var in var_2_bins:
             dict_variable[var] = 2
+
+        for var in var_3_bins:
+            dict_variable[var] = 3
 
         discretizer = Genetic_Numerical_Discretisation(self.train, dict_variable, self.plot)
         self.train = discretizer.run_discretisation()
