@@ -128,22 +128,23 @@ class DataPreparation():
         self.plot = plot
 
     def add_external_features(self):
-        df_bur = pd.read_csv('../data/bureau.csv')
+        df_bur = pd.read_csv('../../data/bureau.csv')
         df_bur_group = df_bur[['DAYS_CREDIT_ENDDATE', 'SK_ID_CURR']].groupby('SK_ID_CURR').sum()
         df_bur_group.reset_index(inplace=True)
 
-        df_prev = pd.read_csv('../data/previous_application.csv')
+        df_prev = pd.read_csv('../../data/previous_application.csv')
         df_prev_group = df_prev[['SK_ID_CURR', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT']].groupby(
             'SK_ID_CURR').sum()
         df_prev_group.reset_index(inplace=True)
 
-        df_ins = pd.read_csv('../data/installments_payments.csv')
+        df_ins = pd.read_csv('../../data/installments_payments.csv')
         df_ins_group = df_ins[['SK_ID_CURR', 'AMT_PAYMENT']].groupby('SK_ID_CURR').sum()
         df_ins_group.reset_index(inplace=True)
 
         self.train = self.train.merge(df_bur_group, on='SK_ID_CURR', how='left')
         self.train = self.train.merge(df_prev_group, on='SK_ID_CURR', how='left')
         self.train = self.train.merge(df_ins_group, on='SK_ID_CURR', how='left')
+        print("Variables extérieures récupérées ✅")
 
     def convert_type(self):
         for var in self.train.columns:
@@ -160,16 +161,16 @@ class DataPreparation():
         for var in impute_0:
             self.train[var].fillna(0, inplace=True)
 
+        ### Others ####
+        impute_mod = ["OCCUPATION_TYPE"]
+        for var in impute_mod:
+            self.train[var].fillna(self.train[var].mode()[0], inplace=True)
+
         #### EXT_SOURCE ####
         self.train['EXT_SOURCE_1'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
         self.train['EXT_SOURCE_1'].fillna(self.train["EXT_SOURCE_1"].mean(), inplace=True)
         self.train['EXT_SOURCE_3'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
         self.train['EXT_SOURCE_3'].fillna(self.train["EXT_SOURCE_3"].mean(), inplace=True)
-
-        ### Others ####
-        impute_mod = ["OCCUPATION_TYPE"]
-        for var in impute_mod:
-            self.train[var].fillna(self.train[var].mode()[0], inplace=True)
 
         for var in self.train.columns:
             pcentage_nan = self.train[var].isna().sum() / self.train.shape[0]
@@ -221,8 +222,8 @@ class DataPreparation():
 
         self.train['NAME_INCOME_TYPE_discret'] = np.select([self.train['NAME_INCOME_TYPE'].isin(high_income),
                                                             self.train['NAME_INCOME_TYPE'].isin(other)],
-                                                           ['high_income', 'other'],
-                                                           default='other')
+                                                           ['high_income', 'Low_income'],
+                                                           default='Low_income')
 
         #### NAME EDUCATION TYPE ####
         lower = ["Lower_education", "Secondary / secondary special", "Incomplete higher"]
