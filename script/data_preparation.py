@@ -280,6 +280,9 @@ class DataPreparation():
         self.train['REGION_RATING_CLIENT_W_CITY'].replace(1, 2, inplace=True)
         self.train['REGION_RATING_CLIENT_W_CITY'].replace(2, "un_deux", inplace=True)
 
+        ### NAME_CONTRACT_TYPE ###
+        self.train["NAME_CONTRACT_TYPE"] = self.train["NAME_CONTRACT_TYPE"].str.replace(' ', '_')
+
         print("Variables catégorielles discrétisées ✅")
 
     def rename_categories(self):

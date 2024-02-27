@@ -1,12 +1,122 @@
-import re
 import warnings
 
+from sklearn.metrics import roc_curve, auc
+from sklearn.model_selection import train_test_split
+import xgboost as xgb
+import shap
+import re
 import numpy as np
 import pandas as pd
 
 warnings.filterwarnings('ignore', category=FutureWarning,
                         message="Series.__getitem__ treating keys as positions is deprecated")
 
+
+
+class XGB_model():
+    def __init__(self, train, dic_ref):
+        self.train = train
+        self.dic_ref = dic_ref
+
+    def get_dic_notref(self):
+        self.dic_not_ref = {}
+        for var in self.dic_ref.keys():
+            modality = self.train[self.train[var] != self.dic_ref[var]][var].mode()[0]
+            self.dic_not_ref[var] = modality
+
+    def prepare_data(self):
+        self.new_var = {}
+        translation_table = str.maketrans({'[': 'zz',
+                                           ']': 'vv',
+                                           ';': 'ww',
+                                           '-': 'ff',
+                                           '.': 'pp'})
+
+        for var in self.dic_ref.keys():
+            self.new_var[f'{var}_{self.dic_ref[var]}'] = f'{var}_{self.dic_ref[var]}'.translate(translation_table)
+            self.train.loc[:, f'{var}_{self.dic_ref[var]}'] = self.train[var].apply(
+                lambda x: 0 if x == self.dic_ref[var] else 1)
+            self.train = self.train.rename(
+                columns={f'{var}_{self.dic_ref[var]}': self.new_var[f'{var}_{self.dic_ref[var]}']})
+
+    def split_data(self):
+        X = self.train[self.new_var.values()]
+        y = self.train["TARGET"]
+
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42,
+                                                                                stratify=y)
+
+    def train_model(self):
+        params = {'max_depth': 10, 'eta': 0.06739876573943267, 'gamma': 1.0887983081146109e-05,
+                  'colsample_bytree': 0.5551288232191764, 'subsample': 0.9618418605416359, 'n_estimators': 97,
+                  'alpha': 0.48989283547214435}
+        self.model = xgb.XGBClassifier(**params)
+        self.model.fit(self.X_train, self.y_train)
+
+    def compute_metrics(self):
+        y_prob = self.model.predict_proba(self.X_test)[:, 1]
+        fpr, tpr, thresholds = roc_curve(self.y_test, y_prob)
+        self.roc_auc = auc(fpr, tpr)
+        self.gini = 2 * self.roc_auc - 1
+
+    def compute_shap_values(self):
+        explainer = shap.TreeExplainer(self.model)
+
+        self.shap_values = explainer.shap_values(self.X_train)
+        # shap.summary_plot(self.shap_values, self.X_train)
+
+        # shap_values_single = explainer.shap_values(self.X_train.iloc[[0]])
+        # shap.force_plot(explainer.expected_value, shap_values_single, self.X_train.iloc[[0]])
+
+    def extract_features_name(self, string):
+        bracket_content = re.search(r'(\[[^\]]+\])', string)
+        if bracket_content:
+            return (string.split(bracket_content.group(1))[0][:-1])
+        else:
+            last_part = re.search(r'[^_]+_[^_]+$', string)
+            if last_part:
+                return (string.split(last_part.group(0))[0][:-1])
+
+    def get_modality(self, row):
+        var = row["Var_ref"]
+        if '_ref' in var:
+            return (self.dic_ref[var.split('_ref')[0]] + '_ref')
+        else:
+            return (self.dic_not_ref[var])
+
+    def get_shap_coef(self):
+        shaps = pd.DataFrame(self.shap_values, columns=self.X_train.columns)
+        shaps['TARGET'] = self.y_train.values
+
+        shapley_values = pd.DataFrame(columns=['Coef', 'Variable'])
+
+        dic_temp = {value: key for key, value in self.new_var.items()}
+        for col in self.X_train.columns:
+            shapley_values.loc[len(shapley_values)] = [shaps[shaps[col] > 0][col].mean(), dic_temp[col]]
+            shapley_values.loc[len(shapley_values)] = [shaps[shaps[col] < 0][col].mean(), dic_temp[col]]
+
+        shapley_values["Var_ok"] = shapley_values["Variable"].apply(lambda x: self.extract_features_name(x))
+
+        unique_var_ok_indexes = shapley_values.drop_duplicates('Var_ok', keep='first').index
+        shapley_values["Var_ref"] = shapley_values["Var_ok"].copy()
+        shapley_values.loc[unique_var_ok_indexes, 'Var_ref'] += '_ref'
+        shapley_values["Modality"] = shapley_values.apply(lambda x: self.get_modality(x), axis=1)
+        shapley_values["Var_ref"] = shapley_values["Var_ref"].apply(lambda x: x.split("_ref")[0])
+
+        shapley_values = shapley_values[["Coef", "Var_ref", "Modality"]]
+        shapley_values = shapley_values.rename(columns={"Coef": "Coefficient",
+                                                        "Var_ref": "Variable"})
+
+        return (shapley_values)
+
+    def run_xgb_model(self):
+        self.get_dic_notref()
+        self.prepare_data()
+        self.split_data()
+        self.train_model()
+        self.compute_metrics()
+        self.compute_shap_values()
+        return (self.get_shap_coef())
 
 class GridScore():
     def __init__(self, df, model):
