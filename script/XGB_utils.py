@@ -129,7 +129,6 @@ class GridScoreXGB():
         df_score["Score_ind"] = df_score.apply(lambda row: self.compute_individual_score(row, features), axis=1)
         return (df_score)
 
-
 class XGB_model():
     def __init__(self, train, dic_ref):
         self.train = train
@@ -180,7 +179,7 @@ class XGB_model():
         explainer = shap.TreeExplainer(self.model)
 
         self.shap_values = explainer.shap_values(self.X_train)
-        shap.summary_plot(self.shap_values, self.X_train)
+        #shap.summary_plot(self.shap_values, self.X_train)
 
         # shap_values_single = explainer.shap_values(self.X_train.iloc[[0]])
         # shap.force_plot(explainer.expected_value, shap_values_single, self.X_train.iloc[[0]])
