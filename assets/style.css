@@ -1,0 +1,179 @@
+/* Table of contents
+––––––––––––––––––––––––––––––––––––––––––––––––––
+- Banner
+- Modal
+- Tabs
+- Main Dashboard Tab
+- Measurement Tab
+- Tables/Dropdown
+- Containers
+- Media Queries
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Corps des pages
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+body {
+    background-color: #e7ebeb; /* Couleur de fond de la page */
+    font-family: 'Arial', sans-serif;
+}
+
+/* Nouvelle classe pour le conteneur global */
+.hub {
+    padding: 1cm; /* Espace autour du conteneur interne */
+}
+
+.container {
+    background-color: #7c7c7c; /* Couleur de fond du conteneur principal */
+    border-radius: 5px; /* Bordures arrondies */
+    box-shadow: 0 4px 8px rgb(231, 235, 235); /* Ombre légère */
+    padding: 2rem;
+    width: 100%;
+    max-width: calc(100% - 0cm); /* Calculer la largeur en soustrayant la marge des deux côtés */
+    margin: auto; /* Centrer le conteneur */
+}
+
+.header {
+    font-weight: bolder;
+    background-color: #7c7c7c; /* Couleur de fond de l'en-tête */
+    color: #ffffff; /* Couleur du texte de l'en-tête */
+    padding: 1rem;
+    border-radius: 5px 5px 0 0; /* Bordures arrondies en haut du conteneur */
+    text-align: center;/* Centrer le texte */
+    margin-bottom: 2rem; /* Marge en bas de l'en-tête */
+}
+
+.result-output {
+    padding: 1rem; /* Padding du conteneur de résultats */
+    background-color: #f2f2f2; /* Couleur de fond du conteneur de résultats */
+    border-radius: 5px; /* Bordures arrondies */
+    margin-top: 1rem; /* Marge en haut du conteneur de résultats */
+}
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Textes
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.header H3 {
+    margin: 0;
+    font-weight: bolder;/* Enlever la marge par défaut du h1 */
+}
+
+/* Adaptation des classes pour les labels et les inputs en utilisant la convention BEM */
+.form-label {
+    display: block; /* Affichage block pour que le label prenne toute la largeur */
+    margin-bottom: .5rem;
+    color: white; /* Couleur du texte des labels mise à jour pour la visibilité */
+}
+
+.variables-info{
+    color: white
+}
+.md_title{
+    color: white
+}
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Boutons
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.button {
+    background-color: #28a745; /* Couleur de fond du bouton */
+    color: white; /* Couleur du texte du bouton */
+     /* Padding du bouton */
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    display: block; /* Rendre le bouton block pour centrer */
+    width: 100%; /* Faire en sorte que le bouton prenne toute la largeur */
+    margin-top: 1rem; /* Marge au-dessus du bouton */
+}
+
+.button:hover {
+    background-color: #218838; /* Couleur de fond du bouton au survol */
+}
+
+.predefined-vars {
+    display: flex; /* Active Flexbox */
+    justify-content: flex-start; /* Alignement au début du conteneur */
+    gap: 10px; /* Espace entre les boutons */
+    width: 100%; /* Assurez-vous que le conteneur prend toute la largeur */
+}
+
+.button-inline {
+    flex-grow: 1; /* Permet aux boutons de remplir l'espace de manière égale */
+    background-color: #28a745; /* Couleur de fond du bouton */
+    color: white; /* Couleur du texte du bouton */
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    margin-top: 1rem; /* Marge au-dessus du bouton */
+}
+
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+DropDowns
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.col {
+    flex: 1;
+}
+
+.label-inline {
+    margin-right: 10px;
+}
+
+.dropdown-inline {
+    flex-grow: 1;
+}
+
+#tabs {
+	width: 100%;
+}
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Tabs
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.custom-tabs {
+	background-color: #454545;
+	text-transform: uppercase;
+    color: #f2f2f2;
+	font-weight: 600;
+	font-size: 14px;
+	height: fit-content;
+	cursor: pointer;
+}
+
+#Specs-tab.custom-tab,
+#Control-chart-tab.custom-tab {
+	background-color: #454545;
+	letter-spacing: 1px;
+	color: inherit;
+	border: 0;
+	border-bottom: #454545 solid 4px !important;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	height: 18px;
+	width: 100%;
+}
+
+#Specs-tab.custom-tab--selected,
+#Control-chart-tab.custom-tab--selected {
+	border-bottom: #002060 solid 4px !important;
+}
+
+#Specs-tab.custom-tab {
+	margin-right: 3px;
+}
+
+#Control-chart-tab.custom-tab {
+	margin-left: 3px;
+}
