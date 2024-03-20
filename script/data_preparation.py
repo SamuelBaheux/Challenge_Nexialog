@@ -323,6 +323,7 @@ class DataPreparation():
 
         return (self.train[final_features])
 
+
 class DashDataPreparation():
     def __init__(self):
         self.train = pd.read_csv('./data/application_train_vf.csv')

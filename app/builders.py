@@ -1,6 +1,8 @@
-from dash import dcc, html
 import sys
-sys.path.append("../script/")
+sys.path.append("./script/")
+
+from dash import dcc, html
+from data_preparation import ConstantFeatures
 
 def build_tabs():
     return html.Div(
@@ -63,7 +65,7 @@ def create_layout():
                             {'label': 'Logit', 'value': 'Logit'},
                             {'label': 'XGBoost', 'value': 'XGBoost'}
                         ],
-                        value='Logit-P',
+                        value='Logit',
                         className='dropdown-inline'
                     ),
                 ]),
@@ -77,15 +79,15 @@ def create_layout():
             html.Div(className='form-input row', children=[
                 html.Div(className='form-label col', children=[
                     html.Label('Choix des Variables', className='label-inline'),
-                ]),
-                html.Div(className='form-dropdown col', children=[dcc.Dropdown(
-                    id='variables-dropdown',
-                    options=[{"label": "A", "value": "A"}, {"label": "B", "value": "B"}, {"label": "C", "value": "C"}],
-                    multi=True,
-                    placeholder="Choisir des variables",
-                    className='dropdown-inline'
-                ),
-            ])]),
+                    ]),
+                html.Div(className='form-dropdown col', children=[
+                    dcc.Dropdown(id='variables-dropdown',
+                                 options=ConstantFeatures().all_features,
+                                 multi=True,
+                                 placeholder="Choisir des variables",
+                                 className='dropdown-inline',),
+                ])
+            ]),
 
             html.Div(className='form-input row', children=[
             html.Div(className='predefined-vars', children=[
