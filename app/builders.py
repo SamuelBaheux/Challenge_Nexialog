@@ -18,7 +18,6 @@ def build_tabs():
                         value="tab1",
                         className="custom-tab",
                         selected_className="custom-tab--selected",
-                        # Intégrer ici le contenu de create_layout
                         children=create_layout(),
                     ),
                     dcc.Tab(

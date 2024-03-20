@@ -9,8 +9,14 @@ import warnings
 
 import numpy as np
 
+from script.data_preparation import ConstantFeatures
+
 warnings.filterwarnings('ignore', category=FutureWarning,
                         message="Series.__getitem__ treating keys as positions is deprecated")
+
+warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
+
+
 
 
 class GridScoreXGB():
@@ -130,9 +136,38 @@ class GridScoreXGB():
         return (df_score)
 
 class XGB_model():
-    def __init__(self, train, dic_ref):
+    def __init__(self, train, intervalles_dic):
         self.train = train
-        self.dic_ref = dic_ref
+        self.reference_dic = ConstantFeatures().dic_ref
+        self.intervalles_dic = intervalles_dic
+
+    def get_features_list(self):
+        self.features = self.train.columns.to_list()
+        self.features.remove("TARGET")
+
+        try:
+            self.features.remove("date_trimestrielle")
+        except:
+            pass
+
+        try:
+            self.features.remove("date_mensuelle")
+        except:
+            pass
+
+    def get_ref_vars(self):
+        self.dic_ref = {}
+
+        for key, value in self.reference_dic.items():
+            if key.split("_discret")[0] in self.features or key.split("_disc_int")[0] in self.features :
+                if value == 'max':
+                    self.dic_ref[key] = self.intervalles_dic[key.split("_disc_int")[0]][
+                        list(self.intervalles_dic[key.split("_disc_int")[0]])[-1]]
+                elif value == 'min':
+                    self.dic_ref[key] = self.intervalles_dic[key.split("_disc_int")[0]][
+                        list(self.intervalles_dic[key.split("_disc_int")[0]])[0]]
+                else:
+                    self.dic_ref[key] = value
 
     def get_dic_notref(self):
         self.dic_not_ref = {}
@@ -174,6 +209,11 @@ class XGB_model():
         fpr, tpr, thresholds = roc_curve(self.y_test, y_prob)
         self.roc_auc = auc(fpr, tpr)
         self.gini = 2 * self.roc_auc - 1
+
+        return({"roc_auc" : self.roc_auc,
+                "gini" : self.gini,
+                "fpr" : fpr,
+                "tpr" : tpr})
 
     def compute_shap_values(self):
         explainer = shap.TreeExplainer(self.model)
@@ -226,10 +266,11 @@ class XGB_model():
         return (shapley_values)
 
     def run_xgb_model(self):
+        self.get_features_list()
+        self.get_ref_vars()
         self.get_dic_notref()
         self.prepare_data()
         self.split_data()
         self.train_model()
-        self.compute_metrics()
         self.compute_shap_values()
         return (self.get_shap_coef())

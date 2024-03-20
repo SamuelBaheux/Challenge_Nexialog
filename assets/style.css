@@ -50,6 +50,13 @@ body {
     margin-top: 1rem; /* Marge en haut du conteneur de résultats */
 }
 
+.predefined-vars {
+    display: flex; /* Active Flexbox */
+    justify-content: flex-start; /* Alignement au début du conteneur */
+    gap: 10px; /* Espace entre les boutons */
+    width: 100%; /* Assurez-vous que le conteneur prend toute la largeur */
+}
+
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 Textes
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -90,13 +97,6 @@ Boutons
 
 .button:hover {
     background-color: #218838; /* Couleur de fond du bouton au survol */
-}
-
-.predefined-vars {
-    display: flex; /* Active Flexbox */
-    justify-content: flex-start; /* Alignement au début du conteneur */
-    gap: 10px; /* Espace entre les boutons */
-    width: 100%; /* Assurez-vous que le conteneur prend toute la largeur */
 }
 
 .button-inline {

@@ -408,28 +408,35 @@ class DashDataPreparation():
     def get_features(self):
         return(self.train.columns.to_list())
 
+    def init_vars(self, selected_vars):
+        selected_vars.extend(["date_mensuelle", "TARGET"])
+        self.train = self.train[selected_vars]
+        self.num_vars = self.train.select_dtypes(exclude='object')
+        self.cat_vars = self.train.select_dtypes(include='object')
+
     def numericals_discretisation(self):
         print("Discrétisation des variables numériques en cours ... ")
+
         var_3_bins = ["EXT_SOURCE_2", "EXT_SOURCE_1"]
 
-        #var_2_bins = ["AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "AMT_GOODS_PRICE", "DAYS_REGISTRATION", "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3",
-                      #"AMT_CREDIT", "AMT_ANNUITY", "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED",
-                      #"DAYS_REGISTRATION", "DAYS_ID_PUBLISH", "AMT_REQ_CREDIT_BUREAU_MON",
-                      #"OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
-                      #"YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG", 'REGION_RATING_CLIENT_W_CITY',
-                      #'EXT_SOURCE_2', 'DAYS_CREDIT_ENDDATE', 'CNT_PAYMENT',
-                      #'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT']
-
-        var_2_bins = ['DAYS_CREDIT_ENDDATE', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT',
+        var_2_bins = ["AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "AMT_GOODS_PRICE", "DAYS_REGISTRATION",
+                      "DAYS_LAST_PHONE_CHANGE", "EXT_SOURCE_3","AMT_CREDIT", "AMT_ANNUITY",
+                      "REGION_POPULATION_RELATIVE", "DAYS_EMPLOYED", "DAYS_REGISTRATION", "DAYS_ID_PUBLISH",
+                      "AMT_REQ_CREDIT_BUREAU_MON", "OWN_CAR_AGE", "YEARS_BEGINEXPLUATATION_MEDI",
+                      "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG", 'REGION_RATING_CLIENT_W_CITY',
+                      'EXT_SOURCE_2', 'DAYS_CREDIT_ENDDATE', 'CNT_PAYMENT', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT',
+                      'AMT_PAYMENT', 'DAYS_CREDIT_ENDDATE', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT',
                       "AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "DAYS_EMPLOYED", "EXT_SOURCE_3"]
 
         dict_variable = {}
 
         for var in var_2_bins:
-            dict_variable[var] = 2
+            if var in self.num_vars :
+                dict_variable[var] = 2
 
         for var in var_3_bins:
-            dict_variable[var] = 3
+            if var in self.num_vars:
+                dict_variable[var] = 3
 
         self.discretizer = Genetic_Numerical_Discretisation(self.train, dict_variable, self.plot)
         self.train = self.discretizer.run_discretisation()
@@ -439,59 +446,65 @@ class DashDataPreparation():
     def categorical_discretisation(self):
         print("Discrétisation des variables catégorielles en cours ... ")
         #### NAME INCOME TYPE ####
-        high_income = ["Working", "Commercial associate", "Businessman"]
-        other = ['State servant', 'Pensioner', 'Student', 'Maternity leave', 'Unemployed']
 
-        self.train['NAME_INCOME_TYPE_discret'] = np.select([self.train['NAME_INCOME_TYPE'].isin(high_income),
-                                                            self.train['NAME_INCOME_TYPE'].isin(other)],
-                                                           ['high_income', 'Low_income'],
-                                                           default='Low_income')
+        if 'NAME_INCOME_TYPE' in self.cat_vars :
+            high_income = ["Working", "Commercial associate", "Businessman"]
+            other = ['State servant', 'Pensioner', 'Student', 'Maternity leave', 'Unemployed']
+
+            self.train['NAME_INCOME_TYPE_discret'] = np.select([self.train['NAME_INCOME_TYPE'].isin(high_income),
+                                                                self.train['NAME_INCOME_TYPE'].isin(other)],
+                                                               ['high_income', 'Low_income'],
+                                                               default='Low_income')
 
         #### NAME EDUCATION TYPE ####
-        lower = ["Lower_education", "Secondary / secondary special", "Incomplete higher"]
-        higher = ["Higher education", "Academic degree"]
+        if 'NAME_EDUCATION_TYPE' in self.cat_vars :
+            lower = ["Lower_education", "Secondary / secondary special", "Incomplete higher"]
+            higher = ["Higher education", "Academic degree"]
 
-        self.train['NAME_EDUCATION_TYPE_discret'] = np.select([self.train['NAME_EDUCATION_TYPE'].isin(lower),
-                                                               self.train['NAME_EDUCATION_TYPE'].isin(higher)],
-                                                              ['lower', 'higher'],
-                                                              default='lower')
+            self.train['NAME_EDUCATION_TYPE_discret'] = np.select([self.train['NAME_EDUCATION_TYPE'].isin(lower),
+                                                                   self.train['NAME_EDUCATION_TYPE'].isin(higher)],
+                                                                  ['lower', 'higher'],
+                                                                  default='lower')
 
 
         #### NAME FAMILY STATUS ###
+        if 'NAME_FAMILY_STATUS' in self.cat_vars :
+            alone = ["Single / not married", "Separated", "Widow", "Security staff", "Laborers", "Unknown",
+                     "Civil marriage"]
+            couple = ["Married"]
 
-        alone = ["Single / not married", "Separated", "Widow", "Security staff", "Laborers", "Unknown",
-                 "Civil marriage"]
-        couple = ["Married"]
-
-        self.train['NAME_FAMILY_STATUS_discret'] = np.select([self.train['NAME_FAMILY_STATUS'].isin(alone),
-                                                              self.train['NAME_FAMILY_STATUS'].isin(couple)],
-                                                             ['alone', 'couple'],
-                                                             default='couple')
+            self.train['NAME_FAMILY_STATUS_discret'] = np.select([self.train['NAME_FAMILY_STATUS'].isin(alone),
+                                                                  self.train['NAME_FAMILY_STATUS'].isin(couple)],
+                                                                 ['alone', 'couple'],
+                                                                 default='couple')
 
 
         #### OCCUPATION TYPE ###
+        if 'OCCUPATION_TYPE' in self.cat_vars :
+            low_skilled = ["Low-skill Laborers", "Drivers", "Waiters/barmen staff", "Security staff", "Laborers",
+                           "Sales staff", "Cooking staff", "Cleaning staff", "Realty agents", "Secretaries"]
+            high_skilled = ["Medicine staff", "IT staff", "Private service staff", "Managers", "Core staff", "HR staff",
+                            "Accountants", "High skilled tech staff"]
 
-        low_skilled = ["Low-skill Laborers", "Drivers", "Waiters/barmen staff", "Security staff", "Laborers",
-                       "Sales staff", "Cooking staff", "Cleaning staff", "Realty agents", "Secretaries"]
-        high_skilled = ["Medicine staff", "IT staff", "Private service staff", "Managers", "Core staff", "HR staff",
-                        "Accountants", "High skilled tech staff"]
-
-        self.train['OCCUPATION_TYPE_discret'] = np.select([self.train['OCCUPATION_TYPE'].isin(low_skilled),
-                                                           self.train['OCCUPATION_TYPE'].isin(high_skilled)],
-                                                          ['low_skilled', 'high_skilled'],
-                                                          default='low_skilled')
+            self.train['OCCUPATION_TYPE_discret'] = np.select([self.train['OCCUPATION_TYPE'].isin(low_skilled),
+                                                               self.train['OCCUPATION_TYPE'].isin(high_skilled)],
+                                                              ['low_skilled', 'high_skilled'],
+                                                              default='low_skilled')
 
 
         #### CODE GENDER ####
-        mode_gender = self.train["CODE_GENDER"].mode()[0]
-        self.train['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
+        if 'CODE_GENDER' in self.cat_vars :
+            mode_gender = self.train["CODE_GENDER"].mode()[0]
+            self.train['CODE_GENDER'].replace('XNA', mode_gender, inplace=True)
 
         ### REGION_RATING_CLIENT_W_CITY ###
-        self.train['REGION_RATING_CLIENT_W_CITY'].replace(1, 2, inplace=True)
-        self.train['REGION_RATING_CLIENT_W_CITY'].replace(2, "un_deux", inplace=True)
+        if 'REGION_RATING_CLIENT_W_CITY' in self.cat_vars :
+            self.train['REGION_RATING_CLIENT_W_CITY'].replace(1, 2, inplace=True)
+            self.train['REGION_RATING_CLIENT_W_CITY'].replace(2, "un_deux", inplace=True)
 
         ### NAME_CONTRACT_TYPE ###
-        self.train["NAME_CONTRACT_TYPE"] = self.train["NAME_CONTRACT_TYPE"].str.replace(' ', '_')
+        if 'NAME_CONTRACT_TYPE' in self.cat_vars :
+            self.train["NAME_CONTRACT_TYPE"] = self.train["NAME_CONTRACT_TYPE"].str.replace(' ', '_')
 
         print("Variables catégorielles discrétisées ✅")
 
@@ -504,7 +517,8 @@ class DashDataPreparation():
         replacement_dict = {1: 'un', 0: 'zero', 2: 'deux', 3: 'trois'}
 
         for var in var_num_to_str :
-            self.train[var] = self.train[var].replace(replacement_dict)
+            if var in self.train.columns :
+                self.train[var] = self.train[var].replace(replacement_dict)
 
         self.train["TARGET"] = self.train["TARGET"].astype("int")
 
@@ -520,8 +534,41 @@ class DashDataPreparation():
                             "FLAG_PHONE", "LIVE_CITY_NOT_WORK_CITY",'NAME_CONTRACT_TYPE', 'FLAG_OWN_CAR',
                             'FLAG_OWN_REALTY', 'CODE_GENDER']
 
+        already_prepared_bis = [var for var in already_prepared if var in self.train.columns]
+
         other = ["date_mensuelle", "TARGET"]
 
-        final_features = other + numericals + categoricals + already_prepared
+        final_features = other + numericals + categoricals + already_prepared_bis
 
         return (self.train[final_features])
+
+
+class ConstantFeatures():
+    def __init__(self):
+        self.all_features = ['AMT_GOODS_PRICE','DAYS_LAST_PHONE_CHANGE','AMT_CREDIT','AMT_ANNUITY',
+                             'REGION_POPULATION_RELATIVE','DAYS_ID_PUBLISH','AMT_REQ_CREDIT_BUREAU_MON',
+                             'YEARS_BEGINEXPLUATATION_MEDI','YEARS_BEGINEXPLUATATION_MODE',
+                             'YEARS_BEGINEXPLUATATION_AVG','DAYS_FIRST_DRAWING','RATE_DOWN_PAYMENT','AMT_PAYMENT',
+                             'AMT_CREDIT_SUM','EXT_SOURCE_2','EXT_SOURCE_1','EXT_SOURCE_3','NAME_EDUCATION_TYPE',
+                             'NAME_FAMILY_STATUS','FLAG_EMP_PHONE','REG_CITY_NOT_LIVE_CITY','REG_CITY_NOT_WORK_CITY',
+                             'REGION_RATING_CLIENT','FLAG_WORK_PHONE','FLAG_PHONE','LIVE_CITY_NOT_WORK_CITY',
+                             'FLAG_OWN_CAR','FLAG_OWN_REALTY','CODE_GENDER','REGION_RATING_CLIENT_W_CITY',
+                             'OCCUPATION_TYPE','NAME_CONTRACT_TYPE','NAME_INCOME_TYPE','DAYS_CREDIT_ENDDATE',
+                             'AMT_CREDIT_SUM_DEBT','DAYS_EMPLOYED']
+
+        self.dic_ref = {'AMT_GOODS_PRICE_disc_int': 'max', 'DAYS_LAST_PHONE_CHANGE_disc_int': 'min',
+                        'AMT_CREDIT_disc_int': 'min','AMT_ANNUITY_disc_int': 'min',
+                        'REGION_POPULATION_RELATIVE_disc_int': 'max','DAYS_ID_PUBLISH_disc_int': 'min',
+                        'AMT_REQ_CREDIT_BUREAU_MON_disc_int': 'max','YEARS_BEGINEXPLUATATION_MEDI_disc_int': 'max',
+                        'YEARS_BEGINEXPLUATATION_MODE_disc_int': 'max','YEARS_BEGINEXPLUATATION_AVG_disc_int': 'max',
+                        'DAYS_FIRST_DRAWING_disc_int': 'max','RATE_DOWN_PAYMENT_disc_int': 'max',
+                        'AMT_PAYMENT_disc_int': 'max','AMT_CREDIT_SUM_disc_int': 'min','EXT_SOURCE_2_disc_int': 'max',
+                        'EXT_SOURCE_1_disc_int': 'max','EXT_SOURCE_3_disc_int': 'max',
+                        'NAME_EDUCATION_TYPE_discret': 'higher', 'NAME_FAMILY_STATUS_discret': 'couple',
+                        'FLAG_EMP_PHONE': 'zero', 'REG_CITY_NOT_LIVE_CITY': 'zero', 'REG_CITY_NOT_WORK_CITY': 'un',
+                        'REGION_RATING_CLIENT': 'un', 'FLAG_WORK_PHONE': 'zero', 'FLAG_PHONE': 'un',
+                        'LIVE_CITY_NOT_WORK_CITY': 'zero', 'FLAG_OWN_CAR': 'Y','FLAG_OWN_REALTY': 'N',
+                        'CODE_GENDER': 'F',     'REGION_RATING_CLIENT_W_CITY': "un_deux",
+                        'OCCUPATION_TYPE_discret': "high_skilled",'NAME_CONTRACT_TYPE': "Revolving_loans",
+                        'NAME_INCOME_TYPE_discret': "Low_income", 'DAYS_CREDIT_ENDDATE_disc_int' : 'min',
+                        'AMT_CREDIT_SUM_DEBT_disc_int': 'min','DAYS_EMPLOYED_disc_int': 'min'}
