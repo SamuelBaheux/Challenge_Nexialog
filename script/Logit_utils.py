@@ -12,10 +12,12 @@ warnings.filterwarnings('ignore', category=FutureWarning,
 
 
 class LogitModel():
-    def __init__(self, df, intervalles_dic):
+    def __init__(self):
+        self.reference_dic = ConstantFeatures().dic_ref
+
+    def init_data(self, df, intervalles_dic):
         self.df = df
         self.intervalles_dic = intervalles_dic
-        self.reference_dic = ConstantFeatures().dic_ref
 
     def get_features_list(self):
         self.features = self.df.columns.to_list()

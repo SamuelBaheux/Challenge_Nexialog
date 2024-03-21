@@ -1,6 +1,17 @@
+import sys
+sys.path.append('./script')
+
 from dash.dependencies import Input, Output, State
 import dash
 from dash import html
+
+from data_preparation import *
+from Logit_utils import *
+from XGB_utils import *
+
+dataprep = DashDataPreparation()
+logit_model = LogitModel()
+
 
 INFO_VAR_INT = '''Détail des variables choisies pour l\'interprétabilité :
 - REGION_RATING_CLIENT_W_CITY : Rating of the region where client lives with taking city into account
@@ -35,7 +46,24 @@ def register_callbacks(app):
             if model is None or features is None :
                 return dash.no_update
 
-            results = html.Div([html.H3(f'Résultats {features, model}')])
+            print("Initialisation des données")
+            dataprep.intialize_data()
+            dataprep.init_vars(features)
+            train_prepared = dataprep.get_prepared_data()
+
+            print("Entraînement du modèle")
+            if model == 'Logit' :
+                logit_model.init_data(train_prepared, dataprep.discretizer.intervalles_dic)
+                logit = logit_model.run_model()
+                metrics = logit_model.get_metrics()
+                results = html.Label(f'{metrics}')
+
+            elif model == 'XGBoost' :
+                model = XGB_model(train_prepared, dataprep.discretizer.intervalles_dic)
+                shap_df = model.run_xgb_model()
+                metrics = model.compute_metrics()
+                results = html.Label(f'{metrics}')
+
             return (results, 'tab2')
 
         return dash.no_update
