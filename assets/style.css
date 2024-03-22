@@ -50,6 +50,11 @@ body {
     margin-top: 1rem; /* Marge en haut du conteneur de résultats */
 }
 
+.results-container {
+    display: flex;
+    flex-direction: row;
+}
+
 .predefined-vars {
     display: flex; /* Active Flexbox */
     justify-content: flex-start; /* Alignement au début du conteneur */
@@ -57,6 +62,26 @@ body {
     width: 100%; /* Assurez-vous que le conteneur prend toute la largeur */
 }
 
+.panels-container{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.left-panel{
+    width: 15%; /* Ajustez selon le besoin */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: #818181;
+}
+
+.right-panel{
+    width: 85%; /* Ajustez selon le besoin */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 Textes
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -78,6 +103,11 @@ Textes
 }
 .md_title{
     color: white
+}
+
+.results-title{
+    color: #000000;
+    font-weight: bolder;
 }
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 Boutons
@@ -176,4 +206,20 @@ Tabs
 
 #Control-chart-tab.custom-tab {
 	margin-left: 3px;
+}
+
+#score-gauge>div,
+#score-gauge>div>div,
+#score-gauge>div>div>div {
+	width: 100%;
+	text-align: center;
+}
+
+#score-gauge svg {
+	height: auto;
+}
+
+#score-gauge>div>div>div>div {
+	color: #000000 !important;
+	font-size: 20px;
 }

@@ -136,9 +136,11 @@ class GridScoreXGB():
         return (df_score)
 
 class XGB_model():
-    def __init__(self, train, intervalles_dic):
-        self.train = train
+    def __init__(self):
         self.reference_dic = ConstantFeatures().dic_ref
+
+    def init_data(self, train, intervalles_dic):
+        self.train = train
         self.intervalles_dic = intervalles_dic
 
     def get_features_list(self):
@@ -204,7 +206,7 @@ class XGB_model():
         self.model = xgb.XGBClassifier(**params)
         self.model.fit(self.X_train, self.y_train)
 
-    def compute_metrics(self):
+    def get_metrics(self):
         y_prob = self.model.predict_proba(self.X_test)[:, 1]
         fpr, tpr, thresholds = roc_curve(self.y_test, y_prob)
         self.roc_auc = auc(fpr, tpr)
@@ -265,7 +267,7 @@ class XGB_model():
 
         return (shapley_values)
 
-    def run_xgb_model(self):
+    def run_model(self):
         self.get_features_list()
         self.get_ref_vars()
         self.get_dic_notref()

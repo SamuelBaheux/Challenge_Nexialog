@@ -1,5 +1,6 @@
 import warnings
 from functools import partial
+from joblib import Parallel, delayed
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -94,6 +95,21 @@ class Genetic_Numerical_Discretisation():
         best_ind = tools.selBest(population, 1)[0]
         return (best_ind)
 
+    def discretize_variable(self, variable):
+        bins = self.genetic_discretisation(self.train, variable, self.variables_dict[variable] - 1)
+        bins_normalise = sorted([min(1, max(0, val)) for val in bins])
+
+        seuils = np.percentile(self.train[variable], [val * 100 for val in bins_normalise])
+        seuils_uniques = np.unique(seuils)
+
+        seuils_uniques = np.unique(seuils)
+        intervalles = self.train.groupby(np.digitize(self.train[variable], seuils_uniques))[variable].agg(
+            ['min', 'max'])
+        dict_renommage = {modalite: f'[{round(row["min"], 2)};{round(row["max"], 2)}]' for modalite, row in
+                          intervalles.iterrows()}
+
+        return variable, seuils_uniques, dict_renommage
+
     def run_discretisation(self):
         self.train["date_mensuelle"] = pd.to_datetime(self.train["date_mensuelle"])
         self.train['date_trimestrielle'] = (self.train['date_mensuelle'].dt.year.astype(str) + '_' +
@@ -101,28 +117,14 @@ class Genetic_Numerical_Discretisation():
 
         self.intervalles_dic = {}
 
-        for variable in tqdm(self.variables_dict):
-            bins = self.genetic_discretisation(self.train, variable, self.variables_dict[variable] - 1)
-            bins_normalise = sorted([min(1, max(0, val)) for val in bins])
+        results = Parallel(n_jobs=-1)(delayed(self.discretize_variable)(variable) for variable in self.variables_dict)
 
-            seuils = np.percentile(self.train[variable], [val * 100 for val in bins_normalise])
-            seuils_uniques = np.unique(seuils)
-
+        for variable, seuils_uniques, dict_renommage in results:
             self.train[f'{variable}_disc'] = np.digitize(self.train[variable], seuils_uniques)
-
-            intervalles = self.train.groupby(f'{variable}_disc')[variable].agg(['min', 'max'])
-
-            dict_renommage = {modalite: f'[{round(row["min"], 2)};{round(row["max"], 2)}]' for modalite, row in
-                              intervalles.iterrows()}
-
+            self.train[f'{variable}_disc_int'] = self.train[f'{variable}_disc'].map(dict_renommage)
             self.intervalles_dic[variable] = dict_renommage
 
-            self.train[f'{variable}_disc_int'] = self.train[f'{variable}_disc'].map(dict_renommage)
-
-            if self.plot:
-                self.plot_stability(f'{variable}_disc')
-
-        return (self.train)
+        return self.train
 
 
 class DataPreparation():
@@ -330,23 +332,46 @@ class DashDataPreparation():
         self.nan_treshold = 0.3
         self.plot = False
 
-    def add_external_features(self):
-        df_bur = pd.read_csv('./data/bureau.csv')
-        df_bur_group = df_bur[['DAYS_CREDIT_ENDDATE', "AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", 'SK_ID_CURR']].groupby('SK_ID_CURR').sum()
-        df_bur_group.reset_index(inplace=True)
+    def initialize_data(self, selected_vars):
+        selected_vars.extend(["date_mensuelle", "TARGET", 'SK_ID_CURR'])
+        self.vars = selected_vars
 
-        df_prev = pd.read_csv('./data/previous_application.csv')
-        df_prev_group = df_prev[['SK_ID_CURR', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT']].groupby(
-            'SK_ID_CURR').sum()
-        df_prev_group.reset_index(inplace=True)
+        self.add_external_features(self.vars)
+        self.train = self.train[self.vars]
+        self.convert_type()
+        self.remove_and_impute_nan()
+        self.num_vars = self.train.select_dtypes(exclude='object')
+        self.cat_vars = self.train.select_dtypes(include='object')
 
-        df_ins = pd.read_csv('./data/installments_payments.csv')
-        df_ins_group = df_ins[['SK_ID_CURR', 'AMT_PAYMENT']].groupby('SK_ID_CURR').sum()
-        df_ins_group.reset_index(inplace=True)
+    def add_external_features(self, selected_features):
+        vars_bur = ['DAYS_CREDIT_ENDDATE', "AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT"]
+        vars_prev = ['DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT']
+        vars_ins = ['AMT_PAYMENT']
 
-        self.train = self.train.merge(df_bur_group, on='SK_ID_CURR', how='left')
-        self.train = self.train.merge(df_prev_group, on='SK_ID_CURR', how='left')
-        self.train = self.train.merge(df_ins_group, on='SK_ID_CURR', how='left')
+        vars_bur_selected = [var for var in selected_features if var in vars_bur]
+        vars_prev_selected = [var for var in selected_features if var in vars_prev]
+        vars_ins_selected = [var for var in selected_features if var in vars_ins]
+
+        if len(vars_bur_selected) > 0 :
+            df_bur = pd.read_csv('./data/bureau.csv')
+            vars_bur_selected.append('SK_ID_CURR')
+            df_bur_group = df_bur[vars_bur_selected].groupby('SK_ID_CURR').sum()
+            df_bur_group.reset_index(inplace=True)
+            self.train = self.train.merge(df_bur_group, on='SK_ID_CURR', how='left')
+
+        if len(vars_prev_selected) > 0:
+            df_prev = pd.read_csv('./data/previous_application.csv')
+            vars_prev_selected.append('SK_ID_CURR')
+            df_prev_group = df_prev[vars_prev_selected].groupby('SK_ID_CURR').sum()
+            df_prev_group.reset_index(inplace=True)
+            self.train = self.train.merge(df_prev_group, on='SK_ID_CURR', how='left')
+
+        if len(vars_ins_selected) > 0 :
+            df_ins = pd.read_csv('./data/installments_payments.csv')
+            df_ins_group = df_ins[['SK_ID_CURR', 'AMT_PAYMENT']].groupby('SK_ID_CURR').sum()
+            df_ins_group.reset_index(inplace=True)
+            self.train = self.train.merge(df_ins_group, on='SK_ID_CURR', how='left')
+
         print("Variables extérieures récupérées ✅")
 
     def convert_type(self):
@@ -362,58 +387,47 @@ class DashDataPreparation():
                     "DAYS_FIRST_DRAWING", "RATE_DOWN_PAYMENT", "AMT_PAYMENT"]
 
         for var in impute_0:
-            self.train[var].fillna(0, inplace=True)
+            if var in self.vars :
+                self.train[var].fillna(0, inplace=True)
 
         for var in ['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM']:
-            self.train[var].fillna(self.train[var].median(), inplace=True)
+            if var in self.vars:
+                self.train[var].fillna(self.train[var].median(), inplace=True)
 
         #### EXT_SOURCE ####
-        self.train['EXT_SOURCE_1'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
-        self.train['EXT_SOURCE_1'].fillna(self.train["EXT_SOURCE_1"].mean(), inplace=True)
-        self.train['EXT_SOURCE_3'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
-        self.train['EXT_SOURCE_3'].fillna(self.train["EXT_SOURCE_3"].mean(), inplace=True)
+        if "EXT_SOURCE_1" in self.vars :
+            if 'EXT_SOURCE_2' in self.vars :
+                self.train['EXT_SOURCE_1'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
+            self.train['EXT_SOURCE_1'].fillna(self.train["EXT_SOURCE_1"].mean(), inplace=True)
+
+        if "EXT_SOURCE_3" in self.vars :
+            if 'EXT_SOURCE_2' in self.vars :
+                self.train['EXT_SOURCE_3'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
+            self.train['EXT_SOURCE_3'].fillna(self.train["EXT_SOURCE_3"].mean(), inplace=True)
 
         ### Others ####
         impute_mod = ["OCCUPATION_TYPE"]
         for var in impute_mod:
-            self.train[var].fillna(self.train[var].mode()[0], inplace=True)
-
-        #### EXT_SOURCE ####
-        self.train['EXT_SOURCE_1'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
-        self.train['EXT_SOURCE_1'].fillna(self.train["EXT_SOURCE_1"].mean(), inplace=True)
-        self.train['EXT_SOURCE_3'].fillna(self.train['EXT_SOURCE_2'], inplace=True)
-        self.train['EXT_SOURCE_3'].fillna(self.train["EXT_SOURCE_3"].mean(), inplace=True)
+            if var in self.vars:
+                self.train[var].fillna(self.train[var].mode()[0], inplace=True)
 
         for var in self.train.columns:
-            pcentage_nan = self.train[var].isna().sum() / self.train.shape[0]
+            if var in self.vars :
+                pcentage_nan = self.train[var].isna().sum() / self.train.shape[0]
 
-            if pcentage_nan != 0:
-                if pcentage_nan > self.nan_treshold:
-                    self.train.drop(columns=[var], inplace=True)
-                else:
-                    if self.train[var].dtype != 'object':
-                        mean = self.train[var].mean()
-                        self.train[var].fillna(mean, inplace=True)
+                if pcentage_nan != 0:
+                    if pcentage_nan > self.nan_treshold:
+                        self.train.drop(columns=[var], inplace=True)
                     else:
-                        mode = self.train[var].mode()
-                        self.train[var].fillna(mode[0], inplace=True)
+                        if self.train[var].dtype != 'object':
+                            mean = self.train[var].mean()
+                            self.train[var].fillna(mean, inplace=True)
+                        else:
+                            mode = self.train[var].mode()
+                            self.train[var].fillna(mode[0], inplace=True)
 
         assert (self.train.isna().sum().sum() == 0)
         print("Valeurs manquantes traitées ✅")
-
-    def intialize_data(self):
-        self.add_external_features()
-        self.convert_type()
-        self.remove_and_impute_nan()
-
-    def get_features(self):
-        return(self.train.columns.to_list())
-
-    def init_vars(self, selected_vars):
-        selected_vars.extend(["date_mensuelle", "TARGET"])
-        self.train = self.train[selected_vars]
-        self.num_vars = self.train.select_dtypes(exclude='object')
-        self.cat_vars = self.train.select_dtypes(include='object')
 
     def numericals_discretisation(self):
         print("Discrétisation des variables numériques en cours ... ")
@@ -540,8 +554,17 @@ class DashDataPreparation():
         other = ["date_mensuelle", "TARGET"]
 
         final_features = other + numericals + categoricals + already_prepared_bis
+        self.train = self.train[final_features]
+        return (self.train)
 
-        return (self.train[final_features])
+    def get_explicative_features(self):
+        features = self.train.columns.to_list()
+        features.remove("TARGET")
+        features.remove("date_mensuelle")
+
+        features_label = [var.split('_disc_int')[0] for var in features]
+        features_label = [var.split('_discret')[0] for var in features_label]
+        return(features, features_label)
 
 
 class ConstantFeatures():
