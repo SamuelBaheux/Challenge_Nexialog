@@ -102,3 +102,15 @@ def register_callbacks(app):
     def update_graph(selected_variable):
         fig = plot_stability_plotly(selected_variable)
         return fig
+
+    @app.callback(
+        Output('class-display', 'figure'),
+        [Input('graph-type-selector', 'value')]
+    )
+    def update_graph(selected_graph):
+        if selected_graph == 'gini':
+            fig =  create_gini_figure()
+        elif selected_graph == 'taux':
+            fig =  create_stability_figure()
+
+        return fig

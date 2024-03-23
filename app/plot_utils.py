@@ -1,3 +1,4 @@
+import numpy as np
 import plotly.graph_objects as go
 from vars import *
 
@@ -55,3 +56,61 @@ def roc_curve():
     )
 
     return(fig)
+
+def gini_coefficient(values):
+    sorted_values = np.sort(values)
+    n = len(values)
+    cumulative_values_sum = np.cumsum(sorted_values)
+    gini_index = (2 * np.sum(cumulative_values_sum) / (n * np.sum(sorted_values))) - (n + 1) / n
+    return 1 - gini_index
+
+def create_gini_figure():
+    df = model.df_score.copy()
+    if "date_trimestrielle" not in df.columns :
+        df["date_mensuelle"] = pd.to_datetime(df["date_mensuelle"])
+        df['date_trimestrielle'] = df['date_mensuelle'].dt.year.astype(str) + '_' + df['date_mensuelle'].dt.quarter.astype(str)
+
+    fig = go.Figure()
+    for classe in range(1, 8):
+        df_classe = df[df['Classes'] == classe][["date_trimestrielle", "TARGET"]]
+        grouped = df_classe.groupby(df_classe['date_trimestrielle'])["TARGET"]
+        gini_per_year = grouped.apply(gini_coefficient)
+
+        fig.add_trace(go.Scatter(x=gini_per_year.index, y=gini_per_year, mode='lines+markers',
+                                 name=f'Classe {classe}'))
+
+    fig.update_layout(
+        title='Évolution Annuelle du Coefficient de Gini par Classe',
+        xaxis_title='Année',
+        yaxis_title='Coefficient de Gini',
+        legend_title='Classe',
+        template='plotly_white'
+    )
+
+    return fig
+
+
+def create_stability_figure():
+    df = model.df_score.copy()
+    if "date_trimestrielle" not in df.columns :
+        df["date_mensuelle"] = pd.to_datetime(df["date_mensuelle"])
+        df['date_trimestrielle'] = df['date_mensuelle'].dt.year.astype(str) + '_' + df['date_mensuelle'].dt.quarter.astype(str)
+
+    fig = go.Figure()
+    stability_df = df.groupby(['date_trimestrielle', 'Classes'])['TARGET'].mean().unstack()
+    stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
+
+    for class_label in stability_df.drop('stability', axis=1).columns:
+        values = stability_df[class_label]
+        fig.add_trace(go.Scatter(x=stability_df.index, y=values, mode='lines+markers',
+                                 name=f'Classe {class_label}'))
+
+    fig.update_layout(
+        title=f'Stabilité de l\'impact sur la cible pour {"Classes"}',
+        xaxis_title='Date',
+        yaxis_title='Proportion de la cible TARGET',
+        legend_title=f'Classes',
+        template='plotly_white'
+    )
+
+    return fig

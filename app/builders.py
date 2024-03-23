@@ -74,7 +74,6 @@ def title_layout():
     return(html.Div(className= 'results-title',
                     children=[html.H3("2.Performances du modèle")]))
 
-
 @render_this(graph_list)
 def stability_plot():
     return html.Div(className='graphpart',
@@ -90,13 +89,32 @@ def title_layout():
 @render_this(graph_list)
 def table():
     grid_score = model.get_grid_score(dataprep.train)
-
     return dash_table.DataTable(grid_score.to_dict('records'), [{"name": i, "id": i} for i in grid_score.columns])
 
 @render_this(graph_list)
 def title_layout():
     return(html.Div(className= 'results-title',
                     children=[html.H3("4.Segmentation")]))
+
+@render_this(graph_list)
+def table():
+    segments = model.get_segmentation()
+    return dash_table.DataTable(segments.to_dict('records'), [{"name": i, "id": i} for i in segments.columns])
+
+@render_this(graph_list)
+def classes_plot():
+    return html.Div([
+    dcc.Dropdown(
+        id='graph-type-selector',
+        className='graphpart',
+        options=[
+            {'label': 'Gini', 'value': 'gini'},
+            {'label': 'Taux', 'value': 'taux'}
+        ],
+        value='gini'  # Valeur par défaut
+    ),
+    dcc.Graph(id='class-display', className='graphpart')
+])
 
 @render_this(graph_list)
 def title_layout():
@@ -126,11 +144,8 @@ def AUC_Metric():
         )
 
 def build_all_panels():
-    # Séparez AUC_Metric des autres panels
     auc_metric_panel = [panel() for panel in graph_list if panel.__name__ == "AUC_Metric"]
     other_panels = [panel() for panel in graph_list if panel.__name__ != "AUC_Metric"]
-
-    # Construisez une disposition avec AUC_Metric à gauche et les autres panels à droite
     layout = html.Div(
         className='panels-container',
         children=[
