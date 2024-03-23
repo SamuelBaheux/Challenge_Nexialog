@@ -2,9 +2,27 @@ import numpy as np
 import plotly.graph_objects as go
 from vars import *
 
+
+custom_layout = {
+    'plot_bgcolor': '#4e5567', # Couleur de fond du graphique
+    'paper_bgcolor': '#2b323f', # Couleur de fond autour du graphique
+    'font': {'color': 'white'}, # Couleur du texte
+    'legend': {'bgcolor': '#2b323f'}, # Couleur de fond de la légende
+    'xaxis': {
+        'title_font': {'color': 'white'}, # Couleur du texte pour le titre de l'axe X
+        'tickfont': {'color': 'white'}, # Couleur des marqueurs de l'axe X
+        'gridcolor': 'darkgrey' # Couleur de la grille de l'axe X
+    },
+    'yaxis': {
+        'title_font': {'color': 'white'}, # Couleur du texte pour le titre de l'axe Y
+        'tickfont': {'color': 'white'}, # Couleur des marqueurs de l'axe Y
+        'gridcolor': 'darkgrey' # Couleur de la grille de l'axe Y
+    }
+}
+
 def calculate_stability(column):
-    #stability_df = dataprep.train.groupby(['date_mensuelle', column])['TARGET'].mean().unstack()
     stability_df = dataprep.train.groupby(['date_mensuelle', column])['TARGET'].mean().unstack()
+    #stability_df = df.groupby(['date_mensuelle', column])['TARGET'].mean().unstack()
 
     stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
     return stability_df
@@ -29,6 +47,7 @@ def plot_stability_plotly(variable):
 
     # Ajustement pour la légende à l'extérieur du graphique
     fig.update_layout(legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99))
+    fig.update_layout(**custom_layout)
 
     return fig
 
@@ -39,13 +58,17 @@ def roc_curve():
     tpr = metrics["tpr"]
     roc_auc = metrics["roc_auc"]
 
+    #fpr = [0.03, 0.05, 0.1, 0.4, 0.6, 0.7]
+    #tpr = [0.03, 0.1, 0.2, 0.5, 0.55, 0.8]
+    #roc_auc = 0.7
+
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines', name='ROC curve (AUC = {:.2f})'.format(roc_auc),
-                             line=dict(color='darkorange', width=2)))
+                             line=dict(width=4)))
 
     fig.add_trace(
-        go.Scatter(x=[0, 1], y=[0, 1], mode='lines', name='Chance', line=dict(color='navy', width=2, dash='dash')))
+        go.Scatter(x=[0, 1], y=[0, 1], mode='lines', name='Chance', line=dict(width=2, dash='dash')))
 
     fig.update_layout(
         title='Receiver Operating Characteristic (ROC) Curve',
@@ -54,6 +77,8 @@ def roc_curve():
         legend=dict(y=0.01, x=0.99, xanchor='right', yanchor='bottom'),
         margin=dict(l=40, r=0, t=40, b=30)
     )
+
+    fig.update_layout(**custom_layout)
 
     return(fig)
 
@@ -87,6 +112,8 @@ def create_gini_figure():
         template='plotly_white'
     )
 
+    fig.update_layout(**custom_layout)
+
     return fig
 
 
@@ -112,5 +139,7 @@ def create_stability_figure():
         legend_title=f'Classes',
         template='plotly_white'
     )
+
+    fig.update_layout(**custom_layout)
 
     return fig

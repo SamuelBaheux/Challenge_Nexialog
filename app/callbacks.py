@@ -16,7 +16,9 @@ from plot_utils import *
 def register_callbacks(app):
     @app.callback(
         [Output('app-tabs', 'value'),
-         Output('app-tabs', 'children'),],
+         Output('Control-chart-tab', 'style'),
+         Output("loading-output", "children"),
+         Output('Control-chart-tab', 'children')],
         [Input('launch-button', 'n_clicks'),
          Input("variables-dropdown", 'value'),
          Input('model-choice', 'value')],
@@ -37,32 +39,14 @@ def register_callbacks(app):
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic)
                 model.run_model()
 
-
             elif model_choice == 'XGBoost' :
                 model.init_model('xgb')
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic)
                 model.run_model()
 
-            return ('tab2', [
-                dcc.Tab(
-                    id="Specs-tab",
-                    label="Paramètres",
-                    value="tab1",
-                    className="custom-tab",
-                    selected_className="custom-tab--selected",
-                    children=create_layout(),
-                ),
-                dcc.Tab(
-                    id="Control-chart-tab",
-                    label="Résultats",
-                    value="tab2",
-                    className="custom-tab",
-                    selected_className="custom-tab--selected",
-                    children=build_all_panels()
-                ),
-            ])
+            return ('tab2', {"display": "flex"} , "loaded", build_all_panels())
 
-        return dash.no_update, dash.no_update
+        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
 
     @app.callback(
         [Output('variables-dropdown', 'value'),
@@ -112,5 +96,4 @@ def register_callbacks(app):
             fig =  create_gini_figure()
         elif selected_graph == 'taux':
             fig =  create_stability_figure()
-
         return fig

@@ -4,11 +4,12 @@ sys.path.append("./script/")
 from dash import dcc, html, dash_table
 import dash_daq as daq
 from data_preparation import ConstantFeatures
-from vars import df, dataprep
+from vars import *
 from plot_utils import *
 
 
-graph_list = []
+graph_left = []
+graph_right = []
 
 def build_tabs():
     return html.Div(
@@ -27,7 +28,14 @@ def build_tabs():
                         className="custom-tab",
                         selected_className="custom-tab--selected",
                         children=create_layout(),
-                    )
+                    ),
+                    dcc.Tab(
+                        id="Control-chart-tab",
+                        label="Resultats",
+                        value="tab2",
+                        className="custom-tab",
+                        selected_className="custom-tab--selected"
+                    ),
                 ],
             )
         ],
@@ -44,18 +52,13 @@ def render_this(render_list):
 
     return decorator
 
-@render_this(graph_list)
+
+@render_this(graph_right)
 def title_layout():
     return(html.Div(className= 'results-title',
-                    style={'textAlign': 'center'},
-                    children=[html.H2("Résultats")]))
+                    children=[html.Br(), html.H3("1.Vérification des hypothèses"),html.Br()]))
 
-@render_this(graph_list)
-def title_layout():
-    return(html.Div(className= 'results-title',
-                    children=[html.H3("1.Vérification des hypothèses")]))
-
-@render_this(graph_list)
+@render_this(graph_right)
 def stability_plot():
     return html.Div(className='graphpart',
              children=[
@@ -69,12 +72,12 @@ def stability_plot():
              ]
     )
 
-@render_this(graph_list)
+@render_this(graph_right)
 def title_layout():
     return(html.Div(className= 'results-title',
-                    children=[html.H3("2.Performances du modèle")]))
+                    children=[html.Br(),html.H3("2.Performances du modèle"),html.Br()]))
 
-@render_this(graph_list)
+@render_this(graph_right)
 def stability_plot():
     return html.Div(className='graphpart',
              children=[
@@ -82,28 +85,67 @@ def stability_plot():
              ]
     )
 
-@render_this(graph_list)
+@render_this(graph_right)
 def title_layout():
     return(html.Div(className= 'results-title',
-                    children=[html.H3("3.Grille de Score")]))
-@render_this(graph_list)
+                    children=[html.Br(),html.H3("3.Grille de Score"),html.Br()]))
+@render_this(graph_right)
 def table():
     grid_score = model.get_grid_score(dataprep.train)
-    return dash_table.DataTable(grid_score.to_dict('records'), [{"name": i, "id": i} for i in grid_score.columns])
 
-@render_this(graph_list)
+    return dash_table.DataTable(grid_score.to_dict('records'), [{"name": i, "id": i} for i in grid_score.columns],
+                                style_header={
+                                    'backgroundColor': 'rgb(76, 82, 94)',
+                                    'color': 'white',
+                                    'fontSize': '20px',
+                                    'height': '50px',  # Augmente la hauteur des cellules de données
+                                    'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
+                                    'padding': '15px'
+                                },
+                                style_data={
+                                    'backgroundColor': 'rgb(78, 85, 103)',
+                                    'color': 'white',
+                                    'fontSize': '14px',
+                                    'height': '40px',  # Augmente la hauteur des cellules de données
+                                    'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
+                                    'padding': '15px'
+                                },
+                                )
+
+
+
+@render_this(graph_right)
 def title_layout():
     return(html.Div(className= 'results-title',
-                    children=[html.H3("4.Segmentation")]))
+                    children=[html.Br(), html.H3("4.Segmentation"),html.Br()]))
 
-@render_this(graph_list)
+@render_this(graph_right)
 def table():
     segments = model.get_segmentation()
-    return dash_table.DataTable(segments.to_dict('records'), [{"name": i, "id": i} for i in segments.columns])
+    return dash_table.DataTable(segments.to_dict('records'), [{"name": i, "id": i} for i in segments.columns],
+                                style_header={
+                                    'backgroundColor': 'rgb(76, 82, 94)',
+                                    'color': 'white',
+                                    'fontSize': '20px',
+                                    'height': '50px',  # Augmente la hauteur des cellules de données
+                                    'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
+                                    'padding': '15px'
+                                },
+                                style_data={
+                                    'backgroundColor': 'rgb(78, 85, 103)',
+                                    'color': 'white',
+                                    'fontSize': '18px',
+                                    'height': '40px',  # Augmente la hauteur des cellules de données
+                                    'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
+                                    'padding': '15px'
+                                },
+                                )
 
-@render_this(graph_list)
+
+@render_this(graph_right)
 def classes_plot():
-    return html.Div([
+    return html.Div(children=[html.Br(),
+                              html.Div([
     dcc.Dropdown(
         id='graph-type-selector',
         className='graphpart',
@@ -111,16 +153,24 @@ def classes_plot():
             {'label': 'Gini', 'value': 'gini'},
             {'label': 'Taux', 'value': 'taux'}
         ],
-        value='gini'  # Valeur par défaut
+        value='gini'
     ),
     dcc.Graph(id='class-display', className='graphpart')
-])
+])])
 
-@render_this(graph_list)
+@render_this(graph_right)
 def title_layout():
     return(html.Div(className= 'results-title',
                     children=[html.H3("5. MOC")]))
-@render_this(graph_list)
+
+
+
+@render_this(graph_left)
+def title_layout():
+    return(html.Div(className= 'results-title',
+                    children=[html.H5("Métriques", style={"text-align":'center'})]))
+
+@render_this(graph_left)
 def AUC_Metric():
     return html.Div(className='metricspart',
              children=[
@@ -137,22 +187,26 @@ def AUC_Metric():
                              "green": [0.7, 1],
                          },
                      },
-                     value=model.get_metrics()["roc_auc"],
+                     value= 0.7, #model.get_metrics()["roc_auc"],
                      showCurrentValue=True,
                  )
              ]
         )
 
+
 def build_all_panels():
-    auc_metric_panel = [panel() for panel in graph_list if panel.__name__ == "AUC_Metric"]
-    other_panels = [panel() for panel in graph_list if panel.__name__ != "AUC_Metric"]
-    layout = html.Div(
+    auc_metric_panel = [panel() for panel in graph_left ]
+    other_panels = [panel() for panel in graph_right]
+    layout = html.Div(children=[
+        html.Div(className="tab2-title",
+                 children=[html.H2("Panneau des résultats")]),
+        html.Div(
         className='panels-container',
         children=[
             html.Div(className='left-panel', children=auc_metric_panel),
             html.Div(className='right-panel', children=other_panels),
         ]
-    )
+    )])
 
     return layout
 
@@ -166,7 +220,7 @@ def create_layout():
         html.Div(className='container', children=[
 
             html.Div(id='md_title_1',children=[
-                dcc.Markdown(id='markdown_title', className='md_title', children='##### 1. Choisir le type de modèle :')
+                dcc.Markdown(id='markdown_title', className='md_title', children='#### 1. Choisir le type de modèle :')
             ]),
 
             html.Div(className='form-input row', children=[
@@ -188,7 +242,7 @@ def create_layout():
 
             html.Br(),
             html.Div(id='md_title_2', children=[
-                dcc.Markdown(id='markdown_title2', className='md_title', children='##### 2. Choisir les variables explicatives :')
+                dcc.Markdown(id='markdown_title2', className='md_title', children='#### 2. Choisir les variables explicatives :')
             ]),
 
             html.Div(className='form-input row', children=[
@@ -213,28 +267,18 @@ def create_layout():
             html.Div(id='variables-info', className='variables-info', children=[dcc.Markdown(id='variables-info-markdown', children='')]),
 
             html.Br(),
-            html.Div(id='md_title_3', children=[
-                dcc.Markdown(id='markdown_title4', className='md_title',
-                             children='##### 3. Choisir la Discrétisation des variables numériques :')
-            ]),
 
-            html.Div(className='form-input row', children=[
-                html.Div(className='form-label col', children=[
-                    html.Label('Choix de Discrétisation', className='label-inline'),
-                ]),
-                html.Div(className='form-dropdown col', children=[
-                    dcc.Dropdown(
-                        id='discret-choice',
-                        options=[
-                            {'label': 'Discrétiser', 'value': True},
-                            {'label': 'Ne pas discrétiser', 'value': False}
-                        ],
-                        value='Discrétiser',
-                        className='dropdown-inline'
-                    ),
-                ]),
-            ]),
-
-            html.Button('Générer', id='launch-button', n_clicks=0, className='button'),
+            html.Div(id="loading-div",
+                     children=[
+                         dcc.Loading(
+                             id="loading",
+                             children=[html.Div(id="loading-output",
+                                                className="loading-page")],
+                             type="circle",
+                             fullscreen=True,
+                         ),
+                     ],
+                     ),
+            html.Button('Lancer la Modélisation', id='launch-button', n_clicks=0, className='button'),
         ])
     ])

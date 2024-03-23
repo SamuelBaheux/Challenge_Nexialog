@@ -14,8 +14,9 @@
 Corps des pages
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 body {
-    background-color: #e7ebeb; /* Couleur de fond de la page */
+    background-color: #2b323f; /* Couleur de fond de la page */
     font-family: 'Arial', sans-serif;
+    font-weight: bold;
 }
 
 /* Nouvelle classe pour le conteneur global */
@@ -24,18 +25,21 @@ body {
 }
 
 .container {
-    background-color: #7c7c7c; /* Couleur de fond du conteneur principal */
-    border-radius: 5px; /* Bordures arrondies */
-    box-shadow: 0 4px 8px rgb(231, 235, 235); /* Ombre légère */
+    background-color: #2b323f; /* Couleur de fond du conteneur principal */
+    border-radius: 5px;
     padding: 2rem;
     width: 100%;
     max-width: calc(100% - 0cm); /* Calculer la largeur en soustrayant la marge des deux côtés */
     margin: auto; /* Centrer le conteneur */
 }
 
+.dash-spinner-container {
+	background-color: #2b323f !important;
+}
+
 .header {
     font-weight: bolder;
-    background-color: #7c7c7c; /* Couleur de fond de l'en-tête */
+    background-color: #2b323f; /* Couleur de fond de l'en-tête */
     color: #ffffff; /* Couleur du texte de l'en-tête */
     padding: 1rem;
     border-radius: 5px 5px 0 0; /* Bordures arrondies en haut du conteneur */
@@ -73,7 +77,8 @@ body {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    background-color: #818181;
+    background-color: #4e5567;
+    border-radius: 10px;
 }
 
 .right-panel{
@@ -81,6 +86,13 @@ body {
     display: flex;
     flex-direction: column;
     padding: 20px;
+}
+
+.tab2-title{
+    color: #ffffff;
+    font-weight: bolder;
+    margin: auto;
+    text-align: center;
 }
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 Textes
@@ -106,15 +118,18 @@ Textes
 }
 
 .results-title{
-    color: #000000;
+    color: #ffffff;
     font-weight: bolder;
 }
+
+
+
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 Boutons
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 .button {
-    background-color: #28a745; /* Couleur de fond du bouton */
+    background-color: #B10031; /* Couleur de fond du bouton */
     color: white; /* Couleur du texte du bouton */
      /* Padding du bouton */
     border: none; /* Aucune bordure */
@@ -126,12 +141,12 @@ Boutons
 }
 
 .button:hover {
-    background-color: #218838; /* Couleur de fond du bouton au survol */
+    background-color: #B10031; /* Couleur de fond du bouton au survol */
 }
 
 .button-inline {
     flex-grow: 1; /* Permet aux boutons de remplir l'espace de manière égale */
-    background-color: #28a745; /* Couleur de fond du bouton */
+    background-color: #B10031; /* Couleur de fond du bouton */
     color: white; /* Couleur du texte du bouton */
     border: none; /* Aucune bordure */
     border-radius: 5px; /* Bordures arrondies */
@@ -170,7 +185,7 @@ Tabs
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 .custom-tabs {
-	background-color: #454545;
+	background-color: #2b323f;
 	text-transform: uppercase;
     color: #f2f2f2;
 	font-weight: 600;
@@ -181,7 +196,7 @@ Tabs
 
 #Specs-tab.custom-tab,
 #Control-chart-tab.custom-tab {
-	background-color: #454545;
+	background-color: #7e7e81;
 	letter-spacing: 1px;
 	color: inherit;
 	border: 0;
@@ -197,7 +212,8 @@ Tabs
 
 #Specs-tab.custom-tab--selected,
 #Control-chart-tab.custom-tab--selected {
-	border-bottom: #002060 solid 4px !important;
+	border-bottom: #B10031 solid 4px !important;
+    background-color: #B10031;
 }
 
 #Specs-tab.custom-tab {
@@ -220,6 +236,6 @@ Tabs
 }
 
 #score-gauge>div>div>div>div {
-	color: #000000 !important;
+	color: #ffffff !important;
 	font-size: 20px;
 }
