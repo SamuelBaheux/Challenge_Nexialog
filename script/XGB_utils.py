@@ -1,7 +1,7 @@
 import re
 
 import pandas as pd
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, f1_score, accuracy_score, precision_score
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
 import shap
@@ -214,6 +214,9 @@ class XGB_model():
 
         return({"roc_auc" : self.roc_auc,
                 "gini" : self.gini,
+                "f1_score": f1_score(self.y_test, round(y_prob)),
+                "accuracy" : accuracy_score(self.y_test, round(y_prob)) ,
+                "precision":precision_score(self.y_test, round(y_prob)),
                 "fpr" : fpr,
                 "tpr" : tpr})
 

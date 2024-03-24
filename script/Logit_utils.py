@@ -1,7 +1,7 @@
 import warnings
 from data_preparation import ConstantFeatures
 
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, f1_score, accuracy_score, precision_score
 from statsmodels.discrete.discrete_model import Logit
 import re
 import numpy as np
@@ -64,11 +64,18 @@ class LogitModel():
     def get_metrics(self):
         pred = self.logit_model.predict(self.df_test)
         fpr, tpr, thresholds = roc_curve(self.df_test["TARGET"], pred)
+
         roc_auc = auc(fpr, tpr)
         gini_coefficient = 2 * roc_auc - 1
-
+        f1 = f1_score(self.df_test["TARGET"], round(pred)) * 100
+        acc = accuracy_score(self.df_test["TARGET"], round(pred)) * 100
+        prec = precision_score(self.df_test["TARGET"], round(pred)) * 100
+        print(f1, acc, prec)
         return({"fpr": fpr,
                 'tpr' : tpr,
+                "f1": f1,
+                "accuracy": acc,
+                "precision": prec,
                 'roc_auc' : roc_auc,
                 'gini' : gini_coefficient})
 

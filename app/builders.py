@@ -93,22 +93,24 @@ def title_layout():
 def table():
     grid_score = model.get_grid_score(dataprep.train)
 
-    return dash_table.DataTable(grid_score.to_dict('records'), [{"name": i, "id": i} for i in grid_score.columns],
+    return dash_table.DataTable(round(grid_score,2).to_dict('records'), [{"name": i, "id": i} for i in grid_score.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
                                     'fontSize': '20px',
                                     'height': '50px',  # Augmente la hauteur des cellules de données
                                     'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
-                                    'padding': '15px'
+                                    'padding': '15px',
+                                    'fontWeight': 'bold'
                                 },
                                 style_data={
                                     'backgroundColor': 'rgb(78, 85, 103)',
                                     'color': 'white',
-                                    'fontSize': '14px',
+                                    'fontSize': '17px',
                                     'height': '40px',  # Augmente la hauteur des cellules de données
                                     'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
-                                    'padding': '15px'
+                                    'padding': '15px',
+                                    'fontWeight': 'normal'
                                 },
                                 )
 
@@ -122,22 +124,24 @@ def title_layout():
 @render_this(graph_right)
 def table():
     segments = model.get_segmentation()
-    return dash_table.DataTable(segments.to_dict('records'), [{"name": i, "id": i} for i in segments.columns],
+    return dash_table.DataTable(round(segments,2).to_dict('records'), [{"name": i, "id": i} for i in segments.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
                                     'fontSize': '20px',
                                     'height': '50px',  # Augmente la hauteur des cellules de données
                                     'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
-                                    'padding': '15px'
+                                    'padding': '15px',
+                                    'fontWeight': 'bold'
                                 },
                                 style_data={
                                     'backgroundColor': 'rgb(78, 85, 103)',
                                     'color': 'white',
-                                    'fontSize': '18px',
+                                    'fontSize': '16px',
                                     'height': '40px',  # Augmente la hauteur des cellules de données
                                     'whiteSpace': 'normal',  # Permet le retour à la ligne dans la cellule
-                                    'padding': '15px'
+                                    'padding': '15px',
+                                    'fontWeight': 'normal'
                                 },
                                 )
 
@@ -187,12 +191,101 @@ def AUC_Metric():
                              "green": [0.7, 1],
                          },
                      },
-                     value= 0.7, #model.get_metrics()["roc_auc"],
+                     value= model.get_metrics()["roc_auc"],
                      showCurrentValue=True,
                  )
              ]
         )
 
+@render_this(graph_left)
+def F1_title_layout():
+    return(html.Div(className= 'results-title',
+                    children=[html.H5("F1 Score", style={"text-align":'center', "fontSize" : "12px"})]))
+
+
+@render_this(graph_left)
+def F1_Metric():
+    return html.Div(className='metricspart',
+             children=[
+                 daq.GraduatedBar(
+                     showCurrentValue=True,
+                     step=5,
+                     color={"gradient": False, "ranges": {"red": [0, 100]}},
+                     max=100,
+                     value=model.get_metrics()["f1"],
+                 )
+             ]
+        )
+
+@render_this(graph_left)
+def Prec_title_layout():
+    return(html.Div(className= 'results-title',
+                    children=[html.H5("Precision", style={"text-align":'center', "fontSize" : "12px"})]))
+
+
+@render_this(graph_left)
+def Precision_Metric():
+    return html.Div(className='metricspart',
+             children=[
+                 daq.GraduatedBar(
+                     showCurrentValue=True,
+                     step=0.01,
+                     max=100,
+                     value=model.get_metrics()["precision"]
+                 )
+             ]
+        )
+
+@render_this(graph_left)
+def accu_title_layout():
+    return(html.Div(className= 'results-title',
+                    children=[html.H5("Accuracy", style={"text-align":'center', "fontSize" : "12px"})]))
+
+
+@render_this(graph_left)
+def accuracy_Metric():
+    return html.Div(className='metricspart',
+             children=[
+                 daq.GraduatedBar(
+                     showCurrentValue=True,
+                     step = 0.01,
+                     max=100,
+                     value=model.get_metrics()["accuracy"]
+                 )
+             ]
+        )
+
+@render_this(graph_left)
+def download_df_score():
+    return html.Div(className= 'results-title',
+                children=[
+                    html.Br(),
+                    html.H5("Artefacts", style={"text-align":'center'}),
+                    html.Br(),
+                    html.Button(["Données"], id="btn_df_score", className='download-button'),
+                    dcc.Download(id="download-df-score"),
+                ], style={'textAlign': 'center'}
+            )
+
+@render_this(graph_left)
+def download_grille_score():
+    return html.Div(className= 'results-title',
+                children=[
+                    html.Br(),
+                    html.Button("Grille de score", id="btn_grille_score", className='download-button'),
+                    dcc.Download(id="download-grille-score"),
+                ], style={'textAlign': 'center'}
+            )
+
+@render_this(graph_left)
+def download_model():
+    return html.Div(className= 'results-title',
+                children=[
+                    html.Br(),
+                    html.Button("Modèle", id="btn_model", className='download-button'),
+                    dcc.Download(id="download-model"),
+                ], style={'textAlign': 'center'}
+            )
 
 def build_all_panels():
     auc_metric_panel = [panel() for panel in graph_left ]
@@ -274,7 +367,7 @@ def create_layout():
                              id="loading",
                              children=[html.Div(id="loading-output",
                                                 className="loading-page")],
-                             type="circle",
+                             type="default",
                              fullscreen=True,
                          ),
                      ],

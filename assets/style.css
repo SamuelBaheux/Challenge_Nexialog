@@ -154,7 +154,19 @@ Boutons
     margin-top: 1rem; /* Marge au-dessus du bouton */
 }
 
-
+.download-button {
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px; /* Ajustement pour un peu plus d'espace */
+  text-align: center;
+  display: inline-block;
+  box-sizing: border-box;
+  background: transparent; /* Wrap the text */
+  line-height: 1.5;
+    width : 270px;
+}
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 DropDowns
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -238,4 +250,15 @@ Tabs
 #score-gauge>div>div>div>div {
 	color: #ffffff !important;
 	font-size: 20px;
+}
+
+.dash-spinner {
+  background-image: url('/assets/download.gif');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.dash-spinner * {
+  display: none !important;
 }

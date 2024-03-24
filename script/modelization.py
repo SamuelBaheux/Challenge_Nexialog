@@ -25,19 +25,19 @@ class Modelization():
         if self.model_name == 'logit':
             GS = GridScore(train_prepared, self.results)
             print("Calcul de la grille de score ✅")
-            grid_score = GS.compute_grid_score()
+            self.grid_score = GS.compute_grid_score()
             self.df_score = GS.get_individual_score()
-            return(grid_score)
+            return(self.grid_score)
 
         else :
             gs = GridScoreXGB(train_prepared, self.results)
             print("Calcul de la grille de score ...")
-            grid_score = gs.compute_grid_score()
+            self.grid_score = gs.compute_grid_score()
             self.df_score = gs.get_individual_score()
-            return(grid_score)
+            return(self.grid_score)
 
     def get_segmentation(self):
-        scores_clients = self.df_score["Score_ind"].sample(20000, replace = True)
+        scores_clients = self.df_score["Score_ind"].sample(30000, replace = False)
         nombre_de_classes = 6
 
         print("Segmentation en cours ... ")
@@ -50,10 +50,10 @@ class Modelization():
         self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(breaks))
 
         resultats = self.df_score.groupby("Classes").agg(
-            moyenne_TARGET=("TARGET", "mean"),
-            nb_individus=("TARGET", "size")
+            Taux_Défaut=("TARGET", "mean"),
+            Population=("TARGET", "size")
         )
-        resultats['taux_individus'] = (resultats['nb_individus'] / self.df_score.shape[0]) * 100
+        resultats['Taux_Individus'] = (resultats['Population'] / self.df_score.shape[0]) * 100
 
         return(resultats)
 

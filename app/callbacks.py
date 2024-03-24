@@ -1,3 +1,4 @@
+import pickle
 import sys
 sys.path.append('./script')
 
@@ -97,3 +98,28 @@ def register_callbacks(app):
         elif selected_graph == 'taux':
             fig =  create_stability_figure()
         return fig
+
+    @app.callback(
+        Output("download-df-score", "data"),
+        Input("btn_df_score", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def download_df_score(n_clicks):
+        return dcc.send_data_frame(model.df_score.to_csv, "data_score.csv", index=False)
+
+    @app.callback(
+        Output("download-grille-score", "data"),
+        Input("btn_grille_score", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def download_grille_score(n_clicks):
+        return dcc.send_data_frame(model.grid_score.to_csv, "grille_score.csv", index=False)
+
+    @app.callback(
+        Output("download-model", "data"),
+        Input("btn_model", "n_clicks"),
+        prevent_initial_call=True
+    )
+    def download_model(n_clicks):
+        serialized_model = pickle.dumps(model.model)
+        return dcc.send_bytes(serialized_model, "model.pickle")
