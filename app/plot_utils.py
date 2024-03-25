@@ -2,7 +2,6 @@ import numpy as np
 import plotly.graph_objects as go
 from vars import *
 
-
 custom_layout = {
     'plot_bgcolor': '#4e5567', # Couleur de fond du graphique
     'paper_bgcolor': '#2b323f', # Couleur de fond autour du graphique

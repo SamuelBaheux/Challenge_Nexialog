@@ -1,13 +1,12 @@
 /* Table of contents
 ––––––––––––––––––––––––––––––––––––––––––––––––––
-- Banner
-- Modal
+- Corps des pages
+- Textes
+- Boutons
+- DropDowns
 - Tabs
-- Main Dashboard Tab
-- Measurement Tab
-- Tables/Dropdown
-- Containers
-- Media Queries
+- Widgets
+- Loading
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -103,7 +102,6 @@ Textes
     font-weight: bolder;/* Enlever la marge par défaut du h1 */
 }
 
-/* Adaptation des classes pour les labels et les inputs en utilisant la convention BEM */
 .form-label {
     display: block; /* Affichage block pour que le label prenne toute la largeur */
     margin-bottom: .5rem;
@@ -121,7 +119,6 @@ Textes
     color: #ffffff;
     font-weight: bolder;
 }
-
 
 
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -236,6 +233,11 @@ Tabs
 	margin-left: 3px;
 }
 
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Widgets
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
 #score-gauge>div,
 #score-gauge>div>div,
 #score-gauge>div>div>div {
@@ -251,6 +253,10 @@ Tabs
 	color: #ffffff !important;
 	font-size: 20px;
 }
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Loading
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 .dash-spinner {
   background-image: url('/assets/download.gif');

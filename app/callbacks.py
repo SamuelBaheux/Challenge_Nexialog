@@ -1,16 +1,14 @@
 import pickle
 import sys
+
 sys.path.append('./script')
 
 from dash.dependencies import Input, Output, State
 import dash
-from dash import html, dcc
+from dash import dcc
 
-from builders import create_layout, build_all_panels
+from builders import build_all_panels
 from data_preparation import *
-from Logit_utils import *
-from XGB_utils import *
-from vars import *
 from plot_utils import *
 
 
@@ -24,10 +22,9 @@ def register_callbacks(app):
          Input("variables-dropdown", 'value'),
          Input('model-choice', 'value')],
         prevent_initial_call=True)
-
     def update_result(n_clicks, features, model_choice):
         if n_clicks and n_clicks > 0:
-            if model_choice is None or features is None :
+            if model_choice is None or features is None:
                 return dash.no_update
 
             print("Initialisation des données")
@@ -35,17 +32,17 @@ def register_callbacks(app):
             train_prepared = dataprep.get_prepared_data()
 
             print("Entraînement du modèle")
-            if model_choice == 'Logit' :
+            if model_choice == 'Logit':
                 model.init_model('logit')
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic)
                 model.run_model()
 
-            elif model_choice == 'XGBoost' :
+            elif model_choice == 'XGBoost':
                 model.init_model('xgb')
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic)
                 model.run_model()
 
-            return ('tab2', {"display": "flex"} , "loaded", build_all_panels())
+            return ('tab2', {"display": "flex"}, "loaded", build_all_panels())
 
         return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
 
@@ -80,6 +77,7 @@ def register_callbacks(app):
             new_values = existing_values
 
         return new_values, info_text
+
     @app.callback(
         Output('stability-graph', 'figure'),
         [Input('stability-dropdown', 'value')]
@@ -94,9 +92,9 @@ def register_callbacks(app):
     )
     def update_graph(selected_graph):
         if selected_graph == 'gini':
-            fig =  create_gini_figure()
+            fig = create_gini_figure()
         elif selected_graph == 'taux':
-            fig =  create_stability_figure()
+            fig = create_stability_figure()
         return fig
 
     @app.callback(

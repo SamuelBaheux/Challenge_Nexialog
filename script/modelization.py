@@ -1,7 +1,7 @@
 import jenkspy
 
-from Logit_utils import *
-from XGB_utils import *
+from logit_utils import *
+from xgb_utils import *
 
 class Modelization():
     def init_model(self, model):
