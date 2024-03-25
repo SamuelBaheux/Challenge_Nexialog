@@ -1,21 +1,22 @@
 import numpy as np
 import plotly.graph_objects as go
 from vars import *
+import plotly.express as px
 
 custom_layout = {
-    'plot_bgcolor': '#4e5567', # Couleur de fond du graphique
-    'paper_bgcolor': '#2b323f', # Couleur de fond autour du graphique
-    'font': {'color': 'white'}, # Couleur du texte
-    'legend': {'bgcolor': '#2b323f'}, # Couleur de fond de la légende
+    'plot_bgcolor': '#4e5567',
+    'paper_bgcolor': '#2b323f',
+    'font': {'color': 'white'},
+    'legend': {'bgcolor': '#2b323f'},
     'xaxis': {
-        'title_font': {'color': 'white'}, # Couleur du texte pour le titre de l'axe X
-        'tickfont': {'color': 'white'}, # Couleur des marqueurs de l'axe X
-        'gridcolor': 'darkgrey' # Couleur de la grille de l'axe X
+        'title_font': {'color': 'white'},
+        'tickfont': {'color': 'white'},
+        'gridcolor': 'darkgrey'
     },
     'yaxis': {
-        'title_font': {'color': 'white'}, # Couleur du texte pour le titre de l'axe Y
-        'tickfont': {'color': 'white'}, # Couleur des marqueurs de l'axe Y
-        'gridcolor': 'darkgrey' # Couleur de la grille de l'axe Y
+        'title_font': {'color': 'white'},
+        'tickfont': {'color': 'white'},
+        'gridcolor': 'darkgrey'
     }
 }
 
@@ -28,23 +29,21 @@ def calculate_stability(column):
 
 def plot_stability_plotly(variable):
     stability_df = calculate_stability(variable)
-
-    # Création du graphique avec Plotly
     fig = go.Figure()
 
-    # Ajout des tracés pour chaque classe
     for class_label in stability_df.drop('stability', axis=1).columns:
         values = stability_df[class_label]
-        fig.add_trace(go.Scatter(x=stability_df.index, y=values, mode='lines+markers', name=f'Classe {class_label}'))
+        fig.add_trace(go.Scatter(x=stability_df.index,
+                                 y=values,
+                                 mode='lines+markers',
+                                 name=f'Classe {class_label}'))
 
-    # Mise en forme du graphique
     fig.update_layout(title=f'Stabilité de l\'impact sur la cible pour {variable}',
                       xaxis_title='Date',
                       yaxis_title='Proportion de la cible TARGET',
                       legend_title='Classes de_binned',
                       margin=dict(l=20, r=20, t=40, b=20))
 
-    # Ajustement pour la légende à l'extérieur du graphique
     fig.update_layout(legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99))
     fig.update_layout(**custom_layout)
 
@@ -63,19 +62,22 @@ def roc_curve():
 
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines', name='ROC curve (AUC = {:.2f})'.format(roc_auc),
+    fig.add_trace(go.Scatter(x=fpr,
+                             y=tpr,
+                             mode='lines',
+                             name='ROC curve (AUC = {:.2f})'.format(roc_auc),
                              line=dict(width=4)))
 
-    fig.add_trace(
-        go.Scatter(x=[0, 1], y=[0, 1], mode='lines', name='Chance', line=dict(width=2, dash='dash')))
+    fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1],
+                             mode='lines',
+                             name='Chance',
+                             line=dict(width=2, dash='dash')))
 
-    fig.update_layout(
-        title='Receiver Operating Characteristic (ROC) Curve',
-        xaxis_title='False Positive Rate',
-        yaxis_title='True Positive Rate',
-        legend=dict(y=0.01, x=0.99, xanchor='right', yanchor='bottom'),
-        margin=dict(l=40, r=0, t=40, b=30)
-    )
+    fig.update_layout(title='Receiver Operating Characteristic (ROC) Curve',
+                      xaxis_title='False Positive Rate',
+                      yaxis_title='True Positive Rate',
+                      legend=dict(y=0.01, x=0.99, xanchor='right', yanchor='bottom'),
+                      margin=dict(l=40, r=0, t=40, b=30))
 
     fig.update_layout(**custom_layout)
 
@@ -103,13 +105,11 @@ def create_gini_figure():
         fig.add_trace(go.Scatter(x=gini_per_year.index, y=gini_per_year, mode='lines+markers',
                                  name=f'Classe {classe}'))
 
-    fig.update_layout(
-        title='Évolution Annuelle du Coefficient de Gini par Classe',
-        xaxis_title='Année',
-        yaxis_title='Coefficient de Gini',
-        legend_title='Classe',
-        template='plotly_white'
-    )
+    fig.update_layout(title='Évolution Annuelle du Coefficient de Gini par Classe',
+                      xaxis_title='Année',
+                      yaxis_title='Coefficient de Gini',
+                      legend_title='Classe',
+                      template='plotly_white')
 
     fig.update_layout(**custom_layout)
 
@@ -128,17 +128,30 @@ def create_stability_figure():
 
     for class_label in stability_df.drop('stability', axis=1).columns:
         values = stability_df[class_label]
-        fig.add_trace(go.Scatter(x=stability_df.index, y=values, mode='lines+markers',
+        fig.add_trace(go.Scatter(x=stability_df.index,
+                                 y=values,
+                                 mode='lines+markers',
                                  name=f'Classe {class_label}'))
 
-    fig.update_layout(
-        title=f'Stabilité de l\'impact sur la cible pour {"Classes"}',
-        xaxis_title='Date',
-        yaxis_title='Proportion de la cible TARGET',
-        legend_title=f'Classes',
-        template='plotly_white'
-    )
+    fig.update_layout(title=f'Stabilité de l\'impact sur la cible pour {"Classes"}',
+                      xaxis_title='Date',
+                      yaxis_title='Proportion de la cible TARGET',
+                      legend_title=f'Classes',
+                      template='plotly_white')
 
     fig.update_layout(**custom_layout)
 
     return fig
+
+def plot_shap_values():
+    if model.model_name == "xgb" :
+        shap_df = pd.DataFrame(model.model.shap_values, columns=model.model.X_train.columns).sample(1000)
+        #Rajouter un stratify par rapport la target
+
+        fig = px.strip(shap_df, orientation='h', stripmode='overlay')
+
+        fig.update_layout(title='Bee swarm plot des valeurs de Shapley',
+                          xaxis_title='Valeur de Shapley (impact sur la sortie du modèle)',
+                          yaxis_title='Caractéristique')
+
+        return(fig)

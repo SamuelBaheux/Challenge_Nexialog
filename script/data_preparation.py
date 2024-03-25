@@ -251,7 +251,7 @@ class DashDataPreparation():
 
         for var in var_3_bins:
             if var in self.num_vars:
-                dict_variable[var] = 3
+                dict_variable[var] = 2
 
         self.discretizer = Genetic_Numerical_Discretisation(self.train, dict_variable, self.plot)
         self.train = self.discretizer.run_discretisation()

@@ -67,15 +67,9 @@ class LogitModel():
 
         roc_auc = auc(fpr, tpr)
         gini_coefficient = 2 * roc_auc - 1
-        f1 = f1_score(self.df_test["TARGET"], round(pred)) * 100
-        acc = accuracy_score(self.df_test["TARGET"], round(pred)) * 100
-        prec = precision_score(self.df_test["TARGET"], round(pred)) * 100
-        print(f1, acc, prec)
+
         return({"fpr": fpr,
                 'tpr' : tpr,
-                "f1": f1,
-                "accuracy": acc,
-                "precision": prec,
                 'roc_auc' : roc_auc,
                 'gini' : gini_coefficient})
 

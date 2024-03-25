@@ -146,6 +146,7 @@ def stability_plot():
                     children=[
                         dcc.Dropdown(
                             id='stability-dropdown',
+                            className='dropdown-results',
                             options=[{'label': label, 'value': col} for col, label in
                                      zip(*dataprep.get_explicative_features())],
                             value=dataprep.get_explicative_features()[0][0],
@@ -169,6 +170,17 @@ def stability_plot():
                         dcc.Graph(figure=roc_curve())
                     ]
                     )
+
+@render_this(graph_right)
+def shap_values():
+    if model.model_name == 'xgb' :
+        return html.Div(className='graphpart',
+                        children=[
+                            dcc.Graph(figure=plot_shap_values())
+                        ]
+                        )
+    else :
+        return html.Div()
 
 
 @render_this(graph_right)

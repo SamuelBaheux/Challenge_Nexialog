@@ -30,6 +30,7 @@ class Modelization():
             return(self.grid_score)
 
         else :
+            print(self.results)
             gs = GridScoreXGB(train_prepared, self.results)
             print("Calcul de la grille de score ...")
             self.grid_score = gs.compute_grid_score()
