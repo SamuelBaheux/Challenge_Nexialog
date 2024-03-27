@@ -47,15 +47,13 @@ def register_callbacks(app):
         return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
 
     @app.callback(
-        [Output('variables-dropdown', 'value'),
-         Output('variables-info-markdown', 'children')],
+        Output('variables-dropdown', 'value'),
         [Input('interpretabilite-button', 'n_clicks'),
          Input('performance-button', 'n_clicks')],
         [State('variables-dropdown', 'value')]
     )
     def update_dropdown_variables(interpretabilite_n_clicks, performance_n_clicks, existing_values):
         ctx = dash.callback_context
-        info_text = ''
 
         if not ctx.triggered:
             button_id = 'No clicks yet'
@@ -65,18 +63,28 @@ def register_callbacks(app):
         if button_id == 'interpretabilite-button':
             new_values = ['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE', 'RATE_DOWN_PAYMENT',
                           'AMT_PAYMENT', 'NAME_INCOME_TYPE', 'OCCUPATION_TYPE']
-            info_text = INFO_VAR_INT
 
         elif button_id == 'performance-button':
             new_values = ['AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM', 'EXT_SOURCE_2',
                           'EXT_SOURCE_1', 'EXT_SOURCE_3', 'NAME_INCOME_TYPE',
                           "DAYS_EMPLOYED"]
-            info_text = INFO_VAR_PERF
 
         else:
             new_values = existing_values
 
-        return new_values, info_text
+        return new_values
+
+    @app.callback(
+        Output('variables-info-markdown', 'children'),
+        [Input('variables-dropdown', 'value')]
+    )
+    def update_dropdown_variables(selected_features):
+        if selected_features is not None :
+            info = "Détail des variables choisies pour la modélisation :\n"
+            for features in selected_features :
+                info += f"- {features} : {dictionnaire[dictionnaire['Row'] == features]['Description'].values[0]}\n"
+
+            return info
 
     @app.callback(
         Output('stability-graph', 'figure'),
