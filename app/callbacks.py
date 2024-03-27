@@ -13,6 +13,30 @@ from plot_utils import *
 
 
 def register_callbacks(app):
+    @app.callback([Output('output-data-upload', 'children'),
+                   Output('variables-dropdown', 'options')],
+                  [Input('upload-data', 'contents')],
+                  [State('upload-data', 'filename')])
+    def update_output(list_of_contents, list_of_names):
+        if list_of_contents is None or not list_of_contents:
+            return [html.Div(['Aucun fichier téléchargé.']), []]
+
+        if not isinstance(list_of_contents, list):
+            list_of_contents = [list_of_contents]
+        if not isinstance(list_of_names, list):
+            list_of_names = [list_of_names]
+
+        children = []
+        options = []
+
+        for c, n in zip(list_of_contents, list_of_names):
+            results = parse_contents(c, n)
+            if results is not None:
+                dataprep.initialize_df(results[0])
+                options = dataprep.get_features()
+                children = [html.Div(html.H5(f'Le fichier {results[1]} a été téléchargé avec succès'))]
+
+        return children, options
     @app.callback(
         [Output('app-tabs', 'value'),
          Output('Control-chart-tab', 'style'),

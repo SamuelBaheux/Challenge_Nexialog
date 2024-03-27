@@ -128,9 +128,18 @@ class Genetic_Numerical_Discretisation():
 
 class DashDataPreparation():
     def __init__(self):
-        self.train = pd.read_csv('./data/application_train_vf.csv')
         self.nan_treshold = 0.3
         self.plot = False
+        self.train = None
+
+    def initialize_df(self, df):
+        self.train = df
+
+    def get_features(self):
+        if self.train is not None:
+            return(self.train.columns.to_list())
+        else :
+            return []
 
     def initialize_data(self, selected_vars):
         selected_vars.extend(["date_mensuelle", "TARGET", 'SK_ID_CURR'])

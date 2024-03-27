@@ -52,6 +52,13 @@ def create_layout():
 
         html.Div(className='container', children=[
 
+            html.Div([dcc.Upload(id='upload-data', className = "uploader", children=html.Div(
+                    ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
+                )), html.Div(id='output-data-upload', style={"color":"#ffffff", "textAlign":"center"}),
+            ]),
+
+            html.Br(),
+
             html.Div(id='md_title_1', children=[
                 dcc.Markdown(id='markdown_title', className='md_title', children='#### 1. Choisir le type de modèle :')
             ]),
@@ -85,7 +92,7 @@ def create_layout():
                 ]),
                 html.Div(className='form-dropdown col', children=[
                     dcc.Dropdown(id='variables-dropdown',
-                                 options=ConstantFeatures().all_features,
+                                 options=dataprep.get_features(),
                                  multi=True,
                                  placeholder="Choisir des variables",
                                  className='dropdown-inline', ),
@@ -118,6 +125,7 @@ def create_layout():
             html.Button('Lancer la Modélisation', id='launch-button', n_clicks=0, className='button'),
         ])
     ])
+
 
 
 ################################################ ONGLET 2 : RÉSULTATS #################################################
