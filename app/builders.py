@@ -4,7 +4,6 @@ sys.path.append("./script/")
 
 from dash import dcc, html, dash_table
 import dash_daq as daq
-from data_preparation import ConstantFeatures
 from plot_utils import *
 
 graph_left = []
@@ -81,9 +80,50 @@ def create_layout():
             ]),
 
             html.Br(),
+            html.Div(id='md_title_3', children=[
+                dcc.Markdown(id='markdown_title3', className='md_title',
+                             children='#### 2. Choisir la variable cible :')
+            ]),
+
+            html.Div(className='form-input row', children=[
+                html.Div(className='form-label col', children=[
+                    html.Label('Choix de la cible', className='label-inline'),
+                ]),
+                html.Div(className='form-dropdown col', children=[
+                    dcc.Dropdown(id='target-dropdown',
+                                 options=dataprep.get_features(),
+                                 multi=False,
+                                 placeholder="Choisir la cible",
+                                 className='dropdown-inline', ),
+                ])
+            ]),
+
+            html.Br(),
+            html.Div(id='md_title_4', children=[
+                dcc.Markdown(id='markdown_title4', className='md_title',
+                             children='#### 3. Choisir la variable de date :')
+            ]),
+
+            html.Div(className='form-input row', children=[
+                html.Div(className='form-label col', children=[
+                    html.Label('Choix de la date', className='label-inline'),
+                ]),
+                html.Div(className='form-dropdown col', children=[
+                    dcc.Dropdown(id='date-dropdown',
+                                 options=dataprep.get_features(),
+                                 multi=False,
+                                 placeholder="Choisir la date",
+                                 className='dropdown-inline', ),
+                ])
+            ]),
+
+            html.Div(id='hidden-div'),
+            html.Div(id='hidden-div1'),
+
+            html.Br(),
             html.Div(id='md_title_2', children=[
                 dcc.Markdown(id='markdown_title2', className='md_title',
-                             children='#### 2. Choisir les variables explicatives :')
+                             children='#### 4. Choisir les variables explicatives :')
             ]),
 
             html.Div(className='form-input row', children=[
@@ -199,7 +239,7 @@ def title_layout():
 
 @render_this(graph_right)
 def table():
-    grid_score = model.get_grid_score(dataprep.train)
+    grid_score = model.get_grid_score(dataprep.train, dataprep.target)
 
     return dash_table.DataTable(round(grid_score, 2).to_dict('records'),
                                 [{"name": i, "id": i} for i in grid_score.columns],
@@ -232,7 +272,7 @@ def title_layout():
 
 @render_this(graph_right)
 def table():
-    segments = model.get_segmentation()
+    segments = model.get_segmentation(dataprep.target)
     return dash_table.DataTable(round(segments, 2).to_dict('records'), [{"name": i, "id": i} for i in segments.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
@@ -286,8 +326,8 @@ def title_layout():
                                html.Div(children=[dcc.Markdown(
                                    f'''
                                   - {model.df_score.shape[0]} observations.
-                                  - {model.df_score["TARGET"].sum()} défauts.
-                                  - {round(model.df_score["TARGET"].mean(), 2) * 100} % de taux de défaut.
+                                  - {model.df_score[dataprep.target].sum()} défauts.
+                                  - {round(model.df_score[dataprep.target].mean(), 2) * 100} % de taux de défaut.
                                   '''
                                )]),
                                html.Br()

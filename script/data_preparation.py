@@ -14,9 +14,11 @@ warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 
 
 class Genetic_Numerical_Discretisation():
-    def __init__(self, train, variables_dict, plot=False):
+    def __init__(self, train, variables_dict, target, date, plot=False):
         self.train = train
         self.variables_dict = variables_dict
+        self.target = target
+        self.date = date
         self.plot = plot
 
     def evalChi2(self, individual, variable, dataset):
@@ -29,7 +31,7 @@ class Genetic_Numerical_Discretisation():
         disc_var = np.digitize(dataset[variable].dropna(), thresholds)
         dataset['disc_var'] = disc_var
 
-        contingency_table = pd.crosstab(dataset['disc_var'], dataset['TARGET'])
+        contingency_table = pd.crosstab(dataset['disc_var'], dataset[self.target])
         chi2, p, dof, expected = chi2_contingency(contingency_table)
 
         return chi2,
@@ -49,7 +51,7 @@ class Genetic_Numerical_Discretisation():
         axes[0].legend(title='Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
         axes[0].tick_params(axis='x', rotation=45)
 
-        stability_taux_df = self.train.groupby(['date_trimestrielle', variable])['TARGET'].mean().unstack()
+        stability_taux_df = self.train.groupby(['date_trimestrielle', variable])[self.target].mean().unstack()
         stability_taux_df['stability'] = stability_taux_df.std(axis=1) / stability_taux_df.mean(axis=1)
 
         for class_label in stability_taux_df.drop('stability', axis=1).columns:
@@ -58,7 +60,7 @@ class Genetic_Numerical_Discretisation():
 
         axes[1].set_title(f'Stabilité de taux pour {variable}')
         axes[1].set_xlabel('Date')
-        axes[1].set_ylabel('Proportion de la cible TARGET')
+        axes[1].set_ylabel('Proportion de la cible')
         axes[1].legend(title='Classes de_binned', loc='upper left', bbox_to_anchor=(1, 1))
         axes[1].tick_params(axis='x', rotation=45)
 
@@ -66,7 +68,7 @@ class Genetic_Numerical_Discretisation():
         plt.show()
 
     def genetic_discretisation(self, train_set, variable, nb_classes_max):
-        temp = train_set[[variable, 'TARGET']].copy()
+        temp = train_set[[variable, self.target]].copy()
         NB_GEN = 5
         POP_SIZE = 100
         CXPB, MUTPB = 0.5, 0.2
@@ -111,9 +113,9 @@ class Genetic_Numerical_Discretisation():
         return variable, seuils_uniques, dict_renommage
 
     def run_discretisation(self):
-        self.train["date_mensuelle"] = pd.to_datetime(self.train["date_mensuelle"])
-        self.train['date_trimestrielle'] = (self.train['date_mensuelle'].dt.year.astype(str) + '_' +
-                                            self.train['date_mensuelle'].dt.quarter.astype(str))
+        self.train[self.date] = pd.to_datetime(self.train[self.date])
+        self.train['date_trimestrielle'] = (self.train[self.date].dt.year.astype(str) + '_' +
+                                            self.train[self.date].dt.quarter.astype(str))
 
         self.intervalles_dic = {}
 
@@ -131,9 +133,19 @@ class DashDataPreparation():
         self.nan_treshold = 0.3
         self.plot = False
         self.train = None
+        self.target = None
+        self.date = None
 
     def initialize_df(self, df):
         self.train = df
+
+    def init_target(self, target):
+        print(target)
+        self.target = target
+
+    def init_date(self, date):
+        print(date)
+        self.date = date
 
     def get_features(self):
         if self.train is not None:
@@ -142,7 +154,10 @@ class DashDataPreparation():
             return []
 
     def initialize_data(self, selected_vars):
-        selected_vars.extend(["date_mensuelle", "TARGET", 'SK_ID_CURR'])
+        selected_vars.extend([self.date, self.target])
+        if "SK_ID_CURR" in self.train.columns :
+            selected_vars.extend(["SK_ID_CURR"])
+
         self.vars = selected_vars
 
         self.add_external_features(self.vars)
@@ -262,7 +277,11 @@ class DashDataPreparation():
             if var in self.num_vars:
                 dict_variable[var] = 2
 
-        self.discretizer = Genetic_Numerical_Discretisation(self.train, dict_variable, self.plot)
+        for var in self.num_vars :
+            if var not in dict_variable.keys():
+                dict_variable[var] = 2
+
+        self.discretizer = Genetic_Numerical_Discretisation(self.train, dict_variable, self.target, self.date, self.plot)
         self.train = self.discretizer.run_discretisation()
 
         print("Variables numériques discrétisées ✅")
@@ -344,7 +363,7 @@ class DashDataPreparation():
             if var in self.train.columns :
                 self.train[var] = self.train[var].replace(replacement_dict)
 
-        self.train["TARGET"] = self.train["TARGET"].astype("int")
+        self.train[self.target] = self.train[self.target].astype("int")
 
     def get_prepared_data(self):
         self.numericals_discretisation()
@@ -360,7 +379,7 @@ class DashDataPreparation():
 
         already_prepared_bis = [var for var in already_prepared if var in self.train.columns]
 
-        other = ["date_mensuelle", "TARGET"]
+        other = [self.date, self.target]
 
         final_features = other + numericals + categoricals + already_prepared_bis
         self.train = self.train[final_features]
@@ -368,8 +387,8 @@ class DashDataPreparation():
 
     def get_explicative_features(self):
         features = self.train.columns.to_list()
-        features.remove("TARGET")
-        features.remove("date_mensuelle")
+        features.remove(self.target)
+        features.remove(self.date)
 
         features_label = [var.split('_disc_int')[0] for var in features]
         features_label = [var.split('_discret')[0] for var in features_label]
@@ -378,16 +397,6 @@ class DashDataPreparation():
 
 class ConstantFeatures():
     def __init__(self):
-        self.all_features = ['AMT_GOODS_PRICE','DAYS_LAST_PHONE_CHANGE','AMT_CREDIT','AMT_ANNUITY',
-                             'REGION_POPULATION_RELATIVE','DAYS_ID_PUBLISH','AMT_REQ_CREDIT_BUREAU_MON',
-                             'YEARS_BEGINEXPLUATATION_MEDI','YEARS_BEGINEXPLUATATION_MODE',
-                             'YEARS_BEGINEXPLUATATION_AVG','DAYS_FIRST_DRAWING','RATE_DOWN_PAYMENT','AMT_PAYMENT',
-                             'AMT_CREDIT_SUM','EXT_SOURCE_2','EXT_SOURCE_1','EXT_SOURCE_3','NAME_EDUCATION_TYPE',
-                             'NAME_FAMILY_STATUS','FLAG_EMP_PHONE','REG_CITY_NOT_LIVE_CITY','REG_CITY_NOT_WORK_CITY',
-                             'REGION_RATING_CLIENT','FLAG_WORK_PHONE','FLAG_PHONE','LIVE_CITY_NOT_WORK_CITY',
-                             'FLAG_OWN_CAR','FLAG_OWN_REALTY','CODE_GENDER','REGION_RATING_CLIENT_W_CITY',
-                             'OCCUPATION_TYPE','NAME_CONTRACT_TYPE','NAME_INCOME_TYPE','DAYS_CREDIT_ENDDATE',
-                             'AMT_CREDIT_SUM_DEBT','DAYS_EMPLOYED']
 
         self.dic_ref = {'AMT_GOODS_PRICE_disc_int': 'max', 'DAYS_LAST_PHONE_CHANGE_disc_int': 'min',
                         'AMT_CREDIT_disc_int': 'min','AMT_ANNUITY_disc_int': 'min',

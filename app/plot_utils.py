@@ -3,11 +3,8 @@ import plotly.graph_objects as go
 from vars import *
 import plotly.express as px
 import base64
-import datetime
 import io
-
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 import pandas as pd
 
 custom_layout = {
@@ -28,8 +25,8 @@ custom_layout = {
 }
 
 def calculate_stability(column):
-    stability_df = dataprep.train.groupby(['date_mensuelle', column])['TARGET'].mean().unstack()
-    #stability_df = df.groupby(['date_mensuelle', column])['TARGET'].mean().unstack()
+    stability_df = dataprep.train.groupby([dataprep.date, column])[dataprep.target].mean().unstack()
+    #stability_df = df.groupby([dataprep.date, column])[dataprep.target].mean().unstack()
 
     stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
     return stability_df
@@ -100,13 +97,13 @@ def gini_coefficient(values):
 def create_gini_figure():
     df = model.df_score.copy()
     if "date_trimestrielle" not in df.columns :
-        df["date_mensuelle"] = pd.to_datetime(df["date_mensuelle"])
-        df['date_trimestrielle'] = df['date_mensuelle'].dt.year.astype(str) + '_' + df['date_mensuelle'].dt.quarter.astype(str)
+        df[dataprep.date] = pd.to_datetime(df[dataprep.date])
+        df['date_trimestrielle'] = df[dataprep.date].dt.year.astype(str) + '_' + df[dataprep.date].dt.quarter.astype(str)
 
     fig = go.Figure()
     for classe in range(1, 8):
-        df_classe = df[df['Classes'] == classe][["date_trimestrielle", "TARGET"]]
-        grouped = df_classe.groupby(df_classe['date_trimestrielle'])["TARGET"]
+        df_classe = df[df['Classes'] == classe][["date_trimestrielle", dataprep.target]]
+        grouped = df_classe.groupby(df_classe['date_trimestrielle'])[dataprep.target]
         gini_per_year = grouped.apply(gini_coefficient)
 
         fig.add_trace(go.Scatter(x=gini_per_year.index, y=gini_per_year, mode='lines+markers',
@@ -126,11 +123,11 @@ def create_gini_figure():
 def create_stability_figure():
     df = model.df_score.copy()
     if "date_trimestrielle" not in df.columns :
-        df["date_mensuelle"] = pd.to_datetime(df["date_mensuelle"])
-        df['date_trimestrielle'] = df['date_mensuelle'].dt.year.astype(str) + '_' + df['date_mensuelle'].dt.quarter.astype(str)
+        df[dataprep.date] = pd.to_datetime(df[dataprep.date])
+        df['date_trimestrielle'] = df[dataprep.date].dt.year.astype(str) + '_' + df[dataprep.date].dt.quarter.astype(str)
 
     fig = go.Figure()
-    stability_df = df.groupby(['date_trimestrielle', 'Classes'])['TARGET'].mean().unstack()
+    stability_df = df.groupby(['date_trimestrielle', 'Classes'])[dataprep.target].mean().unstack()
     stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
 
     for class_label in stability_df.drop('stability', axis=1).columns:
@@ -142,7 +139,7 @@ def create_stability_figure():
 
     fig.update_layout(title=f'Stabilité de l\'impact sur la cible pour {"Classes"}',
                       xaxis_title='Date',
-                      yaxis_title='Proportion de la cible TARGET',
+                      yaxis_title='Proportion de la cible',
                       legend_title=f'Classes',
                       template='plotly_white')
 
@@ -153,7 +150,6 @@ def create_stability_figure():
 def plot_shap_values():
     if model.model_name == "xgb" :
         shap_df = pd.DataFrame(model.model.shap_values, columns=model.model.X_train.columns).sample(1000)
-        #Rajouter un stratify par rapport la target
 
         fig = px.strip(shap_df, orientation='h', stripmode='overlay')
 
@@ -161,25 +157,10 @@ def plot_shap_values():
                           xaxis_title='Valeur de Shapley (impact sur la sortie du modèle)',
                           yaxis_title='Caractéristique')
 
+        fig.update_layout(**custom_layout)
+
         return(fig)
 
 
-def parse_contents(contents, filename):
-    content_type, content_string = contents.split(',')
 
-    decoded = base64.b64decode(content_string)
-    try:
-        if 'csv' in filename:
-            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), index_col=[0])
-        elif 'xls' in filename:
-            df = pd.read_excel(io.BytesIO(decoded))
-        else:
-            return html.Div(['Type de fichier non pris en charge.'])
-    except Exception as e:
-        print(e)
-        return html.Div([
-            'Il y a eu une erreur lors du traitement de ce fichier.'
-        ])
-
-    return [df, filename]
 

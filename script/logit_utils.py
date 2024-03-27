@@ -15,15 +15,17 @@ class LogitModel():
     def __init__(self):
         self.reference_dic = ConstantFeatures().dic_ref
 
-    def init_data(self, df, intervalles_dic):
+    def init_data(self, df, intervalles_dic, target, date):
         self.df = df
         self.intervalles_dic = intervalles_dic
+        self.target = target
+        self.date = date
 
     def get_features_list(self):
         self.features = self.df.columns.to_list()
 
-        self.features.remove("date_mensuelle")
-        self.features.remove("TARGET")
+        self.features.remove(self.date)
+        self.features.remove(self.target)
         try:
             self.features.remove("date_trimestrielle")
         except:
@@ -44,8 +46,9 @@ class LogitModel():
                     self.reference_features[key] = value
 
     def train_test_split(self):
-        self.df_train = self.df.iloc[:280000, :]
-        self.df_test = self.df.iloc[280000:, :]
+        split = round(self.df.shape[0]*0.8)
+        self.df_train = self.df.iloc[:split, :]
+        self.df_test = self.df.iloc[split:, :]
 
     def get_formula(self):
         formula_parts = []
@@ -54,8 +57,10 @@ class LogitModel():
             if var in self.reference_features:
                 ref_category = self.reference_features[var]
                 formula_parts.append(f'C({var}, Treatment(reference="{ref_category}"))')
+            else :
+                formula_parts.append(f'C({var}, Treatment(reference="{self.df[var].mode()[0]}"))')
 
-        self.formula = 'TARGET ~ ' + ' + '.join(formula_parts)
+        self.formula = f'{self.target} ~ ' + ' + '.join(formula_parts)
 
     def train_logit(self):
         model = Logit.from_formula(formula=self.formula, data=self.df_train)
@@ -63,7 +68,9 @@ class LogitModel():
 
     def get_metrics(self):
         pred = self.logit_model.predict(self.df_test)
-        fpr, tpr, thresholds = roc_curve(self.df_test["TARGET"], pred)
+        print(pred)
+        print(self.df_test[self.target])
+        fpr, tpr, thresholds = roc_curve(self.df_test[self.target], pred)
 
         roc_auc = auc(fpr, tpr)
         gini_coefficient = 2 * roc_auc - 1
@@ -83,9 +90,10 @@ class LogitModel():
 
 
 class GridScore():
-    def __init__(self, df, model):
+    def __init__(self, df, model, target):
         self.df = df
         self.model = model
+        self.target = target
         self.variable_pattern = r'C\(\s*([^,]+?)(?=,|\))'
         self.reference_pattern = r'Treatment\(reference="([^"]+)"\)'
 
@@ -102,7 +110,7 @@ class GridScore():
         if '_ref' in modality:
             modality = modality.split('_ref')[0]
 
-        default_count = data_frame[data_frame[variable] == modality]["TARGET"].sum()
+        default_count = data_frame[data_frame[variable] == modality][self.target].sum()
         total_count = data_frame.shape[0]
         return round((default_count / total_count) * 100, 2)
 

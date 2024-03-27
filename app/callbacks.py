@@ -10,16 +10,19 @@ from dash import dcc
 from builders import build_all_panels
 from data_preparation import *
 from plot_utils import *
+from app_utils import *
 
 
 def register_callbacks(app):
     @app.callback([Output('output-data-upload', 'children'),
-                   Output('variables-dropdown', 'options')],
+                   Output('variables-dropdown', 'options'),
+                   Output('target-dropdown', 'options'),
+                   Output('date-dropdown', 'options')],
                   [Input('upload-data', 'contents')],
                   [State('upload-data', 'filename')])
     def update_output(list_of_contents, list_of_names):
         if list_of_contents is None or not list_of_contents:
-            return [html.Div(['Aucun fichier téléchargé.']), []]
+            return [html.Div(''), [], [], []]
 
         if not isinstance(list_of_contents, list):
             list_of_contents = [list_of_contents]
@@ -28,15 +31,35 @@ def register_callbacks(app):
 
         children = []
         options = []
+        target_options = []
+        date_options = []
 
         for c, n in zip(list_of_contents, list_of_names):
             results = parse_contents(c, n)
             if results is not None:
                 dataprep.initialize_df(results[0])
                 options = dataprep.get_features()
+                target_options = dataprep.get_features()
+                date_options = dataprep.get_features()
                 children = [html.Div(html.H5(f'Le fichier {results[1]} a été téléchargé avec succès'))]
 
-        return children, options
+        return children, options, target_options, date_options
+
+    @app.callback(Output('hidden-div', 'children'),
+                  [Input('target-dropdown', 'value')])
+    def update_target(target_selected):
+        if target_selected is not None :
+            dataprep.init_target(target_selected)
+            return ''
+
+    @app.callback(Output('hidden-div1', 'children'),
+                  [Input('date-dropdown', 'value')])
+    def update_target(date_selected):
+        if date_selected is not None :
+            dataprep.init_date(date_selected)
+            return ''
+
+
     @app.callback(
         [Output('app-tabs', 'value'),
          Output('Control-chart-tab', 'style'),
@@ -58,12 +81,12 @@ def register_callbacks(app):
             print("Entraînement du modèle")
             if model_choice == 'Logit':
                 model.init_model('logit')
-                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic)
+                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
                 model.run_model()
 
             elif model_choice == 'XGBoost':
                 model.init_model('xgb')
-                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic)
+                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
                 model.run_model()
 
             return ('tab2', {"display": "flex"}, "loaded", build_all_panels())
@@ -106,7 +129,11 @@ def register_callbacks(app):
         if selected_features is not None :
             info = "Détail des variables choisies pour la modélisation :\n"
             for features in selected_features :
-                info += f"- {features} : {dictionnaire[dictionnaire['Row'] == features]['Description'].values[0]}\n"
+                desc = dictionnaire[dictionnaire['Row'] == features]['Description']
+                if len(desc) > 0 :
+                    info += f"- {features} : {desc.values[0]}\n"
+                else :
+                    info += f"- {features}\n"
 
             return info
 

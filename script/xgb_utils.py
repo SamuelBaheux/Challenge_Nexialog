@@ -1,6 +1,8 @@
 import re
 
 import pandas as pd
+from matplotlib import pyplot as plt
+from plotly.tools import mpl_to_plotly
 from sklearn.metrics import roc_curve, auc, f1_score, accuracy_score, precision_score
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
@@ -21,13 +23,15 @@ class XGB_model():
     def __init__(self):
         self.reference_dic = ConstantFeatures().dic_ref
 
-    def init_data(self, train, intervalles_dic):
+    def init_data(self, train, intervalles_dic, target, date):
         self.train = train
         self.intervalles_dic = intervalles_dic
+        self.target = target
+        self.date = date
 
     def get_features_list(self):
         self.features = self.train.columns.to_list()
-        self.features.remove("TARGET")
+        self.features.remove(self.target)
 
         try:
             self.features.remove("date_trimestrielle")
@@ -35,7 +39,7 @@ class XGB_model():
             pass
 
         try:
-            self.features.remove("date_mensuelle")
+            self.features.remove(self.date)
         except:
             pass
 
@@ -52,6 +56,10 @@ class XGB_model():
                         list(self.intervalles_dic[key.split("_disc_int")[0]])[0]]
                 else:
                     self.dic_ref[key] = value
+
+        for var in self.features:
+            if var not in self.dic_ref.keys():
+                self.dic_ref[var] = self.train[var].mode()[0]
 
     def get_dic_notref(self):
         self.dic_not_ref = {}
@@ -76,7 +84,7 @@ class XGB_model():
 
     def split_data(self):
         X = self.train[self.new_var.values()]
-        y = self.train["TARGET"]
+        y = self.train[self.target]
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42,
                                                                                 stratify=y)
@@ -105,8 +113,11 @@ class XGB_model():
         self.shap_values = explainer.shap_values(self.X_train)
         #shap.summary_plot(self.shap_values, self.X_train)
 
-        # shap_values_single = explainer.shap_values(self.X_train.iloc[[0]])
-        # shap.force_plot(explainer.expected_value, shap_values_single, self.X_train.iloc[[0]])
+        #plt.figure()
+        #shap.summary_plot(self.shap_values, self.X_train, show=False)
+        #plt.tight_layout()
+        #fig = plt.gcf()
+        #self.plotly_fig = mpl_to_plotly(fig)
 
     def extract_features_name(self, string):
         bracket_content = re.search(r'(\[[^\]]+\])', string)
@@ -126,7 +137,7 @@ class XGB_model():
 
     def get_shap_coef(self):
         shaps = pd.DataFrame(self.shap_values, columns=self.X_train.columns)
-        shaps['TARGET'] = self.y_train.values
+        shaps[self.target] = self.y_train.values
 
         shapley_values = pd.DataFrame(columns=['Coef', 'Variable'])
 
@@ -160,11 +171,12 @@ class XGB_model():
         return (self.get_shap_coef())
 
 class GridScoreXGB():
-    def __init__(self, df, shap_df):
+    def __init__(self, df, shap_df, target):
         self.df = df
         self.shap_df = shap_df
         self.variable_pattern = r'C\(\s*([^,]+?)(?=,|\))'
         self.reference_pattern = r'Treatment\(reference="([^"]+)"\)'
+        self.target = target
 
     def calculate_percentage_default(self, row, data_frame):
         variable = row['Variable']
@@ -179,7 +191,7 @@ class GridScoreXGB():
         if '_ref' in modality:
             modality = modality.split('_ref')[0]
 
-        default_count = data_frame[data_frame[variable] == modality]["TARGET"].sum()
+        default_count = data_frame[data_frame[variable] == modality][self.target].sum()
         total_count = data_frame.shape[0]
         return round((default_count / total_count) * 100, 2)
 

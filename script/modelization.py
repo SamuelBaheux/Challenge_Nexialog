@@ -12,8 +12,8 @@ class Modelization():
             self.model = XGB_model()
             self.model_name = "xgb"
 
-    def init_data(self, data, intervalles_dic):
-        self.model.init_data(data, intervalles_dic)
+    def init_data(self, data, intervalles_dic, target, date):
+        self.model.init_data(data, intervalles_dic, target, date)
 
     def run_model(self):
         self.results = self.model.run_model()
@@ -21,9 +21,9 @@ class Modelization():
     def get_metrics(self):
         return(self.model.get_metrics())
 
-    def get_grid_score(self, train_prepared):
+    def get_grid_score(self, train_prepared, target):
         if self.model_name == 'logit':
-            GS = GridScore(train_prepared, self.results)
+            GS = GridScore(train_prepared, self.results, target)
             print("Calcul de la grille de score ✅")
             self.grid_score = GS.compute_grid_score()
             self.df_score = GS.get_individual_score()
@@ -31,13 +31,13 @@ class Modelization():
 
         else :
             print(self.results)
-            gs = GridScoreXGB(train_prepared, self.results)
+            gs = GridScoreXGB(train_prepared, self.results, target)
             print("Calcul de la grille de score ...")
             self.grid_score = gs.compute_grid_score()
             self.df_score = gs.get_individual_score()
             return(self.grid_score)
 
-    def get_segmentation(self):
+    def get_segmentation(self, target):
         scores_clients = self.df_score["Score_ind"].sample(30000, replace = False)
         nombre_de_classes = 6
 
@@ -51,8 +51,8 @@ class Modelization():
         self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(breaks))
 
         resultats = self.df_score.groupby("Classes").agg(
-            Taux_Défaut=("TARGET", "mean"),
-            Population=("TARGET", "size")
+            Taux_Défaut=(target, "mean"),
+            Population=(target, "size")
         )
         resultats['Taux_Individus'] = (resultats['Population'] / self.df_score.shape[0]) * 100
 
