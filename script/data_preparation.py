@@ -278,7 +278,7 @@ class DashDataPreparation():
                 dict_variable[var] = 2
 
         for var in self.num_vars :
-            if var not in dict_variable.keys():
+            if var not in dict_variable.keys() and var != "SK_ID_CURR":
                 dict_variable[var] = 2
 
         self.discretizer = Genetic_Numerical_Discretisation(self.train, dict_variable, self.target, self.date, self.plot)
@@ -404,7 +404,7 @@ class ConstantFeatures():
                         'AMT_REQ_CREDIT_BUREAU_MON_disc_int': 'max','YEARS_BEGINEXPLUATATION_MEDI_disc_int': 'max',
                         'YEARS_BEGINEXPLUATATION_MODE_disc_int': 'max','YEARS_BEGINEXPLUATATION_AVG_disc_int': 'max',
                         'DAYS_FIRST_DRAWING_disc_int': 'max','RATE_DOWN_PAYMENT_disc_int': 'max',
-                        'AMT_PAYMENT_disc_int': 'max','AMT_CREDIT_SUM_disc_int': 'min','EXT_SOURCE_2_disc_int': 'max',
+                        'AMT_PAYMENT_disc_int': 'max','AMT_CREDIT_SUM_disc_int': 'max','EXT_SOURCE_2_disc_int': 'max',
                         'EXT_SOURCE_1_disc_int': 'max','EXT_SOURCE_3_disc_int': 'max',
                         'NAME_EDUCATION_TYPE_discret': 'higher', 'NAME_FAMILY_STATUS_discret': 'couple',
                         'FLAG_EMP_PHONE': 'zero', 'REG_CITY_NOT_LIVE_CITY': 'zero', 'REG_CITY_NOT_WORK_CITY': 'un',

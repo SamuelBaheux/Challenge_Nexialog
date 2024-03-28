@@ -58,3 +58,33 @@ class Modelization():
 
         return(resultats)
 
+    def get_moc_c(self, target):
+        resultats = self.df_score.groupby("Classes").agg(moyenne_TARGET=(target, "mean")).to_dict()["moyenne_TARGET"]
+
+        def Boostrapping_Classes(classe):
+            df_classe = self.df_score[self.df_score['Classes'] == classe]
+            tx_defaut_liste = []
+
+            for _ in range(1000):
+                echantillon = df_classe[target].sample(n=len(df_classe), replace=True)
+                tx_defaut_liste.append(echantillon.mean())
+
+            tx_defaut_liste = np.array(tx_defaut_liste)
+
+            decile9 = np.percentile(tx_defaut_liste, 90)
+
+            MOC_C = decile9 - resultats[classe]
+
+            return (classe, resultats[classe], decile9, MOC_C)
+
+        self.MOC_C = pd.DataFrame(columns=["Classe", "LRA", "Moc_C"])
+
+        classes = list(self.df_score["Classes"].unique())
+        classes.sort()
+
+        for i in classes:
+            classe, LRA, _, MOC_C_classe = Boostrapping_Classes(i)
+            self.MOC_C.loc[len(self.MOC_C)] = [classe, LRA, MOC_C_classe]
+
+        return(self.MOC_C)
+

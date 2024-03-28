@@ -46,12 +46,28 @@ def plot_stability_plotly(variable):
                       xaxis_title='Date',
                       yaxis_title='Proportion de la cible TARGET',
                       legend_title='Classes de_binned',
-                      margin=dict(l=20, r=20, t=40, b=20))
+                      margin=dict(l=20, r=20, t=40, b=20),
+                      height = 500)
 
     fig.update_layout(legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99))
     fig.update_layout(**custom_layout)
 
     return fig
+
+def plot_hist(column):
+    histogramme = go.Figure(go.Histogram(x=dataprep.train[column]))
+
+    histogramme.update_layout(
+        title=f'Distribution de {column}',
+        xaxis_title=column,
+        yaxis_title='Fréquence',
+        bargap=0.2,
+        height=580
+    )
+
+    histogramme.update_layout(**custom_layout)
+
+    return histogramme
 
 def roc_curve():
     metrics = model.get_metrics()
@@ -115,6 +131,14 @@ def create_gini_figure():
                       legend_title='Classe',
                       template='plotly_white')
 
+    fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ))
+
     fig.update_layout(**custom_layout)
 
     return fig
@@ -142,6 +166,14 @@ def create_stability_figure():
                       yaxis_title='Proportion de la cible',
                       legend_title=f'Classes',
                       template='plotly_white')
+
+    fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ))
 
     fig.update_layout(**custom_layout)
 

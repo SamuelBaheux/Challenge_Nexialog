@@ -68,8 +68,6 @@ class LogitModel():
 
     def get_metrics(self):
         pred = self.logit_model.predict(self.df_test)
-        print(pred)
-        print(self.df_test[self.target])
         fpr, tpr, thresholds = roc_curve(self.df_test[self.target], pred)
 
         roc_auc = auc(fpr, tpr)

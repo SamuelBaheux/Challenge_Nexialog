@@ -1,0 +1,47 @@
+.Select-control {
+    background-color: #4e5567;
+}
+
+.Select-value-label {
+    color: #ffffff !important;
+}
+
+.Select--single > .Select-control .Select-value, .Select-placeholder .Select-control{
+    border: 1px #646775;
+    border-radius: 4px;
+}
+
+.Select-multi-value-wrapper,
+.Select-menu-outer div {
+	background-color : #4e5567;
+}
+
+.Select-control,
+.Select-control>span {
+	color: white;
+	background: #4e5567 !important;
+}
+
+/* dropdown menu options */
+.VirtualizedSelectOption {
+    background-color: #4e5567;
+    color: #ffffff;
+ }
+
+
+/* dropdown menu hover effect */
+.VirtualizedSelectFocusedOption {
+    background-color: #ff0000;
+    opacity: 0.2;
+}
+
+.is-focused:not(.is-open) > .Select-control {
+  border-color: #646775;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+/* this colors the input box text and x of multi dropdown*/
+.Select--multi .Select-value {
+  color: #ffffff;
+}

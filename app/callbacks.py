@@ -12,17 +12,17 @@ from data_preparation import *
 from plot_utils import *
 from app_utils import *
 
-
 def register_callbacks(app):
     @app.callback([Output('output-data-upload', 'children'),
                    Output('variables-dropdown', 'options'),
                    Output('target-dropdown', 'options'),
-                   Output('date-dropdown', 'options')],
+                   Output('date-dropdown', 'options'),
+                   Output('predefined_vars_button', 'style')],
                   [Input('upload-data', 'contents')],
                   [State('upload-data', 'filename')])
     def update_output(list_of_contents, list_of_names):
         if list_of_contents is None or not list_of_contents:
-            return [html.Div(''), [], [], []]
+            return [html.Div(''), [], [], [], {'display': 'None'}]
 
         if not isinstance(list_of_contents, list):
             list_of_contents = [list_of_contents]
@@ -43,7 +43,10 @@ def register_callbacks(app):
                 date_options = dataprep.get_features()
                 children = [html.Div(html.H5(f'Le fichier {results[1]} a été téléchargé avec succès'))]
 
-        return children, options, target_options, date_options
+        if list_of_names[0] == "application_train_vf.csv" :
+            return children, options, target_options, date_options, {'display': 'flex'}
+        else :
+            return children, options, target_options, date_options, {'display': 'None'}
 
     @app.callback(Output('hidden-div', 'children'),
                   [Input('target-dropdown', 'value')])
@@ -92,6 +95,7 @@ def register_callbacks(app):
             return ('tab2', {"display": "flex"}, "loaded", build_all_panels())
 
         return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
+
 
     @app.callback(
         Output('variables-dropdown', 'value'),
@@ -143,6 +147,14 @@ def register_callbacks(app):
     )
     def update_graph(selected_variable):
         fig = plot_stability_plotly(selected_variable)
+        return fig
+
+    @app.callback(
+        Output('histo-graph', 'figure'),
+        [Input('stability-dropdown', 'value')]
+    )
+    def update_graph(selected_variable):
+        fig = plot_hist(selected_variable)
         return fig
 
     @app.callback(

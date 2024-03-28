@@ -11,7 +11,9 @@ graph_right = []
 
 
 def build_tabs():
-    return html.Div(
+    return html.Div([html.Div(className='header', children=[
+            html.H3(children='NexiaMod - Modélisation de la Probabilité de Défaut')]),
+                            html.Div(
         id="tabs",
         className="tabs",
         children=[
@@ -39,6 +41,7 @@ def build_tabs():
             )
         ],
     )
+                    ])
 
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
@@ -46,10 +49,12 @@ def build_tabs():
 def create_layout():
     return html.Div(className='hub', children=[
 
-        html.Div(className='header', children=[
-            html.H3(children='Challenge Nexialog x MoSEF - Modélisation de la Probabilité de Défaut')]),
-
         html.Div(className='container', children=[
+
+            html.Div(id='md_title_0', children=[
+                html.Label(className='md_title', children='1. Importer les données :')
+            ]),
+            html.Br(),
 
             html.Div([dcc.Upload(id='upload-data', className = "uploader", children=html.Div(
                     ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
@@ -57,14 +62,18 @@ def create_layout():
             ]),
 
             html.Br(),
+            html.Br(),
 
             html.Div(id='md_title_1', children=[
-                dcc.Markdown(id='markdown_title', className='md_title', children='#### 1. Choisir le type de modèle :')
+               html.Label(className='md_title', children='2. Paramétrer la modélisation :')
             ]),
 
+            html.Br(),
+
             html.Div(className='form-input row', children=[
-                html.Div(className='form-label col', children=[
-                    html.Label('Type de modèle', className='label-inline'),
+                html.Div(className='logo-and-label col', children=[
+                    html.Img(src='./assets/model.png', className='logo-inline', style={'marginLeft':'4px'}),
+                    html.Label('Choix du Modèle', className='label-inline', style={'marginLeft':'4px'}),
                 ]),
                 html.Div(className='form-dropdown col', children=[
                     dcc.Dropdown(
@@ -74,19 +83,17 @@ def create_layout():
                             {'label': 'XGBoost', 'value': 'XGBoost'}
                         ],
                         value='Logit',
-                        className='dropdown-inline'
+                        className='dropdown-inline',
+                        style={'background-color': '#4e5567'}
                     ),
                 ]),
             ]),
 
             html.Br(),
-            html.Div(id='md_title_3', children=[
-                dcc.Markdown(id='markdown_title3', className='md_title',
-                             children='#### 2. Choisir la variable cible :')
-            ]),
 
             html.Div(className='form-input row', children=[
-                html.Div(className='form-label col', children=[
+                html.Div(className='logo-and-label col', children=[
+                    html.Img(src='./assets/target2.png', className='logo-inline'),
                     html.Label('Choix de la cible', className='label-inline'),
                 ]),
                 html.Div(className='form-dropdown col', children=[
@@ -94,26 +101,25 @@ def create_layout():
                                  options=dataprep.get_features(),
                                  multi=False,
                                  placeholder="Choisir la cible",
-                                 className='dropdown-inline', ),
+                                 className='dropdown-inline',
+                                 style={'background-color':'#4e5567'}),
                 ])
             ]),
 
             html.Br(),
-            html.Div(id='md_title_4', children=[
-                dcc.Markdown(id='markdown_title4', className='md_title',
-                             children='#### 3. Choisir la variable de date :')
-            ]),
 
             html.Div(className='form-input row', children=[
-                html.Div(className='form-label col', children=[
-                    html.Label('Choix de la date', className='label-inline'),
+                html.Div(className='logo-and-label col', children=[
+                    html.Img(src='./assets/calendar.png', className='logo-inline'),
+                    html.Label('Choix de la variable date', className='label-inline'),
                 ]),
                 html.Div(className='form-dropdown col', children=[
                     dcc.Dropdown(id='date-dropdown',
                                  options=dataprep.get_features(),
                                  multi=False,
                                  placeholder="Choisir la date",
-                                 className='dropdown-inline', ),
+                                 className='dropdown-inline',
+                                 style={'background-color':'#4e5567'}),
                 ])
             ]),
 
@@ -121,26 +127,24 @@ def create_layout():
             html.Div(id='hidden-div1'),
 
             html.Br(),
-            html.Div(id='md_title_2', children=[
-                dcc.Markdown(id='markdown_title2', className='md_title',
-                             children='#### 4. Choisir les variables explicatives :')
-            ]),
 
             html.Div(className='form-input row', children=[
-                html.Div(className='form-label col', children=[
-                    html.Label('Choix des Variables', className='label-inline'),
+                html.Div(className='logo-and-label col', children=[
+                    html.Img(src='./assets/check.png', className='logo-inline'),
+                    html.Label('Choix des variables explicatives', className='label-inline'),
                 ]),
                 html.Div(className='form-dropdown col', children=[
                     dcc.Dropdown(id='variables-dropdown',
                                  options=dataprep.get_features(),
                                  multi=True,
                                  placeholder="Choisir des variables",
-                                 className='dropdown-inline', ),
+                                 className='dropdown-inline',
+                                 style={'background-color':'#4e5567'}),
                 ])
             ]),
 
             html.Div(className='form-input row', children=[
-                html.Div(className='predefined-vars', children=[
+                html.Div(id = 'predefined_vars_button', className='predefined-vars', children=[
                     html.Button('Interprétabilité', id='interpretabilite-button', n_clicks=0,
                                 className='button-inline'),
                     html.Button('Performance', id='performance-button', n_clicks=0, className='button-inline'),
@@ -162,7 +166,9 @@ def create_layout():
                          ),
                      ],
                      ),
-            html.Button('Lancer la Modélisation', id='launch-button', n_clicks=0, className='button'),
+            html.Br(),
+            html.Br(),
+            html.Button('Lancer la Modélisation', id='launch-button', n_clicks=0, className='launch-button'),
         ])
     ])
 
@@ -189,26 +195,32 @@ def title_layout():
 
 
 @render_this(graph_right)
-def stability_plot():
-    return html.Div(className='graphpart',
-                    children=[
-                        dcc.Dropdown(
-                            id='stability-dropdown',
-                            className='dropdown-results',
-                            options=[{'label': label, 'value': col} for col, label in
-                                     zip(*dataprep.get_explicative_features())],
-                            value=dataprep.get_explicative_features()[0][0],
-                            style={'marginBottom': '20px'}
-                        ),
-                        dcc.Graph(id='stability-graph')
-                    ]
-                    )
+def title_layout():
+    return html.Div(children=[
+        html.Div(className='graphpart',
+                 children=[
+                     dcc.Dropdown(
+                         id='stability-dropdown',
+                         className='dropdown-results',
+                         options=[{'label': label, 'value': col} for col, label in
+                                  zip(*dataprep.get_explicative_features())],
+                         value=dataprep.get_explicative_features()[0][0],
+                         style={'marginBottom': '20px'}
+
+                     ),
+                     dcc.Graph(id='stability-graph')
+                 ], style={'width': '50%'}),
+        html.Div(className='graphpart',
+                 children=[dcc.Graph(id='histo-graph')],
+                 style={'width': '50%', 'margin-top': "2px"})],
+        style={'display': 'flex', 'flexDirection': 'row'})
 
 
 @render_this(graph_right)
 def title_layout():
     return (html.Div(className='results-title',
-                     children=[html.Br(), html.H3("2.Performances du modèle"), html.Br()]))
+                   children=[html.Br(), html.H3("2.Performances du modèle"), html.Br()]))
+
 
 
 @render_this(graph_right)
@@ -258,7 +270,7 @@ def table():
                                     'fontSize': '17px',
                                     'height': '40px',
                                     'whiteSpace': 'normal',
-                                    'padding': '15px',
+                                    'padding': '10px',
                                     'fontWeight': 'normal'
                                 },
                                 )
@@ -269,11 +281,59 @@ def title_layout():
     return (html.Div(className='results-title',
                      children=[html.Br(), html.H3("4.Segmentation"), html.Br()]))
 
+@render_this(graph_right)
+def test():
+    segments = model.get_segmentation(dataprep.target)
+    return html.Div(children=[
+        html.Div(children=[html.Br(),
+                           html.Div([
+                               dcc.Dropdown(
+                                   id='graph-type-selector',
+                                   className='dropdown-results',
+                                   options=[
+                                       {'label': 'Gini', 'value': 'gini'},
+                                       {'label': 'Taux', 'value': 'taux'}
+                                   ],
+                                   value='gini',
+                                   style={'marginBottom': '20px'}
+                               ),
+                               dcc.Graph(id='class-display', className='graphpart')
+                           ])], style={'width': '65%'}),
+        html.Div([html.Br(), html.Br(), html.Br(),
+            dash_table.DataTable(round(segments, 2).to_dict('records'),
+                                 [{"name": i, "id": i} for i in segments.columns],
+                                 style_header={
+                                     'backgroundColor': 'rgb(76, 82, 94)',
+                                     'color': 'white',
+                                     'fontSize': '20px',
+                                     'height': '50px',
+                                     'whiteSpace': 'normal',
+                                     'padding': '15px',
+                                     'fontWeight': 'bold'
+                                 },
+                                 style_data={
+                                     'backgroundColor': 'rgb(78, 85, 103)',
+                                     'color': 'white',
+                                     'fontSize': '16px',
+                                     'height': '40px',
+                                     'whiteSpace': 'normal',
+                                     'padding': '15px',
+                                     'fontWeight': 'normal'
+                                 },
+                                 )
+        ], style={'width': '35%', 'margin-top':"20px"}),
+    ], style={'display': 'flex', 'flexDirection': 'row'})
+
+
+@render_this(graph_right)
+def title_layout():
+    return (html.Div(className='results-title',
+                     children=[html.H3("5. MOC")]))
 
 @render_this(graph_right)
 def table():
-    segments = model.get_segmentation(dataprep.target)
-    return dash_table.DataTable(round(segments, 2).to_dict('records'), [{"name": i, "id": i} for i in segments.columns],
+    moc_C = model.get_moc_c(dataprep.target)
+    return dash_table.DataTable(round(moc_C, 4).to_dict('records'), [{"name": i, "id": i} for i in moc_C.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
@@ -293,29 +353,6 @@ def table():
                                     'fontWeight': 'normal'
                                 },
                                 )
-
-
-@render_this(graph_right)
-def classes_plot():
-    return html.Div(children=[html.Br(),
-                              html.Div([
-                                  dcc.Dropdown(
-                                      id='graph-type-selector',
-                                      className='graphpart',
-                                      options=[
-                                          {'label': 'Gini', 'value': 'gini'},
-                                          {'label': 'Taux', 'value': 'taux'}
-                                      ],
-                                      value='gini'
-                                  ),
-                                  dcc.Graph(id='class-display', className='graphpart')
-                              ])])
-
-
-@render_this(graph_right)
-def title_layout():
-    return (html.Div(className='results-title',
-                     children=[html.H3("5. MOC")]))
 
 
 @render_this(graph_left)
@@ -403,8 +440,9 @@ def build_all_panels():
     other_panels = [panel() for panel in graph_right]
     auc_metric_panel = [panel() for panel in graph_left]
     layout = html.Div(children=[
-        html.Div(className="tab2-title",
-                 children=[html.H2("Panneau des résultats")]),
+        html.Br(),
+        html.Br(),
+        html.Br(),
         html.Div(
             className='panels-container',
             children=[
