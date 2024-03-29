@@ -1,11 +1,8 @@
 import numpy as np
-import plotly.graph_objects as go
-from vars import *
 import plotly.express as px
-import base64
-import io
-from dash import dcc, html
-import pandas as pd
+import plotly.graph_objects as go
+
+from vars import *
 
 custom_layout = {
     'plot_bgcolor': '#4e5567',
@@ -24,18 +21,12 @@ custom_layout = {
     }
 }
 
-def calculate_stability(column):
-    stability_df = dataprep.train.groupby([dataprep.date, column])[dataprep.target].mean().unstack()
-    #stability_df = df.groupby([dataprep.date, column])[dataprep.target].mean().unstack()
-
-    stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
-    return stability_df
-
 def plot_stability_plotly(variable):
-    stability_df = calculate_stability(variable)
+    stability_df = dataprep.train.groupby([dataprep.date, variable])[dataprep.target].mean().unstack()
+
     fig = go.Figure()
 
-    for class_label in stability_df.drop('stability', axis=1).columns:
+    for class_label in stability_df.columns:
         values = stability_df[class_label]
         fig.add_trace(go.Scatter(x=stability_df.index,
                                  y=values,
@@ -44,12 +35,18 @@ def plot_stability_plotly(variable):
 
     fig.update_layout(title=f'Stabilité de l\'impact sur la cible pour {variable}',
                       xaxis_title='Date',
-                      yaxis_title='Proportion de la cible TARGET',
-                      legend_title='Classes de_binned',
+                      yaxis_title='Proportion de la cible',
+                      legend_title='Classes',
                       margin=dict(l=20, r=20, t=40, b=20),
                       height = 500)
 
-    fig.update_layout(legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99))
+    fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="top",
+        y=-0.2,
+        xanchor="center",
+        x=0.5
+    ))
     fig.update_layout(**custom_layout)
 
     return fig
@@ -62,7 +59,7 @@ def plot_hist(column):
         xaxis_title=column,
         yaxis_title='Fréquence',
         bargap=0.2,
-        height=580
+        height=520
     )
 
     histogramme.update_layout(**custom_layout)
@@ -71,14 +68,9 @@ def plot_hist(column):
 
 def roc_curve():
     metrics = model.get_metrics()
-
     fpr = metrics["fpr"]
     tpr = metrics["tpr"]
     roc_auc = metrics["roc_auc"]
-
-    #fpr = [0.03, 0.05, 0.1, 0.4, 0.6, 0.7]
-    #tpr = [0.03, 0.1, 0.2, 0.5, 0.55, 0.8]
-    #roc_auc = 0.7
 
     fig = go.Figure()
 
@@ -152,9 +144,8 @@ def create_stability_figure():
 
     fig = go.Figure()
     stability_df = df.groupby(['date_trimestrielle', 'Classes'])[dataprep.target].mean().unstack()
-    stability_df['stability'] = stability_df.std(axis=1) / stability_df.mean(axis=1)
 
-    for class_label in stability_df.drop('stability', axis=1).columns:
+    for class_label in stability_df.columns:
         values = stability_df[class_label]
         fig.add_trace(go.Scatter(x=stability_df.index,
                                  y=values,
@@ -192,6 +183,32 @@ def plot_shap_values():
         fig.update_layout(**custom_layout)
 
         return(fig)
+
+
+def plot_metrics_leftpanel(metrics) :
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=[metrics],
+        y=[metrics],
+        text=[f'{round(metrics)}%'],
+        textposition='auto',
+        orientation='h',
+    ))
+
+    fig.update_layout(
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 100]),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        showlegend=False,
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=40,
+
+    )
+    fig.update_layout(**custom_layout)
+
+    fig.update_layout(paper_bgcolor = '#4e5567')
+
+    return(fig)
 
 
 

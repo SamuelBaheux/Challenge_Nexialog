@@ -12,7 +12,7 @@ graph_right = []
 
 def build_tabs():
     return html.Div([html.Div(className='header', children=[
-            html.H3(children='NexiaMod - Modélisation de la Probabilité de Défaut')]),
+            html.Img(src='./assets/images/logo.png', className='logo-title')]),
                             html.Div(
         id="tabs",
         className="tabs",
@@ -72,7 +72,7 @@ def create_layout():
 
             html.Div(className='form-input row', children=[
                 html.Div(className='logo-and-label col', children=[
-                    html.Img(src='./assets/model.png', className='logo-inline', style={'marginLeft':'4px'}),
+                    html.Img(src='./assets/images/model.png', className='logo-inline', style={'marginLeft':'4px'}),
                     html.Label('Choix du Modèle', className='label-inline', style={'marginLeft':'4px'}),
                 ]),
                 html.Div(className='form-dropdown col', children=[
@@ -93,7 +93,7 @@ def create_layout():
 
             html.Div(className='form-input row', children=[
                 html.Div(className='logo-and-label col', children=[
-                    html.Img(src='./assets/target2.png', className='logo-inline'),
+                    html.Img(src='./assets/images/target2.png', className='logo-inline'),
                     html.Label('Choix de la cible', className='label-inline'),
                 ]),
                 html.Div(className='form-dropdown col', children=[
@@ -110,7 +110,7 @@ def create_layout():
 
             html.Div(className='form-input row', children=[
                 html.Div(className='logo-and-label col', children=[
-                    html.Img(src='./assets/calendar.png', className='logo-inline'),
+                    html.Img(src='./assets/images/calendar.png', className='logo-inline'),
                     html.Label('Choix de la variable date', className='label-inline'),
                 ]),
                 html.Div(className='form-dropdown col', children=[
@@ -130,7 +130,7 @@ def create_layout():
 
             html.Div(className='form-input row', children=[
                 html.Div(className='logo-and-label col', children=[
-                    html.Img(src='./assets/check.png', className='logo-inline'),
+                    html.Img(src='./assets/images/check.png', className='logo-inline'),
                     html.Label('Choix des variables explicatives', className='label-inline'),
                 ]),
                 html.Div(className='form-dropdown col', children=[
@@ -209,10 +209,10 @@ def title_layout():
 
                      ),
                      dcc.Graph(id='stability-graph')
-                 ], style={'width': '50%'}),
+                 ], style={'width': '65%'}),
         html.Div(className='graphpart',
                  children=[dcc.Graph(id='histo-graph')],
-                 style={'width': '50%', 'margin-top': "2px"})],
+                 style={'width': '35%', 'margin-top': "2px"})],
         style={'display': 'flex', 'flexDirection': 'row'})
 
 
@@ -357,56 +357,58 @@ def table():
 
 @render_this(graph_left)
 def title_layout():
-    return (html.Div(className='results-title',
-                     children=[html.H5("Données", style={"text-align": 'center'}),
-                               html.Br(),
-                               html.Div(children=[dcc.Markdown(
-                                   f'''
-                                  - {model.df_score.shape[0]} observations.
-                                  - {model.df_score[dataprep.target].sum()} défauts.
-                                  - {round(model.df_score[dataprep.target].mean(), 2) * 100} % de taux de défaut.
-                                  '''
-                               )]),
-                               html.Br()
-                               ]))
+    return (html.Div(className='left-title',
+                     children=[html.Label("Données"),
+                               html.Br()]))
+
+@render_this(graph_left)
+def title_layout():
+   return(html.Div([html.Div(
+       className='data-summary',
+       children=[
+           html.Label([
+               f"- {model.df_score.shape[0]} observations.",
+               html.Br(),
+               f"- {model.df_score[dataprep.target].sum()} défauts.",
+               html.Br(),
+               f"- {round(model.df_score[dataprep.target].mean(), 2) * 100} % de taux de défaut."
+           ])
+       ]
+   ),
+   ]))
 
 
 @render_this(graph_left)
 def title_layout():
-    return (html.Div(className='results-title',
-                     children=[html.H5("Métriques", style={"text-align": 'center'})]))
-
+    return (html.Div(className='left-title',
+                     children=[html.Br(), html.Label("Métriques"), html.Br()]))
 
 @render_this(graph_left)
-def AUC_Metric():
-    return html.Div(className='metricspart',
+def stability_plot():
+    dic_metrics = model.get_segmentation_metrics(dataprep.target, dataprep.date)
+    roc_auc = model.get_metrics()["roc_auc"]*100
+    return html.Div(className='graphpart',
                     children=[
-                        daq.Gauge(
-                            id="score-gauge",
-                            max=1,
-                            min=0,
-                            size=150,
-                            color={
-                                "gradient": True,
-                                "ranges": {
-                                    "red": [0, 0.5],
-                                    "yellow": [0.5, 0.7],
-                                    "green": [0.7, 1],
-                                },
-                            },
-                            value=model.get_metrics()["roc_auc"],
-                            showCurrentValue=True,
-                        )
+                        html.Label("ROC-AUC :", className='left-panel-metric'),
+                        dcc.Graph(figure=plot_metrics_leftpanel(roc_auc)),
+                        html.Br(),
+                        html.Label("Segmentation :", className='left-panel-metric'),
+                        dcc.Graph(figure=plot_metrics_leftpanel(dic_metrics["count_seg"])),
+                        html.Br(),
+                        html.Label("Monotonie :", className='left-panel-metric'),
+                        dcc.Graph(figure=plot_metrics_leftpanel(dic_metrics["count_monotonie"]))
                     ]
                     )
 
+@render_this(graph_left)
+def title_layout():
+    return (html.Div(className='left-title',
+                     children=[html.Br(), html.Label("Artefacts")]))
 
 @render_this(graph_left)
 def download_df_score():
     return html.Div(className='results-title',
                     children=[
-                        html.Br(),
-                        html.H5("Artefacts", style={"text-align": 'center'}),
                         html.Br(),
                         html.Button(["Données"], id="btn_df_score", className='download-button'),
                         dcc.Download(id="download-df-score"),

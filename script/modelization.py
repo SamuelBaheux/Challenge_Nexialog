@@ -27,6 +27,8 @@ class Modelization():
             print("Calcul de la grille de score ✅")
             self.grid_score = GS.compute_grid_score()
             self.df_score = GS.get_individual_score()
+            self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_disc_int")[0])
+            self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_discrete")[0])
             return(self.grid_score)
 
         else :
@@ -35,6 +37,8 @@ class Modelization():
             print("Calcul de la grille de score ...")
             self.grid_score = gs.compute_grid_score()
             self.df_score = gs.get_individual_score()
+            self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_disc_int")[0])
+            self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_discrete")[0])
             return(self.grid_score)
 
     def get_segmentation(self, target):
@@ -50,13 +54,26 @@ class Modelization():
 
         self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(breaks))
 
-        resultats = self.df_score.groupby("Classes").agg(
+        self.resultats = self.df_score.groupby("Classes").agg(
             Taux_Défaut=(target, "mean"),
             Population=(target, "size")
         )
-        resultats['Taux_Individus'] = (resultats['Population'] / self.df_score.shape[0]) * 100
+        self.resultats['Taux_Individus'] = (self.resultats['Population'] / self.df_score.shape[0]) * 100
 
-        return(resultats)
+        return(self.resultats)
+
+    def get_segmentation_metrics(self, target, date):
+        stability_df = self.df_score.groupby([date, 'Classes'])[target].mean().unstack()
+        count_seg = sum(stability_df[i + 1].max() > stability_df[i].min() for i in range(1, 7))
+
+        self.resultats['defaut_monotone'] = (self.resultats['Taux_Défaut'].diff() < 0).astype(int)
+        nombre_defauts_monotones = self.resultats['defaut_monotone'].sum() + 1
+
+        count_seg = (count_seg / 7 * 100)
+        nombre_defauts_monotones = (nombre_defauts_monotones / 7 * 100)
+
+        return({"count_seg" : count_seg,
+                "count_monotonie" : nombre_defauts_monotones})
 
     def get_moc_c(self, target):
         resultats = self.df_score.groupby("Classes").agg(moyenne_TARGET=(target, "mean")).to_dict()["moyenne_TARGET"]

@@ -22,7 +22,6 @@
 	background: #4e5567 !important;
 }
 
-/* dropdown menu options */
 .VirtualizedSelectOption {
     background-color: #4e5567;
     color: #ffffff;
@@ -31,8 +30,8 @@
 
 /* dropdown menu hover effect */
 .VirtualizedSelectFocusedOption {
-    background-color: #ff0000;
-    opacity: 0.2;
+    background-color: #3e3f42 !important;
+    opacity: 1;
 }
 
 .is-focused:not(.is-open) > .Select-control {
@@ -41,7 +40,6 @@
   box-shadow: none;
 }
 
-/* this colors the input box text and x of multi dropdown*/
 .Select--multi .Select-value {
   color: #ffffff;
 }

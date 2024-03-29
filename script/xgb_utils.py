@@ -111,13 +111,9 @@ class XGB_model():
         explainer = shap.TreeExplainer(self.model)
 
         self.shap_values = explainer.shap_values(self.X_train)
-        #shap.summary_plot(self.shap_values, self.X_train)
+        pd.DataFrame(self.shap_values).to_csv("./data/shap_values.csv")
+        self.X_train.to_csv("./data/Xtrain.csv")
 
-        #plt.figure()
-        #shap.summary_plot(self.shap_values, self.X_train, show=False)
-        #plt.tight_layout()
-        #fig = plt.gcf()
-        #self.plotly_fig = mpl_to_plotly(fig)
 
     def extract_features_name(self, string):
         bracket_content = re.search(r'(\[[^\]]+\])', string)

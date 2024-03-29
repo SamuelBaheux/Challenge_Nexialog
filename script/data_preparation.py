@@ -128,6 +128,7 @@ class Genetic_Numerical_Discretisation():
 
         return self.train
 
+
 class DashDataPreparation():
     def __init__(self):
         self.nan_treshold = 0.3

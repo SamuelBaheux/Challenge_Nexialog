@@ -142,20 +142,14 @@ def register_callbacks(app):
             return info
 
     @app.callback(
-        Output('stability-graph', 'figure'),
+        [Output('stability-graph', 'figure'),
+         Output('histo-graph', 'figure')],
         [Input('stability-dropdown', 'value')]
     )
     def update_graph(selected_variable):
-        fig = plot_stability_plotly(selected_variable)
-        return fig
-
-    @app.callback(
-        Output('histo-graph', 'figure'),
-        [Input('stability-dropdown', 'value')]
-    )
-    def update_graph(selected_variable):
-        fig = plot_hist(selected_variable)
-        return fig
+        fig_stab = plot_stability_plotly(selected_variable)
+        fig_hist = plot_hist(selected_variable)
+        return [fig_stab, fig_hist]
 
     @app.callback(
         Output('class-display', 'figure'),
