@@ -111,9 +111,6 @@ class XGB_model():
         explainer = shap.TreeExplainer(self.model)
 
         self.shap_values = explainer.shap_values(self.X_train)
-        pd.DataFrame(self.shap_values).to_csv("./data/shap_values.csv")
-        self.X_train.to_csv("./data/Xtrain.csv")
-
 
     def extract_features_name(self, string):
         bracket_content = re.search(r'(\[[^\]]+\])', string)

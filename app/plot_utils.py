@@ -172,13 +172,51 @@ def create_stability_figure():
 
 def plot_shap_values():
     if model.model_name == "xgb" :
-        shap_df = pd.DataFrame(model.model.shap_values, columns=model.model.X_train.columns).sample(1000)
+        shap_values = model.model.shap_values
+        train = model.model.X_train
 
-        fig = px.strip(shap_df, orientation='h', stripmode='overlay')
+        shap_values = pd.DataFrame(shap_values, columns=train.columns)
+        train.reset_index(inplace=True, drop=True)
 
-        fig.update_layout(title='Bee swarm plot des valeurs de Shapley',
-                          xaxis_title='Valeur de Shapley (impact sur la sortie du modèle)',
-                          yaxis_title='Caractéristique')
+        replacements = {
+            'zz': '[',
+            'vv': ']',
+            'ww': ';',
+            'ff': '-',
+            'pp': '.'
+        }
+
+        for old, new in replacements.items():
+            train.columns = [col.replace(old, new) for col in train.columns]
+            shap_values.columns = [col.replace(old, new) for col in shap_values.columns]
+
+        train = train.iloc[:500, :]
+        shap_values = shap_values.iloc[:500, :]
+
+        # Joining SHAP values and one-hot encoded features
+        merged_df = shap_values.join(train, lsuffix='_shap', rsuffix='_train')
+
+        # Melt the merged DataFrame to long format
+        melted_df = merged_df.melt(value_vars=[col for col in
+                                               merged_df.columns if '_shap' in col],
+                                   var_name='Feature',
+                                   value_name='SHAP Value')
+
+        melted_df['Feature'] = melted_df['Feature'].str.replace('_shap', '')
+
+        for feature in train.columns:
+            feature_shap = feature + '_shap'
+            feature_train = feature + '_train'
+            melted_df.loc[melted_df['Feature'] == feature, 'One-hot Value'] = merged_df[feature_train].values
+
+        # Generate the plot again
+        fig = px.strip(melted_df, x='SHAP Value', y='Feature',
+                       color='One-hot Value',
+                       orientation='h', stripmode='overlay',
+                       title='Bee Swarm Plot of SHAP Values by Feature')
+
+        fig.update_layout(xaxis_title='SHAP Value (Impact on Model Output)',
+                          yaxis_title='Feature')
 
         fig.update_layout(**custom_layout)
 
