@@ -33,7 +33,7 @@ def plot_stability_plotly(variable):
                                  mode='lines+markers',
                                  name=f'Classe {class_label}'))
 
-    fig.update_layout(title=f'Stabilité de l\'impact sur la cible pour {variable}',
+    fig.update_layout(title=f'Stabilité temporelle de {variable}',
                       xaxis_title='Date',
                       yaxis_title='Proportion de la cible',
                       legend_title='Classes',
@@ -77,7 +77,7 @@ def roc_curve():
     fig.add_trace(go.Scatter(x=fpr,
                              y=tpr,
                              mode='lines',
-                             name='ROC curve (AUC = {:.2f})'.format(roc_auc),
+                             name='Courbe ROC (AUC = {:.2f})'.format(roc_auc),
                              line=dict(width=4)))
 
     fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1],
@@ -85,9 +85,9 @@ def roc_curve():
                              name='Chance',
                              line=dict(width=2, dash='dash')))
 
-    fig.update_layout(title='Receiver Operating Characteristic (ROC) Curve',
-                      xaxis_title='False Positive Rate',
-                      yaxis_title='True Positive Rate',
+    fig.update_layout(title='Courbe ROC',
+                      xaxis_title='Taux Faux Positifs',
+                      yaxis_title='Taux Vrais Positifs',
                       legend=dict(y=0.01, x=0.99, xanchor='right', yanchor='bottom'),
                       margin=dict(l=40, r=0, t=40, b=30))
 
@@ -117,11 +117,13 @@ def create_gini_figure():
         fig.add_trace(go.Scatter(x=gini_per_year.index, y=gini_per_year, mode='lines+markers',
                                  name=f'Classe {classe}'))
 
-    fig.update_layout(title='Évolution Annuelle du Coefficient de Gini par Classe',
-                      xaxis_title='Année',
+    fig.update_layout(title='Évolution Temporelle du Coefficient de Gini par Classe Homogène de Risque',
+                      xaxis_title='Date',
                       yaxis_title='Coefficient de Gini',
                       legend_title='Classe',
                       template='plotly_white')
+
+    fig.update_layout(xaxis=dict(tickangle=-45))
 
     fig.update_layout(legend=dict(
         orientation="h",
@@ -152,7 +154,7 @@ def create_stability_figure():
                                  mode='lines+markers',
                                  name=f'Classe {class_label}'))
 
-    fig.update_layout(title=f'Stabilité de l\'impact sur la cible pour {"Classes"}',
+    fig.update_layout(title=f'Stabilité temporelle des Classes Homogènes de Risque',
                       xaxis_title='Date',
                       yaxis_title='Proportion de la cible',
                       legend_title=f'Classes',
@@ -166,6 +168,7 @@ def create_stability_figure():
         x=1
     ))
 
+    fig.update_layout(xaxis=dict(tickangle=-45))
     fig.update_layout(**custom_layout)
 
     return fig
@@ -213,10 +216,10 @@ def plot_shap_values():
         fig = px.strip(melted_df, x='SHAP Value', y='Feature',
                        color='One-hot Value',
                        orientation='h', stripmode='overlay',
-                       title='Bee Swarm Plot of SHAP Values by Feature')
+                       title='Impact des Variables sur la sortie du modèle')
 
-        fig.update_layout(xaxis_title='SHAP Value (Impact on Model Output)',
-                          yaxis_title='Feature')
+        fig.update_layout(xaxis_title='Valeurs de Shapley',
+                          yaxis_title='Variable')
 
         fig.update_layout(**custom_layout)
 

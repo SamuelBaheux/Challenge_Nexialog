@@ -125,6 +125,7 @@ def create_layout():
 
             html.Div(id='hidden-div'),
             html.Div(id='hidden-div1'),
+            html.Div(id='hidden-div3'),
 
             html.Br(),
 
@@ -143,15 +144,15 @@ def create_layout():
                 ])
             ]),
 
+            html.Div(id='variables-info', className='variables-info',
+                     children=[dcc.Markdown(id='variables-info-markdown', children='')]),
+
             html.Div(className='form-input row', children=[
                 html.Div(id = 'predefined_vars_button', className='predefined-vars', children=[
                     html.Button('Interprétabilité', id='interpretabilite-button', n_clicks=0,
                                 className='button-inline'),
                     html.Button('Performance', id='performance-button', n_clicks=0, className='button-inline'),
                 ])]),
-
-            html.Div(id='variables-info', className='variables-info',
-                     children=[dcc.Markdown(id='variables-info-markdown', children='')]),
 
             html.Br(),
 
@@ -283,7 +284,18 @@ def title_layout():
 
 @render_this(graph_right)
 def test():
-    segments = model.get_segmentation(dataprep.target)
+    model.get_segmentation(dataprep.target)
+    return html.Div(children=[
+        html.Div(children=[dcc.RangeSlider(0,
+                                           1000,
+                                           id = "breaks-slider",
+                                           value=model.breaks,
+                                           allowCross=False)],
+                 style={'width': '100%'}),
+        html.Br(),])
+
+@render_this(graph_right)
+def test():
     return html.Div(children=[
         html.Div(children=[html.Br(),
                            html.Div([
@@ -299,9 +311,9 @@ def test():
                                ),
                                dcc.Graph(id='class-display', className='graphpart')
                            ])], style={'width': '65%'}),
-        html.Div([html.Br(), html.Br(), html.Br(),
-            dash_table.DataTable(round(segments, 2).to_dict('records'),
-                                 [{"name": i, "id": i} for i in segments.columns],
+        html.Div([html.Br(), html.Label("Segmentation - Tableau Récapitulatif", className="data-summary"), html.Br(),
+            dash_table.DataTable(round(model.resultats, 2).to_dict('records'),
+                                 [{"name": i, "id": i} for i in model.resultats.columns],
                                  style_header={
                                      'backgroundColor': 'rgb(76, 82, 94)',
                                      'color': 'white',
@@ -320,7 +332,7 @@ def test():
                                      'padding': '15px',
                                      'fontWeight': 'normal'
                                  },
-                                 )
+                                 id="table-id")
         ], style={'width': '35%', 'margin-top':"20px"}),
     ], style={'display': 'flex', 'flexDirection': 'row'})
 

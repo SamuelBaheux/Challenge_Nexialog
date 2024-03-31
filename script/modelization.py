@@ -39,6 +39,7 @@ class Modelization():
             self.df_score = gs.get_individual_score()
             self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_disc_int")[0])
             self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_discrete")[0])
+            self.grid_score["Coefficient"] = self.grid_score["Coefficient"].astype("float")
             return(self.grid_score)
 
     def get_segmentation(self, target):
@@ -46,21 +47,33 @@ class Modelization():
         nombre_de_classes = 6
 
         print("Segmentation en cours ... ")
-        breaks = jenkspy.jenks_breaks(scores_clients, nombre_de_classes)
-        breaks = [round (score) for score in breaks]
-        breaks[-1] = breaks[-2] + 50
+        self.breaks = jenkspy.jenks_breaks(scores_clients, nombre_de_classes)
+        self.breaks = [round (score) for score in self.breaks]
+        self.breaks[-1] = self.breaks[-2] + 50
 
-        print(breaks)
+        print(self.breaks)
 
-        self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(breaks))
+        self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(self.breaks))
 
         self.resultats = self.df_score.groupby("Classes").agg(
             Taux_Défaut=(target, "mean"),
             Population=(target, "size")
         )
         self.resultats['Taux_Individus'] = (self.resultats['Population'] / self.df_score.shape[0]) * 100
+        self.resultats["CHR"] = range(1,8)
+        self.resultats = self.resultats[['CHR', "Taux_Défaut", "Taux_Individus"]]
 
-        return(self.resultats)
+    def update_segmentation(self, new_breaks, target):
+        self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(new_breaks))
+
+        self.resultats = self.df_score.groupby("Classes").agg(
+            Taux_Défaut=(target, "mean"),
+            Population=(target, "size")
+        )
+        self.resultats['Taux_Individus'] = (self.resultats['Population'] / self.df_score.shape[0]) * 100
+        self.resultats["CHR"] = range(1,8)
+        self.resultats = self.resultats[['CHR', "Taux_Défaut", "Taux_Individus"]]
+
 
     def get_segmentation_metrics(self, target, date):
         stability_df = self.df_score.groupby([date, 'Classes'])[target].mean().unstack()

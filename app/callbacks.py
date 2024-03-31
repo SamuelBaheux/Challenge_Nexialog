@@ -142,6 +142,27 @@ def register_callbacks(app):
             return info
 
     @app.callback(
+        [Output('class-display', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
+         Output('table-id', 'data')],
+        [Input('breaks-slider', 'value'),
+         Input('graph-type-selector', 'value')],
+        prevent_initial_call = True
+    )
+    def update_breaks_graph(breaks, graph_type):
+        if breaks is not None :
+            model.update_segmentation(breaks, dataprep.target)
+
+            if graph_type == 'gini':
+                fig = create_gini_figure()
+            elif graph_type == 'taux':
+                fig = create_stability_figure()
+
+            table_data = round(model.resultats, 2).to_dict('records')
+
+            return fig, table_data
+
+
+    @app.callback(
         [Output('stability-graph', 'figure'),
          Output('histo-graph', 'figure')],
         [Input('stability-dropdown', 'value')]
