@@ -7,6 +7,7 @@
 - Tabs
 - Widgets
 - Loading
+- Slider
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -347,4 +348,26 @@ Loading
     height: 80px;
     width: auto;
     vertical-align: middle;
+}
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Slider
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+
+
+.custom-slider .rc-slider-track {
+    background-color: #B20031; /* Change la couleur de la barre */
+}
+
+.custom-slider .rc-slider-handle {
+    border-color: #B20031;
+    width: 15px; /* Change la largeur des poignées */
+    height: 15px; /* Change la hauteur des poignées */
+    margin-top: -6px; /* Ajustement pour centrer verticalement après modification de la taille */
+}
+
+.slider-container{
+    width: 80%;
+    margin: auto;
 }

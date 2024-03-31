@@ -286,12 +286,20 @@ def title_layout():
 def test():
     model.get_segmentation(dataprep.target)
     return html.Div(children=[
-        html.Div(children=[dcc.RangeSlider(0,
+        html.Div(id = "slider-container", children=[dcc.RangeSlider(0,
                                            1000,
                                            id = "breaks-slider",
                                            value=model.breaks,
-                                           allowCross=False)],
-                 style={'width': '100%'}),
+                                           marks={i: {'label': str(i), 'style': {'color': '#ffffff', 'fontSize': '14px'}}
+                                                  for i in range(0, 1001, 250)},
+                                           allowCross=False,
+                                            tooltip={
+                                                "placement": "top",
+                                                "always_visible": True,
+                                                "style": {"color": "white", "fontSize": "12px"},
+                                            },
+                                           className="custom-slider")],
+                 style={'width': '95%', 'margin':"auto"}),
         html.Br(),])
 
 @render_this(graph_right)
