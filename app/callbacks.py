@@ -131,11 +131,11 @@ def register_callbacks(app):
     )
     def update_dropdown_variables(selected_features):
         if selected_features is not None :
-            info = "Détail des variables choisies pour la modélisation :\n"
+            info = "**Détail des variables choisies pour la modélisation :**\n"
             for features in selected_features :
                 desc = dictionnaire[dictionnaire['Row'] == features]['Description']
                 if len(desc) > 0 :
-                    info += f"- {features} : {desc.values[0]}\n"
+                    info += f"- **{features}** : {desc.values[0]}\n"
                 else :
                     info += f"- {features}\n"
 

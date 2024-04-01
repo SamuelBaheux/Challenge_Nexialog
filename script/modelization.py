@@ -118,3 +118,36 @@ class Modelization():
 
         return(self.MOC_C)
 
+    def get_moc_a(self, target, date):
+        if 'date_trimestrielle' not in self.df_score.columns :
+            self.df_score[date] = pd.to_datetime(self.df_score[date])
+            self.df_score['date_trimestrielle'] = (self.df_score[date].dt.year.astype(str) + '_' +
+                                                self.df_score[date].dt.quarter.astype(str))
+
+        avant_covid = self.df_score[self.df_score['date_trimestrielle'] < '2020_2']
+
+        taux_defaut_avant_covid = avant_covid.groupby('Classes')[target].mean()
+        taux_defaut_pendant_covid = self.df_score.groupby('Classes')[target].mean()
+
+        impact_covid_par_classe = (taux_defaut_avant_covid / taux_defaut_pendant_covid) - 1
+        variance_taux_defaut_pendant_covid = self.df_score.groupby('Classes')[target].var()
+
+        simulations = pd.DataFrame()
+
+        for classe in impact_covid_par_classe.index:
+            moyenne_impact = impact_covid_par_classe[classe]
+            variance_impact = variance_taux_defaut_pendant_covid[classe]
+            variance_impact = variance_impact if variance_impact > 0 else 0.001
+            tirages = np.random.normal(moyenne_impact, variance_impact, 1000)
+            simulations[classe] = tirages
+
+        percentile_90 = simulations.quantile(0.90)
+        self.MOC_A = percentile_90 - taux_defaut_pendant_covid
+        self.MOC_A = self.MOC_A.reset_index()
+        self.MOC_A.columns = ["CHR", "MOC_A"]
+        self.MOC_A["MOC_A"] = self.MOC_A["MOC_A"].apply(lambda x : 0 if x < 0 else x)
+
+        print(self.MOC_A)
+        return(self.MOC_A)
+
+

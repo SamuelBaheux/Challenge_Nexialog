@@ -21,12 +21,13 @@ custom_layout = {
     }
 }
 
+
 def plot_stability_plotly(variable):
     stability_df = dataprep.train.groupby([dataprep.date, variable])[dataprep.target].mean().unstack()
 
     fig = go.Figure()
 
-    for class_label in stability_df.columns:
+    for i, class_label in enumerate(stability_df.columns):
         values = stability_df[class_label]
         fig.add_trace(go.Scatter(x=stability_df.index,
                                  y=values,
@@ -136,6 +137,7 @@ def create_gini_figure():
     fig.update_layout(**custom_layout)
 
     return fig
+
 
 
 def create_stability_figure():

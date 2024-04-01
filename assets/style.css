@@ -115,7 +115,10 @@ Textes
 }
 
 .variables-info{
-    color: white
+    color: white;
+    font-size: 18px;
+    font-weight: normal;
+    margin-left: 25px;
 }
 
 .md_title{
@@ -127,6 +130,9 @@ Textes
 .results-title{
     color: #ffffff;
     font-weight: bolder;
+    font-family: "DecoType Naskh";
+    font-size: 35px;
+
 }
 
 .left-title{
@@ -143,10 +149,22 @@ Textes
     gap: 15px; /* Adjust this value as needed to control the spacing between the logo and the text */
 }
 
+.logo-and-label-left {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Adjust this value as needed to control the spacing between the logo and the text */
+}
+
 .logo-inline {
     height: 40px;
     width: auto;
     margin-right: 5px;
+    vertical-align: middle;
+}
+
+.logo-left {
+    height: 50px;
+    width: auto;
     vertical-align: middle;
 }
 
@@ -230,6 +248,12 @@ DropDowns
 
 .label-inline {
     font-size: 22px;
+    color: white;
+}
+
+.label-left{
+    font-size: 20px;
+    font-weight: bold;
     color: white;
 }
 
@@ -354,20 +378,22 @@ Loading
 Slider
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-
-
 .custom-slider .rc-slider-track {
-    background-color: #B20031; /* Change la couleur de la barre */
+    background-color: #B20031;
 }
 
 .custom-slider .rc-slider-handle {
     border-color: #B20031;
-    width: 15px; /* Change la largeur des poignées */
-    height: 15px; /* Change la hauteur des poignées */
-    margin-top: -6px; /* Ajustement pour centrer verticalement après modification de la taille */
+    width: 15px;
+    height: 15px;
+    margin-top: -6px;
 }
 
 .slider-container{
     width: 80%;
     margin: auto;
+}
+
+.custom-slider .rc-slider-dot-active{
+    border-color : #FFFFFF;
 }

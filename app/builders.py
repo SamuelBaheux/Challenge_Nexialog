@@ -125,7 +125,6 @@ def create_layout():
 
             html.Div(id='hidden-div'),
             html.Div(id='hidden-div1'),
-            html.Div(id='hidden-div3'),
 
             html.Br(),
 
@@ -145,7 +144,7 @@ def create_layout():
             ]),
 
             html.Div(id='variables-info', className='variables-info',
-                     children=[dcc.Markdown(id='variables-info-markdown', children='')]),
+                     children=[html.Br(), dcc.Markdown(id='variables-info-markdown', children=''), html.Br()]),
 
             html.Div(className='form-input row', children=[
                 html.Div(id = 'predefined_vars_button', className='predefined-vars', children=[
@@ -192,7 +191,7 @@ def render_this(render_list):
 @render_this(graph_right)
 def title_layout():
     return (html.Div(className='results-title',
-                     children=[html.Br(), html.H3("1.Vérification des hypothèses"), html.Br()]))
+                     children=[html.Label("1.Vérification des hypothèses"), html.Br()]))
 
 
 @render_this(graph_right)
@@ -220,7 +219,7 @@ def title_layout():
 @render_this(graph_right)
 def title_layout():
     return (html.Div(className='results-title',
-                   children=[html.Br(), html.H3("2.Performances du modèle"), html.Br()]))
+                   children=[html.Br(), html.Label("2.Performances du modèle"), html.Br()]))
 
 
 
@@ -247,7 +246,7 @@ def shap_values():
 @render_this(graph_right)
 def title_layout():
     return (html.Div(className='results-title',
-                     children=[html.Br(), html.H3("3.Grille de Score"), html.Br()]))
+                     children=[html.Br(), html.Label("3.Grille de Score"), html.Br()]))
 
 
 @render_this(graph_right)
@@ -280,7 +279,7 @@ def table():
 @render_this(graph_right)
 def title_layout():
     return (html.Div(className='results-title',
-                     children=[html.Br(), html.H3("4.Segmentation"), html.Br()]))
+                     children=[html.Br(), html.Label("4.Segmentation"), html.Br()]))
 
 @render_this(graph_right)
 def test():
@@ -348,12 +347,36 @@ def test():
 @render_this(graph_right)
 def title_layout():
     return (html.Div(className='results-title',
-                     children=[html.H3("5. MOC")]))
+                     children=[html.Label("5. MOC")]))
 
 @render_this(graph_right)
 def table():
     moc_C = model.get_moc_c(dataprep.target)
     return dash_table.DataTable(round(moc_C, 4).to_dict('records'), [{"name": i, "id": i} for i in moc_C.columns],
+                                style_header={
+                                    'backgroundColor': 'rgb(76, 82, 94)',
+                                    'color': 'white',
+                                    'fontSize': '20px',
+                                    'height': '50px',
+                                    'whiteSpace': 'normal',
+                                    'padding': '15px',
+                                    'fontWeight': 'bold'
+                                },
+                                style_data={
+                                    'backgroundColor': 'rgb(78, 85, 103)',
+                                    'color': 'white',
+                                    'fontSize': '16px',
+                                    'height': '40px',
+                                    'whiteSpace': 'normal',
+                                    'padding': '15px',
+                                    'fontWeight': 'normal'
+                                },
+                                )
+
+@render_this(graph_right)
+def table():
+    moc_A = model.get_moc_a(dataprep.target, dataprep.date)
+    return dash_table.DataTable(round(moc_A, 4).to_dict('records'), [{"name": i, "id": i} for i in moc_A.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
@@ -386,16 +409,24 @@ def title_layout():
    return(html.Div([html.Div(
        className='data-summary',
        children=[
-           html.Label([
-               f"- {model.df_score.shape[0]} observations.",
+           html.Div(className='logo-and-label-left col', children=[
+               html.Img(src='./assets/images/homme.png', className='logo-left', style={"margin-left":"8px"}),
+               html.Label(f"{model.df_score.shape[0]} observations.", className='label-left', style={"margin-left":"10px"}),
+           ]),
                html.Br(),
-               f"- {model.df_score[dataprep.target].sum()} défauts.",
+           html.Div(className='logo-and-label-left col', children=[
+               html.Img(src='./assets/images/croix.png', className='logo-left', style={"height":'40px'}),
+               html.Label(f"{model.df_score[dataprep.target].sum()} défauts.", className='label-left',  style={"margin-left":"5px"}),
+           ]),
                html.Br(),
-               f"- {round(model.df_score[dataprep.target].mean(), 2) * 100} % de taux de défaut."
+           html.Div(className='logo-and-label-left col-left', children=[
+               html.Img(src='./assets/images/pcentage.png', className='logo-left'),
+               html.Label(f"{round(model.df_score[dataprep.target].mean(), 2) * 100} % de taux de défaut.", className='label-left'),
+           ]),
            ])
        ]
-   ),
-   ]))
+   )
+   )
 
 
 @render_this(graph_left)
@@ -427,7 +458,7 @@ def title_layout():
 
 @render_this(graph_left)
 def download_df_score():
-    return html.Div(className='results-title',
+    return html.Div(
                     children=[
                         html.Br(),
                         html.Button(["Données"], id="btn_df_score", className='download-button'),
@@ -438,7 +469,7 @@ def download_df_score():
 
 @render_this(graph_left)
 def download_grille_score():
-    return html.Div(className='results-title',
+    return html.Div(
                     children=[
                         html.Br(),
                         html.Button("Grille de score", id="btn_grille_score", className='download-button'),
@@ -449,7 +480,7 @@ def download_grille_score():
 
 @render_this(graph_left)
 def download_model():
-    return html.Div(className='results-title',
+    return html.Div(
                     children=[
                         html.Br(),
                         html.Button("Modèle", id="btn_model", className='download-button'),
