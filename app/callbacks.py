@@ -11,6 +11,7 @@ from builders import build_all_panels
 from data_preparation import *
 from plot_utils import *
 from app_utils import *
+from vars import statement_list
 
 def register_callbacks(app):
     @app.callback([Output('output-data-upload', 'children'),
@@ -47,6 +48,13 @@ def register_callbacks(app):
             return children, options, target_options, date_options, {'display': 'flex'}
         else :
             return children, options, target_options, date_options, {'display': 'None'}
+
+    @app.callback(
+        Output('loading-statement', 'children'),
+        Input('interval-component', 'n_intervals')
+    )
+    def check_list_changes(n):
+        return(statement_list[-1])
 
     @app.callback(Output('hidden-div', 'children'),
                   [Input('target-dropdown', 'value')])
@@ -96,6 +104,23 @@ def register_callbacks(app):
 
         return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
 
+    @app.callback(
+        Output('loading-div', 'style'),
+        [Input('launch-button', 'n_clicks'),
+         Input("variables-dropdown", 'value'),
+         Input('model-choice', 'value')],
+        [State('loading-div', 'style')],  # Utilisez l'état actuel pour conditionner la mise à jour
+        prevent_initial_call=True
+    )
+    def toggle_loading_div(n_clicks, features, model_choice, current_style):
+        if n_clicks and n_clicks > 0:
+            if model_choice is None or features is None:
+                # Si les entrées ne sont pas valides, ne changez pas le style
+                return dash.no_update
+            # Si le bouton est cliqué et les entrées sont valides, affichez loading-div
+            return {'display': 'block'}
+        # Dans d'autres cas, gardez loading-div caché
+        return {'display': 'none'}
 
     @app.callback(
         Output('variables-dropdown', 'value'),

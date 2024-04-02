@@ -150,4 +150,16 @@ class Modelization():
         print(self.MOC_A)
         return(self.MOC_A)
 
+    def get_default_proba(self, target, date):
+        moc_c = self.get_moc_c(target)
+        moc_a = self.get_moc_a(target, date)
+
+        default_proba = moc_c.copy()
+        default_proba["MOC_A"] = moc_a["MOC_A"]
+        default_proba["Moc_C"] = default_proba["Moc_C"].apply(lambda x: 0 if x < 0 else x)
+        default_proba["Probabilité_Défaut"] = default_proba["LRA"] + default_proba["Moc_C"] + default_proba["MOC_A"]
+        default_proba = default_proba[['Classe', 'LRA', 'Probabilité_Défaut']]
+
+        return(default_proba)
+
 

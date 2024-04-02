@@ -3,45 +3,41 @@ import sys
 sys.path.append("./script/")
 
 from dash import dcc, html, dash_table
-import dash_daq as daq
 from plot_utils import *
 
 graph_left = []
 graph_right = []
 
-
 def build_tabs():
-    return html.Div([html.Div(className='header', children=[
-            html.Img(src='./assets/images/logo.png', className='logo-title')]),
-                            html.Div(
-        id="tabs",
-        className="tabs",
-        children=[
-            dcc.Tabs(
-                id="app-tabs",
-                value="tab1",
-                className="custom-tabs",
-                children=[
-                    dcc.Tab(
-                        id="Specs-tab",
-                        label="Paramètres",
-                        value="tab1",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected",
-                        children=create_layout(),
-                    ),
-                    dcc.Tab(
-                        id="Control-chart-tab",
-                        label="Resultats",
-                        value="tab2",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected"
-                    ),
+    return html.Div([html.Div(className='header',
+                              children=[html.Img(src='./assets/images/logo.png',
+                                                 className='logo-title')]),
+                                        html.Div(id="tabs",
+                                                 className="tabs",
+                                                 children=[
+                                        dcc.Tabs(
+                                            id="app-tabs",
+                                            value="tab1",
+                                            className="custom-tabs",
+                                            children=[
+                                                dcc.Tab(id="Specs-tab",
+                                                        label="Modélisation",
+                                                        value="tab1",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected",
+                                                        children=create_layout(),
+                                                ),
+                                                dcc.Tab(id="Control-chart-tab",
+                                                        label="Resultats",
+                                                        value="tab2",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected"
+                            ),
                 ],
             )
         ],
     )
-                    ])
+])
 
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
@@ -156,11 +152,14 @@ def create_layout():
             html.Br(),
 
             html.Div(id="loading-div",
+                     style={'display': 'none'},
                      children=[
                          dcc.Loading(
                              id="loading",
                              children=[html.Div(id="loading-output",
-                                                className="loading-page")],
+                                                className="loading-page"),
+                                       #dcc.Interval(id='interval-component', interval=1 * 1000, n_intervals=0),
+                                       html.Div(id='test_loading', children=[html.H3("", id = "loading-statement",  style={'color':'#FFFFFF'})])],
                              type="default",
                              fullscreen=True,
                          ),
@@ -351,8 +350,8 @@ def title_layout():
 
 @render_this(graph_right)
 def table():
-    moc_C = model.get_moc_c(dataprep.target)
-    return dash_table.DataTable(round(moc_C, 4).to_dict('records'), [{"name": i, "id": i} for i in moc_C.columns],
+    proba_defaut = model.get_default_proba(dataprep.target, dataprep.date)
+    return dash_table.DataTable(round(proba_defaut, 4).to_dict('records'), [{"name": i, "id": i} for i in proba_defaut.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
@@ -373,29 +372,7 @@ def table():
                                 },
                                 )
 
-@render_this(graph_right)
-def table():
-    moc_A = model.get_moc_a(dataprep.target, dataprep.date)
-    return dash_table.DataTable(round(moc_A, 4).to_dict('records'), [{"name": i, "id": i} for i in moc_A.columns],
-                                style_header={
-                                    'backgroundColor': 'rgb(76, 82, 94)',
-                                    'color': 'white',
-                                    'fontSize': '20px',
-                                    'height': '50px',
-                                    'whiteSpace': 'normal',
-                                    'padding': '15px',
-                                    'fontWeight': 'bold'
-                                },
-                                style_data={
-                                    'backgroundColor': 'rgb(78, 85, 103)',
-                                    'color': 'white',
-                                    'fontSize': '16px',
-                                    'height': '40px',
-                                    'whiteSpace': 'normal',
-                                    'padding': '15px',
-                                    'fontWeight': 'normal'
-                                },
-                                )
+
 
 
 @render_this(graph_left)
