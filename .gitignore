@@ -1,2 +1,6 @@
-.nexialog_venv
+.gitignore
+.idea
+.DS_Store
+.gitattributes
 data
+.nexiavenv
