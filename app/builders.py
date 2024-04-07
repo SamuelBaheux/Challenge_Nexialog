@@ -20,6 +20,13 @@ def build_tabs():
                                             value="tab1",
                                             className="custom-tabs",
                                             children=[
+                                                dcc.Tab(id="Analyse-tab",
+                                                        label="Analyse",
+                                                        value="tab0",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected",
+                                                        children=create_analyse(),
+                                                        ),
                                                 dcc.Tab(id="Specs-tab",
                                                         label="Modélisation",
                                                         value="tab1",
