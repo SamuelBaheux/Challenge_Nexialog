@@ -20,6 +20,13 @@ def build_tabs():
                                             value="tab1",
                                             className="custom-tabs",
                                             children=[
+                                                dcc.Tab(id="Analyse-tab",
+                                                        label="Analyse",
+                                                        value="tab0",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected",
+                                                        children=analyse_layout(),
+                                                        ),
                                                 dcc.Tab(id="Specs-tab",
                                                         label="Modélisation",
                                                         value="tab1",
@@ -50,6 +57,7 @@ def chatbot():
     return html.Div(children=[html.Label("AAAA", style={'color':'#FFFFFF'})])
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
+def analyse_layout():
 
 def create_layout():
     return html.Div(className='hub', children=[
