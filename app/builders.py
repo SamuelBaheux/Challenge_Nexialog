@@ -32,13 +32,22 @@ def build_tabs():
                                                         value="tab2",
                                                         className="custom-tab",
                                                         selected_className="custom-tab--selected"
-                            ),
+                                                ),
+                                                dcc.Tab(id='chat-tab',
+                                                        label='Chatbot',
+                                                        className="custom-tab",
+                                                        value='tab3',
+                                                        selected_className="custom-tab--selected",
+                                                        children=chatbot()),
                 ],
             )
         ],
     )
 ])
 
+
+def chatbot():
+    return html.Div(children=[html.Label("AAAA", style={'color':'#FFFFFF'})])
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
