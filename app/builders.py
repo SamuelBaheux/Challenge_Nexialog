@@ -20,6 +20,12 @@ def build_tabs():
                                             value="tab1",
                                             className="custom-tabs",
                                             children=[
+                                                dcc.Tab(id='analyse-tab',
+                                                        label='Analyse',
+                                                        className="custom-tab",
+                                                        value='tab9',
+                                                        selected_className="custom-tab--selected",
+                                                        children=analyse_layout()),
                                                 dcc.Tab(id="Specs-tab",
                                                         label="Modélisation",
                                                         value="tab1",
@@ -45,9 +51,55 @@ def build_tabs():
     )
 ])
 
+################################################ ONGLET 0 : Analyse #################################################
 
-def chatbot():
-    return html.Div(children=[html.Label("AAAA", style={'color':'#FFFFFF'})])
+def analyse_layout():
+    return html.Div(className='hub', children = [
+
+        html.Div([dcc.Upload(id='upload-data-analyse', className="uploader", children=html.Div(
+            ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
+        )), html.Div(id='output-data-upload-analyse', style={"color": "#ffffff", "textAlign": "center"}),
+                  ]),
+
+        html.Br(),
+
+        html.Div(className='form-input row', children=[
+            html.Div(className='logo-and-label col', children=[
+                html.Label('Choix de la cible', className='label-inline'),
+            ]),
+            html.Div(className='form-dropdown col', children=[
+                dcc.Dropdown(id='target-dropdown-analyse',
+                             options=dataprep.get_features(),
+                             multi=False,
+                             placeholder="Choisir la cible",
+                             className='dropdown-inline',
+                             style={'background-color': '#4e5567'}),
+            ])
+        ]),
+
+        html.Br(),
+
+        html.Div(className='form-input row', children=[
+            html.Div(className='logo-and-label col', children=[
+                html.Label('Choix de la variable date', className='label-inline'),
+            ]),
+            html.Div(className='form-dropdown col', children=[
+                dcc.Dropdown(id='date-dropdown-analyse',
+                             options=dataprep.get_features(),
+                             multi=False,
+                             placeholder="Choisir la date",
+                             className='dropdown-inline',
+                             style={'background-color': '#4e5567'}),
+            ])
+        ]),
+
+        html.Br(),
+        html.Button('Lancer l\'analyse', id='launch-button-analyse', n_clicks=0, className='launch-button'),
+
+        html.Div(id = "Graph-Container", children=[])
+
+    ])
+
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
@@ -491,3 +543,9 @@ def build_all_panels():
         )])
 
     return layout
+
+################################################ ONGLET 3 : Chatbot #################################################
+
+
+def chatbot():
+    return html.Div(children=[html.Label("AAAA", style={'color':'#FFFFFF'})])

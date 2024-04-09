@@ -10,10 +10,47 @@ from dash import dcc
 from builders import build_all_panels
 from data_preparation import *
 from plot_utils import *
+from plot_analyse import *
 from app_utils import *
 from vars import statement_list
 
 def register_callbacks(app):
+
+    ####################################### ANALYSE ########################################
+
+    @app.callback([Output('output-data-upload-analyse', 'children'),
+                   Output('target-dropdown-analyse', 'options'),
+                   Output('date-dropdown-analyse', 'options')],
+                  [Input('upload-data-analyse', 'contents')],
+                  [State('upload-data-analyse', 'filename')])
+    def update_output(contents, filename):
+        if contents is not None:
+            df, filename = parse_contents(contents, filename)
+            if isinstance(df, pd.DataFrame):
+                analyse.init_data(df)
+                target_options = analyse.get_features()
+                date_options = analyse.get_features()
+
+                return [html.Div(html.H5(f'Le fichier {filename} a été téléchargé avec succès'))], target_options, date_options
+        else:
+            return dash.no_update,[], []
+
+    @app.callback([Output("Graph-Container", "children")],
+                  [Input("launch-button-analyse", "n_clicks")])
+    def display_graph(n_clicks):
+        if n_clicks and n_clicks > 0:
+            return [
+                dcc.Graph(figure=missing_values())
+                # Tu rajoutes ici les différents graphiques que tu fais
+                # Si tu veux faire des styles différent (taille des graphs, disposition, ...) tu peux rajouter des
+                # html.Div dans cette liste
+                # tu peux rajouter tout ce que tu veux dans la liste (des html.Label, ...)
+            ]
+        else :
+            return dash.no_update
+
+
+    ####################################### MODÉLISATION ########################################
     @app.callback([Output('output-data-upload', 'children'),
                    Output('variables-dropdown', 'options'),
                    Output('target-dropdown', 'options'),
