@@ -4,6 +4,7 @@ sys.path.append("./script/")
 
 from dash import dcc, html, dash_table
 from plot_utils import *
+from plot_analyse import *
 
 graph_left = []
 graph_right = []
@@ -100,6 +101,14 @@ def analyse_layout():
 
     ])
 
+def build_analyse_panel():
+    return ([
+        dcc.Graph(figure=missing_values())
+        # Tu rajoutes ici les différents graphiques que tu fais
+        # Si tu veux faire des styles différent (taille des graphs, disposition, ...) tu peux rajouter des
+        # html.Div dans cette liste
+        # tu peux rajouter tout ce que tu veux dans la liste (des html.Label, ...)
+    ])
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 

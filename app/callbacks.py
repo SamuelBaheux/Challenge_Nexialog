@@ -7,7 +7,7 @@ from dash.dependencies import Input, Output, State
 import dash
 from dash import dcc
 
-from builders import build_all_panels
+from builders import build_all_panels, build_analyse_panel
 from data_preparation import *
 from plot_utils import *
 from plot_analyse import *
@@ -39,13 +39,7 @@ def register_callbacks(app):
                   [Input("launch-button-analyse", "n_clicks")])
     def display_graph(n_clicks):
         if n_clicks and n_clicks > 0:
-            return [
-                dcc.Graph(figure=missing_values())
-                # Tu rajoutes ici les différents graphiques que tu fais
-                # Si tu veux faire des styles différent (taille des graphs, disposition, ...) tu peux rajouter des
-                # html.Div dans cette liste
-                # tu peux rajouter tout ce que tu veux dans la liste (des html.Label, ...)
-            ]
+            return build_analyse_panel()
         else :
             return dash.no_update
 
