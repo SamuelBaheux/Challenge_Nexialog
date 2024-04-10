@@ -9,6 +9,7 @@ graph_left = []
 graph_right = []
 
 
+
 def build_tabs():
     return html.Div([html.Div(className='header',
                               children=[html.Img(src='./assets/images/logo.png',
@@ -33,12 +34,23 @@ def build_tabs():
                                                         value="tab2",
                                                         className="custom-tab",
                                                         selected_className="custom-tab--selected"
-                            ),
+                                                
+                                                ),
+                                                dcc.Tab(id="Chatbot-tab",
+                                                        label="chatbot",
+                                                        value="tab3",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected",
+                                                        children=chatbot()
+                                                ),
+
                 ],
             )
         ],
     )
 ])
+
+
 
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
@@ -53,7 +65,7 @@ def create_layout():
             ]),
             html.Br(),
 
-            html.Div([dcc.Upload(id='upload-data', className = "uploader", children=html.Div(
+            html.Div([dcc.Upload(id='upload-data', className="uploader", children=html.Div(
                     ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
                 )), html.Div(id='output-data-upload', style={"color":"#ffffff", "textAlign":"center"}),
             ]),
@@ -99,7 +111,7 @@ def create_layout():
                                  multi=False,
                                  placeholder="Choisir la cible",
                                  className='dropdown-inline',
-                                 style={'background-color':'#4e5567'}),
+                                 style={'background-color': '#4e5567'}),
                 ])
             ]),
 
@@ -116,7 +128,7 @@ def create_layout():
                                  multi=False,
                                  placeholder="Choisir la date",
                                  className='dropdown-inline',
-                                 style={'background-color':'#4e5567'}),
+                                 style={'background-color': '#4e5567'}),
                 ])
             ]),
 
@@ -136,7 +148,7 @@ def create_layout():
                                  multi=True,
                                  placeholder="Choisir des variables",
                                  className='dropdown-inline',
-                                 style={'background-color':'#4e5567'}),
+                                 style={'background-color': '#4e5567'}),
                 ])
             ]),
 
@@ -160,7 +172,7 @@ def create_layout():
                              children=[html.Div(id="loading-output",
                                                 className="loading-page"),
                                        #dcc.Interval(id='interval-component', interval=1 * 1000, n_intervals=0),
-                                       html.Div(id='test_loading', children=[html.H3("", id = "loading-statement",  style={'color':'#FFFFFF'})])],
+                                       html.Div(id='test_loading', children=[html.H3("", id ="loading-statement",  style={'color':'#FFFFFF'})])],
                              type="default",
                              fullscreen=True,
                          ),
@@ -171,8 +183,6 @@ def create_layout():
             html.Button('Lancer la Modélisation', id='launch-button', n_clicks=0, className='launch-button'),
         ])
     ])
-
-
 
 ################################################ ONGLET 2 : RÉSULTATS #################################################
 
@@ -192,7 +202,6 @@ def render_this(render_list):
 def title_layout():
     return (html.Div(className='results-title',
                      children=[html.Label("1.Vérification des hypothèses"), html.Br()]))
-
 
 @render_this(graph_right)
 def title_layout():
@@ -490,3 +499,47 @@ def build_all_panels():
         )])
 
     return layout
+
+################################################ ONGLET 3 : CHATBOT #################################################
+
+import pandas as pd
+from vars import model
+
+df = pd.read_csv("/Users/SamuelLP/Desktop/git/Challenge_Nexialog/data/df_segmentation.csv")
+df = df[['DAYS_CREDIT_ENDDATE_disc_int', 'REGION_RATING_CLIENT', 'Score_ind', "Classes"]]
+
+dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
+
+def chatbot():
+    children = [
+        html.Div(className='hub', children=[
+            html.Div(className='container', children=[
+                html.Div(id='md_title_chatbot', style={'margin-bottom': '50px'}, children=[
+                    html.Label(className='md_title', children='Quelle catégorie vous correspond le mieux ?')
+                ]),
+                html.Br(),
+                # Créez des dropdowns pour chaque colonne spécifiée dans 'dropdown_columns'
+                *[html.Div(className='form-input row', style={'margin-bottom': '50px'}, children=[
+                    html.Div(className='logo-and-label col', children=[
+                        html.Label(f'Pour la variable {column} :', className='label-inline'),
+                    ]),
+                    html.Div(className='form-dropdown col', children=[
+                        dcc.Dropdown(
+                            id={'type': 'dropdown-inline2', 'column': column},
+                            options=[{'label': value, 'value': value} for value in df[column].unique() if pd.notnull(value)],
+                            placeholder="Sélectionnez...",
+                            className='dropdown-inline',
+                            style={'background-color': '#4e5567'}
+                        ),
+                    ])
+                ]) for column in dropdown_columns],
+                html.Br(),
+                html.Br(),
+                html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px'}),
+                html.Div(id='score-ind-result'),
+            ])
+        ])
+    ]
+
+    return html.Div(children, id='chatbot-container')
+

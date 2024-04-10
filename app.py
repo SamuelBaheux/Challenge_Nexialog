@@ -1,6 +1,5 @@
 import sys
-
-from dash import dash
+from dash import dash, html
 
 sys.path.append("./app")
 
@@ -20,6 +19,5 @@ app.layout = html.Div(
         build_tabs(),
     ],
 )
-
 if __name__ == '__main__':
     app.run_server(debug=True)

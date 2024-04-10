@@ -3,8 +3,10 @@ import sys
 
 sys.path.append('./script')
 
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, MATCH, ALL
 import dash
+
+import json
 from dash import dcc
 
 from builders import build_all_panels
@@ -12,6 +14,7 @@ from data_preparation import *
 from plot_utils import *
 from app_utils import *
 from vars import statement_list
+
 
 def register_callbacks(app):
     @app.callback([Output('output-data-upload', 'children'),
@@ -232,3 +235,50 @@ def register_callbacks(app):
     def download_model(n_clicks):
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
+
+    #@app.callback(
+    #Output('response-storage', 'data'),  # Un dcc.Store pour enregistrer les réponses
+    #Input({'type': 'chatbot-button', 'column': ALL, 'value': ALL}, 'n_clicks'),
+    #State('response-storage', 'data'),
+    #prevent_initial_call=True
+    #)
+    #def record_responses(n_clicks, stored_data):
+   #     ctx = dash.callback_context
+   #     if not ctx.triggered:
+   #         return dash.no_update
+
+        # Identifier le bouton qui a été cliqué et la réponse associée
+   #     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+   #     column, value = json.loads(button_id.replace("'", "\"")).values()
+
+        # Enregistrer la réponse dans un objet de stockage
+   #     stored_data[column] = value
+   #     return stored_data
+
+    @app.callback(
+        Output('score-ind-result', 'children'),
+        [Input('launch-chatbot-modeling', 'n_clicks')],
+        [State({'type': 'dropdown-inline2', 'column': ALL}, 'value')]
+    )
+    def update_score_ind(n_clicks, dropdown_values):
+        dropdown_columns = ['DAYS_CREDIT_ENDDATE_disc_int', 'REGION_RATING_CLIENT']
+        if n_clicks > 0:
+            # Filtrez le DataFrame basé sur les sélections des dropdowns
+            filtered_df = df
+            print(filtered_df.head(5))
+            print(dropdown_values)
+            
+            for column, value in zip(dropdown_columns, dropdown_values):
+                print(f"Column: {column}, Value: {value}, Unique values in DF: {df[column].unique()}")
+
+                if value is not None:
+                    filtered_df = filtered_df[filtered_df[column] == value]
+                    print("Callback déclenché")
+            
+            # Calculez la moyenne de 'Score_ind'
+            mean_score_ind = filtered_df['Score_ind'].mean()
+
+            print(mean_score_ind)
+            
+            return f"La moyenne de 'Score_ind' pour les catégories sélectionnées est : {mean_score_ind:.2f}"
+        return "Sélectionnez des valeurs et cliquez sur le bouton pour voir le score moyen."
