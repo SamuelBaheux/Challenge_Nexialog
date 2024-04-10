@@ -16,6 +16,8 @@ from app_utils import *
 from vars import statement_list
 
 
+import pandas as pd
+
 def register_callbacks(app):
     @app.callback([Output('output-data-upload', 'children'),
                    Output('variables-dropdown', 'options'),
@@ -236,24 +238,6 @@ def register_callbacks(app):
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
 
-    #@app.callback(
-    #Output('response-storage', 'data'),  # Un dcc.Store pour enregistrer les réponses
-    #Input({'type': 'chatbot-button', 'column': ALL, 'value': ALL}, 'n_clicks'),
-    #State('response-storage', 'data'),
-    #prevent_initial_call=True
-    #)
-    #def record_responses(n_clicks, stored_data):
-   #     ctx = dash.callback_context
-   #     if not ctx.triggered:
-   #         return dash.no_update
-
-        # Identifier le bouton qui a été cliqué et la réponse associée
-   #     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-   #     column, value = json.loads(button_id.replace("'", "\"")).values()
-
-        # Enregistrer la réponse dans un objet de stockage
-   #     stored_data[column] = value
-   #     return stored_data
 
     @app.callback(
         Output('score-ind-result', 'children'),
@@ -261,24 +245,56 @@ def register_callbacks(app):
         [State({'type': 'dropdown-inline2', 'column': ALL}, 'value')]
     )
     def update_score_ind(n_clicks, dropdown_values):
-        dropdown_columns = ['DAYS_CREDIT_ENDDATE_disc_int', 'REGION_RATING_CLIENT']
+
+        df = pd.read_csv("/Users/SamuelLP/Desktop/git/Challenge_Nexialog/datas/df_segmentation.csv", index_col=[0])
+        df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
+                 "RATE_DOWN_PAYMENT_disc_int", "AMT_PAYMENT_disc_int",
+                 "NAME_INCOME_TYPE_discret", "OCCUPATION_TYPE_discret",
+                 'Score_ind', "Classes"]]
+
+        dropdown_columns = df.columns.difference(
+            ['Score_ind', 'Classes']).tolist()
+{
+    
+}
+        print(df.columns)
         if n_clicks > 0:
-            # Filtrez le DataFrame basé sur les sélections des dropdowns
+
             filtered_df = df
-            print(filtered_df.head(5))
-            print(dropdown_values)
-            
+
             for column, value in zip(dropdown_columns, dropdown_values):
-                print(f"Column: {column}, Value: {value}, Unique values in DF: {df[column].unique()}")
+                print(
+                    f"Column: {column}, Value: {value}, Unique values in DF: {
+                        df[column].unique()}")
 
                 if value is not None:
                     filtered_df = filtered_df[filtered_df[column] == value]
                     print("Callback déclenché")
-            
+
             # Calculez la moyenne de 'Score_ind'
             mean_score_ind = filtered_df['Score_ind'].mean()
+            mean_classes = int(filtered_df['Classes'].mean())
 
-            print(mean_score_ind)
-            
-            return f"La moyenne de 'Score_ind' pour les catégories sélectionnées est : {mean_score_ind:.2f}"
-        return "Sélectionnez des valeurs et cliquez sur le bouton pour voir le score moyen."
+            print(mean_score_ind, mean_classes)
+            if mean_classes < 3:
+                message = f"""
+            Votre score est de : {mean_score_ind:.2f} \n
+            Vous êtes dans la classe {mean_classes} \n
+            Un crédit vous sera octroyé
+            """
+            elif 5 >= mean_classes >= 3:
+                message = f"""
+                Votre score est de : {mean_score_ind:.2f} \n
+                Vous êtes dans la classe {mean_classes} \n
+                Un crédit vous sera octroyé, mais avec un taux d'intérêt élevé
+                """
+            else:
+                message = f"""
+                Votre score est de : {mean_score_ind:.2f} \n
+                Vous êtes dans la classe {mean_classes} \n
+                Aucun crédit ne vous sera octroyé
+                """
+            return dcc.Markdown(message, style={'margin-top': '20px',
+                                                "color": "#ffffff",
+                                                'font-weight': 'bold',
+                                                "font-size": "20px"})

@@ -505,8 +505,11 @@ def build_all_panels():
 import pandas as pd
 from vars import model
 
-df = pd.read_csv("/Users/SamuelLP/Desktop/git/Challenge_Nexialog/data/df_segmentation.csv")
-df = df[['DAYS_CREDIT_ENDDATE_disc_int', 'REGION_RATING_CLIENT', 'Score_ind', "Classes"]]
+df = pd.read_csv("/Users/SamuelLP/Desktop/git/Challenge_Nexialog/datas/df_segmentation.csv")
+df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
+         "RATE_DOWN_PAYMENT_disc_int",
+         "AMT_PAYMENT_disc_int", "NAME_INCOME_TYPE_discret",
+         "OCCUPATION_TYPE_discret", 'Score_ind', "Classes"]]
 
 dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
 
@@ -514,11 +517,12 @@ def chatbot():
     children = [
         html.Div(className='hub', children=[
             html.Div(className='container', children=[
-                html.Div(id='md_title_chatbot', style={'margin-bottom': '50px'}, children=[
-                    html.Label(className='md_title', children='Quelle catégorie vous correspond le mieux ?')
-                ]),
+                html.Div(id='md_title_chatbot',
+                         style={'margin-bottom': '50px'}, children=[
+                             html.Label(className='md_title',
+                                        children='Quelle catégorie vous correspond le mieux ?')]),
                 html.Br(),
-                # Créez des dropdowns pour chaque colonne spécifiée dans 'dropdown_columns'
+
                 *[html.Div(className='form-input row', style={'margin-bottom': '50px'}, children=[
                     html.Div(className='logo-and-label col', children=[
                         html.Label(f'Pour la variable {column} :', className='label-inline'),
