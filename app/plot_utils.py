@@ -1,7 +1,7 @@
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-
+import pandas as pd
 from vars import *
 
 custom_layout = {
@@ -39,7 +39,7 @@ def plot_stability_plotly(variable):
                       yaxis_title='Proportion de la cible',
                       legend_title='Classes',
                       margin=dict(l=20, r=20, t=40, b=20),
-                      height = 500)
+                      height=500)
 
     fig.update_layout(legend=dict(
         orientation="h",
@@ -51,6 +51,7 @@ def plot_stability_plotly(variable):
     fig.update_layout(**custom_layout)
 
     return fig
+
 
 def plot_hist(column):
     histogramme = go.Figure(go.Histogram(x=dataprep.train[column]))
@@ -66,6 +67,7 @@ def plot_hist(column):
     histogramme.update_layout(**custom_layout)
 
     return histogramme
+
 
 def roc_curve():
     metrics = model.get_metrics()
@@ -96,12 +98,14 @@ def roc_curve():
 
     return(fig)
 
+
 def gini_coefficient(values):
     sorted_values = np.sort(values)
     n = len(values)
     cumulative_values_sum = np.cumsum(sorted_values)
     gini_index = (2 * np.sum(cumulative_values_sum) / (n * np.sum(sorted_values))) - (n + 1) / n
     return 1 - gini_index
+
 
 def create_gini_figure():
     df = model.df_score.copy()
@@ -139,7 +143,6 @@ def create_gini_figure():
     return fig
 
 
-
 def create_stability_figure():
     df = model.df_score.copy()
     if "date_trimestrielle" not in df.columns :
@@ -175,8 +178,9 @@ def create_stability_figure():
 
     return fig
 
+
 def plot_shap_values():
-    if model.model_name == "xgb" :
+    if model.model_name == "xgb":
         shap_values = model.model.shap_values
         train = model.model.X_train
 
@@ -212,7 +216,8 @@ def plot_shap_values():
         for feature in train.columns:
             feature_shap = feature + '_shap'
             feature_train = feature + '_train'
-            melted_df.loc[melted_df['Feature'] == feature, 'One-hot Value'] = merged_df[feature_train].values
+            melted_df.loc[melted_df['Feature'] == feature, 'One-hot Value'] = \
+                merged_df[feature_train].values
 
         # Generate the plot again
         fig = px.strip(melted_df, x='SHAP Value', y='Feature',
@@ -225,10 +230,10 @@ def plot_shap_values():
 
         fig.update_layout(**custom_layout)
 
-        return(fig)
+        return fig
 
 
-def plot_metrics_leftpanel(metrics) :
+def plot_metrics_leftpanel(metrics):
     fig = go.Figure()
 
     fig.add_trace(go.Bar(
@@ -240,7 +245,8 @@ def plot_metrics_leftpanel(metrics) :
     ))
 
     fig.update_layout(
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 100]),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False,
+                   range=[0, 100]),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         showlegend=False,
         margin=dict(l=0, r=0, t=0, b=0),
@@ -249,10 +255,6 @@ def plot_metrics_leftpanel(metrics) :
     )
     fig.update_layout(**custom_layout)
 
-    fig.update_layout(paper_bgcolor = '#4e5567')
+    fig.update_layout(paper_bgcolor='#4e5567')
 
-    return(fig)
-
-
-
-
+    return fig

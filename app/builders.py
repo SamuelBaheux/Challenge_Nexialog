@@ -8,6 +8,8 @@ from plot_utils import *
 graph_left = []
 graph_right = []
 
+
+
 def build_tabs():
     return html.Div([html.Div(className='header',
                               children=[html.Img(src='./assets/images/logo.png',
@@ -32,6 +34,16 @@ def build_tabs():
                                                         value="tab2",
                                                         className="custom-tab",
                                                         selected_className="custom-tab--selected"
+                                                
+                                                ),
+                                                dcc.Tab(id="Chatbot-tab",
+                                                        label="chatbot",
+                                                        value="tab3",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected",
+                                                        children=chatbot()
+                                                ),
+
                                                 ),
                                                 dcc.Tab(id='chat-tab',
                                                         label='Chatbot',
@@ -44,6 +56,8 @@ def build_tabs():
         ],
     )
 ])
+
+
 
 
 def chatbot():
@@ -61,7 +75,7 @@ def create_layout():
             ]),
             html.Br(),
 
-            html.Div([dcc.Upload(id='upload-data', className = "uploader", children=html.Div(
+            html.Div([dcc.Upload(id='upload-data', className="uploader", children=html.Div(
                     ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
                 )), html.Div(id='output-data-upload', style={"color":"#ffffff", "textAlign":"center"}),
             ]),
@@ -107,7 +121,7 @@ def create_layout():
                                  multi=False,
                                  placeholder="Choisir la cible",
                                  className='dropdown-inline',
-                                 style={'background-color':'#4e5567'}),
+                                 style={'background-color': '#4e5567'}),
                 ])
             ]),
 
@@ -124,7 +138,7 @@ def create_layout():
                                  multi=False,
                                  placeholder="Choisir la date",
                                  className='dropdown-inline',
-                                 style={'background-color':'#4e5567'}),
+                                 style={'background-color': '#4e5567'}),
                 ])
             ]),
 
@@ -144,7 +158,7 @@ def create_layout():
                                  multi=True,
                                  placeholder="Choisir des variables",
                                  className='dropdown-inline',
-                                 style={'background-color':'#4e5567'}),
+                                 style={'background-color': '#4e5567'}),
                 ])
             ]),
 
@@ -168,7 +182,7 @@ def create_layout():
                              children=[html.Div(id="loading-output",
                                                 className="loading-page"),
                                        #dcc.Interval(id='interval-component', interval=1 * 1000, n_intervals=0),
-                                       html.Div(id='test_loading', children=[html.H3("", id = "loading-statement",  style={'color':'#FFFFFF'})])],
+                                       html.Div(id='test_loading', children=[html.H3("", id ="loading-statement",  style={'color':'#FFFFFF'})])],
                              type="default",
                              fullscreen=True,
                          ),
@@ -179,8 +193,6 @@ def create_layout():
             html.Button('Lancer la Modélisation', id='launch-button', n_clicks=0, className='launch-button'),
         ])
     ])
-
-
 
 ################################################ ONGLET 2 : RÉSULTATS #################################################
 
@@ -200,7 +212,6 @@ def render_this(render_list):
 def title_layout():
     return (html.Div(className='results-title',
                      children=[html.Label("1.Vérification des hypothèses"), html.Br()]))
-
 
 @render_this(graph_right)
 def title_layout():
@@ -295,7 +306,7 @@ def test():
     return html.Div(children=[
         html.Div(id = "slider-container", children=[dcc.RangeSlider(0,
                                            1000,
-                                           id = "breaks-slider",
+                                           id="breaks-slider",
                                            value=model.breaks,
                                            marks={i: {'label': str(i), 'style': {'color': '#ffffff', 'fontSize': '14px'}}
                                                   for i in range(0, 1001, 250)},
@@ -303,11 +314,13 @@ def test():
                                             tooltip={
                                                 "placement": "top",
                                                 "always_visible": True,
-                                                "style": {"color": "white", "fontSize": "12px"},
+                                                "style": {"color": "white",
+                                                          "fontSize": "12px"},
                                             },
                                            className="custom-slider")],
                  style={'width': '95%', 'margin':"auto"}),
         html.Br(),])
+
 
 @render_this(graph_right)
 def test():
@@ -360,7 +373,8 @@ def title_layout():
 @render_this(graph_right)
 def table():
     proba_defaut = model.get_default_proba(dataprep.target, dataprep.date)
-    return dash_table.DataTable(round(proba_defaut, 4).to_dict('records'), [{"name": i, "id": i} for i in proba_defaut.columns],
+    return dash_table.DataTable(round(proba_defaut, 4).to_dict('records'),
+                                [{"name": i, "id": i} for i in proba_defaut.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
@@ -389,6 +403,7 @@ def title_layout():
     return (html.Div(className='left-title',
                      children=[html.Label("Données"),
                                html.Br()]))
+
 
 @render_this(graph_left)
 def title_layout():
@@ -447,7 +462,8 @@ def download_df_score():
     return html.Div(
                     children=[
                         html.Br(),
-                        html.Button(["Données"], id="btn_df_score", className='download-button'),
+                        html.Button(["Données"], id="btn_df_score",
+                                    className='download-button'),
                         dcc.Download(id="download-df-score"),
                     ], style={'textAlign': 'center'}
                     )
@@ -458,7 +474,8 @@ def download_grille_score():
     return html.Div(
                     children=[
                         html.Br(),
-                        html.Button("Grille de score", id="btn_grille_score", className='download-button'),
+                        html.Button("Grille de score", id="btn_grille_score",
+                                    className='download-button'),
                         dcc.Download(id="download-grille-score"),
                     ], style={'textAlign': 'center'}
                     )
@@ -469,7 +486,8 @@ def download_model():
     return html.Div(
                     children=[
                         html.Br(),
-                        html.Button("Modèle", id="btn_model", className='download-button'),
+                        html.Button("Modèle", id="btn_model",
+                                    className='download-button'),
                         dcc.Download(id="download-model"),
                     ], style={'textAlign': 'center'}
                     )
@@ -491,3 +509,51 @@ def build_all_panels():
         )])
 
     return layout
+
+################################################ ONGLET 3 : CHATBOT #################################################
+
+import pandas as pd
+from vars import model
+
+df = pd.read_csv("/Users/SamuelLP/Desktop/git/Challenge_Nexialog/datas/df_segmentation.csv")
+df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
+         "RATE_DOWN_PAYMENT_disc_int",
+         "AMT_PAYMENT_disc_int", "NAME_INCOME_TYPE_discret",
+         "OCCUPATION_TYPE_discret", 'Score_ind', "Classes"]]
+
+dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
+
+def chatbot():
+    children = [
+        html.Div(className='hub', children=[
+            html.Div(className='container', children=[
+                html.Div(id='md_title_chatbot',
+                         style={'margin-bottom': '50px'}, children=[
+                             html.Label(className='md_title',
+                                        children='Quelle catégorie vous correspond le mieux ?')]),
+                html.Br(),
+
+                *[html.Div(className='form-input row', style={'margin-bottom': '50px'}, children=[
+                    html.Div(className='logo-and-label col', children=[
+                        html.Label(f'Pour la variable {column} :', className='label-inline'),
+                    ]),
+                    html.Div(className='form-dropdown col', children=[
+                        dcc.Dropdown(
+                            id={'type': 'dropdown-inline2', 'column': column},
+                            options=[{'label': value, 'value': value} for value in df[column].unique() if pd.notnull(value)],
+                            placeholder="Sélectionnez...",
+                            className='dropdown-inline',
+                            style={'background-color': '#4e5567'}
+                        ),
+                    ])
+                ]) for column in dropdown_columns],
+                html.Br(),
+                html.Br(),
+                html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px'}),
+                html.Div(id='score-ind-result'),
+            ])
+        ])
+    ]
+
+    return html.Div(children, id='chatbot-container')
+

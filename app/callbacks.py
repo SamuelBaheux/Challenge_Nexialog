@@ -3,8 +3,10 @@ import sys
 
 sys.path.append('./script')
 
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, MATCH, ALL
 import dash
+
+import json
 from dash import dcc
 
 from builders import build_all_panels
@@ -12,6 +14,9 @@ from data_preparation import *
 from plot_utils import *
 from app_utils import *
 from vars import statement_list
+
+
+import pandas as pd
 
 def register_callbacks(app):
     @app.callback([Output('output-data-upload', 'children'),
@@ -232,3 +237,64 @@ def register_callbacks(app):
     def download_model(n_clicks):
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
+
+
+    @app.callback(
+        Output('score-ind-result', 'children'),
+        [Input('launch-chatbot-modeling', 'n_clicks')],
+        [State({'type': 'dropdown-inline2', 'column': ALL}, 'value')]
+    )
+    def update_score_ind(n_clicks, dropdown_values):
+
+        df = pd.read_csv("/Users/SamuelLP/Desktop/git/Challenge_Nexialog/datas/df_segmentation.csv", index_col=[0])
+        df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
+                 "RATE_DOWN_PAYMENT_disc_int", "AMT_PAYMENT_disc_int",
+                 "NAME_INCOME_TYPE_discret", "OCCUPATION_TYPE_discret",
+                 'Score_ind', "Classes"]]
+
+        dropdown_columns = df.columns.difference(
+            ['Score_ind', 'Classes']).tolist()
+{
+    
+}
+        print(df.columns)
+        if n_clicks > 0:
+
+            filtered_df = df
+
+            for column, value in zip(dropdown_columns, dropdown_values):
+                print(
+                    f"Column: {column}, Value: {value}, Unique values in DF: {
+                        df[column].unique()}")
+
+                if value is not None:
+                    filtered_df = filtered_df[filtered_df[column] == value]
+                    print("Callback déclenché")
+
+            # Calculez la moyenne de 'Score_ind'
+            mean_score_ind = filtered_df['Score_ind'].mean()
+            mean_classes = int(filtered_df['Classes'].mean())
+
+            print(mean_score_ind, mean_classes)
+            if mean_classes < 3:
+                message = f"""
+            Votre score est de : {mean_score_ind:.2f} \n
+            Vous êtes dans la classe {mean_classes} \n
+            Un crédit vous sera octroyé
+            """
+            elif 5 >= mean_classes >= 3:
+                message = f"""
+                Votre score est de : {mean_score_ind:.2f} \n
+                Vous êtes dans la classe {mean_classes} \n
+                Un crédit vous sera octroyé, mais avec un taux d'intérêt élevé
+                """
+            else:
+                message = f"""
+                Votre score est de : {mean_score_ind:.2f} \n
+                Vous êtes dans la classe {mean_classes} \n
+                Aucun crédit ne vous sera octroyé
+                """
+            return dcc.Markdown(message, style={'margin-top': '20px',
+                                                "color": "#ffffff",
+                                                'font-weight': 'bold',
+                                                "font-size": "20px"})

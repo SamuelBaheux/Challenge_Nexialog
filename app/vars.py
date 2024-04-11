@@ -6,5 +6,5 @@ dataprep = DashDataPreparation()
 model = Modelization()
 statement_list = ["test"]
 
-df = pd.read_csv("./data/df_score.csv")
-dictionnaire = pd.read_csv("./data/Columns_Description.csv")
+df = pd.read_csv("./datas/df_score.csv")
+dictionnaire = pd.read_csv("./datas/Columns_Description.csv")
