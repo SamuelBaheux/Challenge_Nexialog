@@ -78,12 +78,13 @@ def register_callbacks(app):
 
     @app.callback(
         [Output('app-tabs', 'value'),
-         Output('Control-chart-tab', 'style'),
-         Output("loading-output", "children"),
-         Output('Control-chart-tab', 'children')],
+        Output('Control-chart-tab', 'style'),
+        Output('Chatbot-tab', 'style'),  # Ajout de cet Output pour contrôler la visibilité de l'onglet chatbot
+        Output("loading-output", "children"),
+        Output('Control-chart-tab', 'children')],
         [Input('launch-button', 'n_clicks'),
-         Input("variables-dropdown", 'value'),
-         Input('model-choice', 'value')],
+        Input("variables-dropdown", 'value'),
+        Input('model-choice', 'value')],
         prevent_initial_call=True)
     def update_result(n_clicks, features, model_choice):
         if n_clicks and n_clicks > 0:
@@ -105,9 +106,9 @@ def register_callbacks(app):
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
                 model.run_model()
 
-            return ('tab2', {"display": "flex"}, "loaded", build_all_panels())
+            return ('tab2', {"display": "flex"}, {"display": "flex"}, "loaded", build_all_panels())  # Rendez l'onglet chatbot visible
+        return dash.no_update, {"display": "none"}, {"display": "none"}, dash.no_update, dash.no_update
 
-        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
 
     @app.callback(
         Output('loading-div', 'style'),
@@ -238,7 +239,8 @@ def register_callbacks(app):
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
 
-
+    ######## chatbot
+    
     @app.callback(
         Output('score-ind-result', 'children'),
         [Input('launch-chatbot-modeling', 'n_clicks')],
@@ -254,12 +256,9 @@ def register_callbacks(app):
 
         dropdown_columns = df.columns.difference(
             ['Score_ind', 'Classes']).tolist()
-{
-    
-}
+
         print(df.columns)
         if n_clicks > 0:
-
             filtered_df = df
 
             for column, value in zip(dropdown_columns, dropdown_values):
