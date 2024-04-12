@@ -4,6 +4,7 @@ sys.path.append("./script/")
 import dash
 from dash import dcc, html, dash_table
 from plot_utils import *
+from plot_analyse import *
 from vars import model
 
 graph_left = []
@@ -22,6 +23,12 @@ def build_tabs():
                                             value="tab1",
                                             className="custom-tabs",
                                             children=[
+                                                dcc.Tab(id='analyse-tab',
+                                                        label='Analyse',
+                                                        className="custom-tab",
+                                                        value='tab9',
+                                                        selected_className="custom-tab--selected",
+                                                        children=analyse_layout()),
                                                 dcc.Tab(id="Specs-tab",
                                                         label="Modélisation",
                                                         value="tab1",
@@ -33,17 +40,7 @@ def build_tabs():
                                                         label="Resultats",
                                                         value="tab2",
                                                         className="custom-tab",
-                                                        selected_className="custom-tab--selected"
-                                                
-                                                ),
-                                                #dcc.Tab(id="Chatbot-tab",
-                                                #    label="chatbot",
-                                                #    value="tab3",
-                                                #    className="custom-tab",
-                                                #    selected_className="custom-tab--selected",
-                                                #    style={"display": "none"},  # Cachez l'onglet par défaut
-                                                #    children=chatbot())
-                                                    
+                                                        selected_className="custom-tab--selected" ),
                                                 dcc.Tab(
                                                     id="Chatbot-tab",
                                                     label="chatbot",
@@ -53,14 +50,69 @@ def build_tabs():
                                                     children=chatbot(),
                                                    # style={"background-color": "#7e7e81", "border-bottom": "4px solid #B10031"}
                                                 )
-
-
                 ],
             )
         ],
     )
 ])
 
+################################################ ONGLET 0 : Analyse #################################################
+
+def analyse_layout():
+    return html.Div(className='hub', children = [
+
+        html.Div([dcc.Upload(id='upload-data-analyse', className="uploader", children=html.Div(
+            ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
+        )), html.Div(id='output-data-upload-analyse', style={"color": "#ffffff", "textAlign": "center"}),
+                  ]),
+
+        html.Br(),
+
+        html.Div(className='form-input row', children=[
+            html.Div(className='logo-and-label col', children=[
+                html.Label('Choix de la cible', className='label-inline'),
+            ]),
+            html.Div(className='form-dropdown col', children=[
+                dcc.Dropdown(id='target-dropdown-analyse',
+                             options=dataprep.get_features(),
+                             multi=False,
+                             placeholder="Choisir la cible",
+                             className='dropdown-inline',
+                             style={'background-color': '#4e5567'}),
+            ])
+        ]),
+
+        html.Br(),
+
+        html.Div(className='form-input row', children=[
+            html.Div(className='logo-and-label col', children=[
+                html.Label('Choix de la variable date', className='label-inline'),
+            ]),
+            html.Div(className='form-dropdown col', children=[
+                dcc.Dropdown(id='date-dropdown-analyse',
+                             options=dataprep.get_features(),
+                             multi=False,
+                             placeholder="Choisir la date",
+                             className='dropdown-inline',
+                             style={'background-color': '#4e5567'}),
+            ])
+        ]),
+
+        html.Br(),
+        html.Button('Lancer l\'analyse', id='launch-button-analyse', n_clicks=0, className='launch-button'),
+
+        html.Div(id = "Graph-Container", children=[])
+
+    ])
+
+def build_analyse_panel():
+    return ([
+        dcc.Graph(figure=missing_values())
+        # Tu rajoutes ici les différents graphiques que tu fais
+        # Si tu veux faire des styles différent (taille des graphs, disposition, ...) tu peux rajouter des
+        # html.Div dans cette liste
+        # tu peux rajouter tout ce que tu veux dans la liste (des html.Label, ...)
+    ])
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
