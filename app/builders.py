@@ -1,13 +1,15 @@
 import sys
 
 sys.path.append("./script/")
-
+import dash
 from dash import dcc, html, dash_table
 from plot_utils import *
+from vars import model
 
 graph_left = []
 graph_right = []
 
+# Utilisation avec les Onglets
 def build_tabs():
     return html.Div([html.Div(className='header',
                               children=[html.Img(src='./assets/images/logo.png',
@@ -34,13 +36,24 @@ def build_tabs():
                                                         selected_className="custom-tab--selected"
                                                 
                                                 ),
-                                                dcc.Tab(id="Chatbot-tab",
+                                                #dcc.Tab(id="Chatbot-tab",
+                                                #    label="chatbot",
+                                                #    value="tab3",
+                                                #    className="custom-tab",
+                                                #    selected_className="custom-tab--selected",
+                                                #    style={"display": "none"},  # Cachez l'onglet par défaut
+                                                #    children=chatbot())
+                                                    
+                                                dcc.Tab(
+                                                    id="Chatbot-tab",
                                                     label="chatbot",
                                                     value="tab3",
                                                     className="custom-tab",
                                                     selected_className="custom-tab--selected",
-                                                    style={"display": "none"},  # Cachez l'onglet par défaut
-                                                    children=chatbot())
+                                                    children=chatbot(),
+                                                   # style={"background-color": "#7e7e81", "border-bottom": "4px solid #B10031"}
+                                                )
+
 
                 ],
             )
@@ -519,7 +532,6 @@ def build_all_panels():
     return layout
 
 ################################################ ONGLET 3 : CHATBOT #################################################
-
 import pandas as pd
 from vars import model
 
@@ -528,40 +540,33 @@ df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
          "RATE_DOWN_PAYMENT_disc_int",
          "AMT_PAYMENT_disc_int", "NAME_INCOME_TYPE_discret",
          "OCCUPATION_TYPE_discret", 'Score_ind', "Classes"]]
-
 dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
 
 def chatbot():
-    children = [
-        html.Div(className='hub', children=[
-            html.Div(className='container', children=[
-                html.Div(id='md_title_chatbot',
-                         style={'margin-bottom': '50px'}, children=[
-                             html.Label(className='md_title',
-                                        children='Quelle catégorie vous correspond le mieux ?')]),
-                html.Br(),
+    return html.Div([
+        html.Div([
+            html.Div(id='md_title_chatbot', style={'margin-bottom': '50px'}, children=[
+                html.Label('Quelle catégorie vous correspond le mieux ?', className='md_title'),
+            ]),
+            html.Br(),
+        ], className='container'),
 
-                *[html.Div(className='form-input row', style={'margin-bottom': '50px'}, children=[
-                    html.Div(className='logo-and-label col', children=[
-                        html.Label(f'Pour la variable {column} :', className='label-inline'),
-                    ]),
-                    html.Div(className='form-dropdown col', children=[
-                        dcc.Dropdown(
-                            id={'type': 'dropdown-inline2', 'column': column},
-                            options=[{'label': value, 'value': value} for value in df[column].unique() if pd.notnull(value)],
-                            placeholder="Sélectionnez...",
-                            className='dropdown-inline',
-                            style={'background-color': '#4e5567'}
-                        ),
-                    ])
-                ]) for column in dropdown_columns],
-                html.Br(),
-                html.Br(),
-                html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px'}),
-                html.Div(id='score-ind-result'),
-            ])
-        ])
-    ]
+        html.Div(id='dynamic-dropdown-container', children=[
+            html.Div([
+                html.Div([
+                    html.Label(f'Pour la variable {dropdown_columns[0]}:', className='label-inline message-label'),
+                ], className='message-container'),
+                html.Div([
+                    dcc.Dropdown(
+                        id={'type': 'dynamic-dropdown', 'index': 0},
+                        options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if pd.notnull(value)],
+                        placeholder="Sélectionnez...",
+                        className='dropdown-inline selection-dropdown'
+                    ),
+                ], className='dropdown-container'),
+            ], className='form-input row', style={'margin-bottom': '50px'})
+        ]),
 
-    return html.Div(children, id='chatbot-container')
-
+        html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'none'}),
+        html.Div(id='score-ind-result'),
+    ], className='hub')

@@ -60,7 +60,7 @@ class Modelization():
             Population=(target, "size")
         )
         self.resultats['Taux_Individus'] = (self.resultats['Population'] / self.df_score.shape[0]) * 100
-        self.resultats["CHR"] = range(1,8)
+        self.resultats["CHR"] = range(1, 8)
         self.resultats = self.resultats[['CHR', "Taux_Défaut", "Taux_Individus"]]
 
     def update_segmentation(self, new_breaks, target):
@@ -71,8 +71,10 @@ class Modelization():
             Population=(target, "size")
         )
         self.resultats['Taux_Individus'] = (self.resultats['Population'] / self.df_score.shape[0]) * 100
-        self.resultats["CHR"] = range(1,8)
+        self.resultats["CHR"] = range(1, 8)
         self.resultats = self.resultats[['CHR', "Taux_Défaut", "Taux_Individus"]]
+
+        
 
 
     def get_segmentation_metrics(self, target, date):
