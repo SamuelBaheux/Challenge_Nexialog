@@ -78,12 +78,13 @@ def register_callbacks(app):
 
     @app.callback(
         [Output('app-tabs', 'value'),
-         Output('Control-chart-tab', 'style'),
-         Output("loading-output", "children"),
-         Output('Control-chart-tab', 'children')],
+        Output('Control-chart-tab', 'style'),
+        Output('Chatbot-tab', 'style'),  # Ajout de cet Output pour contrôler la visibilité de l'onglet chatbot
+        Output("loading-output", "children"),
+        Output('Control-chart-tab', 'children')],
         [Input('launch-button', 'n_clicks'),
-         Input("variables-dropdown", 'value'),
-         Input('model-choice', 'value')],
+        Input("variables-dropdown", 'value'),
+        Input('model-choice', 'value')],
         prevent_initial_call=True)
     def update_result(n_clicks, features, model_choice):
         if n_clicks and n_clicks > 0:
@@ -105,9 +106,9 @@ def register_callbacks(app):
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
                 model.run_model()
 
-            return ('tab2', {"display": "flex"}, "loaded", build_all_panels())
+            return ('tab2', {"display": "flex"}, {"display": "flex"}, "loaded", build_all_panels())  # Rendez l'onglet chatbot visible
+        return dash.no_update, {"display": "none"}, {"display": "none"}, dash.no_update, dash.no_update
 
-        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
 
     @app.callback(
         Output('loading-div', 'style'),
@@ -238,15 +239,55 @@ def register_callbacks(app):
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
 
+    ######## chatbot
+    @app.callback(
+        Output('dynamic-dropdown-container', 'children'),
+        [Input({'type': 'dynamic-dropdown', 'index': ALL}, 'value')],
+        [State('dynamic-dropdown-container', 'children')]
+    )
+    def add_dropdown(values, children):
+        if not values or None in values:
+            return dash.no_update
+        df = pd.read_csv("/Users/jinzhou/Cours_M2/S2/Challenge_Nexialog/datas/df_segmentation.csv")
+        df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
+                "RATE_DOWN_PAYMENT_disc_int",
+                "AMT_PAYMENT_disc_int", "NAME_INCOME_TYPE_discret",
+                "OCCUPATION_TYPE_discret", 'Score_ind', "Classes"]]
+        dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
+
+        next_index = len(values)
+        if next_index < len(dropdown_columns):
+            new_element = html.Div([
+                html.Div([
+                    html.Label(f'Pour la variable {dropdown_columns[next_index]}:', className='label-inline message-label'),
+                ], className='message-container'),
+                html.Div([
+                    dcc.Dropdown(
+                        id={'type': 'dynamic-dropdown', 'index': next_index},
+                        options=[{'label': str(v), 'value': v} for v in df[dropdown_columns[next_index]].dropna().unique()],
+                        placeholder="Sélectionnez...",
+                        className='dropdown-inline selection-dropdown'
+                    ),
+                ], className='dropdown-container'),
+            ], className='form-input row', style={'margin-bottom': '50px'})
+            children.append(new_element)
+
+        button_exists = any(isinstance(child, html.Button) and child.id == 'launch-chatbot-modeling' for child in children)
+
+        # Si tous les dropdowns sont affichés et que le bouton n'existe pas, ajoutez le bouton
+        if next_index == len(dropdown_columns) and not button_exists:
+            children.append(html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'block'}))
+
+        return children
 
     @app.callback(
         Output('score-ind-result', 'children'),
         [Input('launch-chatbot-modeling', 'n_clicks')],
-        [State({'type': 'dropdown-inline2', 'column': ALL}, 'value')]
+        [State({'type': 'dynamic-dropdown', 'index': ALL}, 'value')]
     )
-    def update_score_ind(n_clicks, dropdown_values):
 
-        df = pd.read_csv("/Users/SamuelLP/Desktop/git/Challenge_Nexialog/datas/df_segmentation.csv", index_col=[0])
+    def update_score_ind(n_clicks, dropdown_values):
+        df = pd.read_csv("/Users/jinzhou/Cours_M2/S2/Challenge_Nexialog/datas/df_segmentation.csv", index_col=[0])
         df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
                  "RATE_DOWN_PAYMENT_disc_int", "AMT_PAYMENT_disc_int",
                  "NAME_INCOME_TYPE_discret", "OCCUPATION_TYPE_discret",
@@ -254,26 +295,26 @@ def register_callbacks(app):
 
         dropdown_columns = df.columns.difference(
             ['Score_ind', 'Classes']).tolist()
-{
-    
-}
-        print(df.columns)
-        if n_clicks > 0:
 
-            filtered_df = df
+        if n_clicks > 0 and None not in dropdown_values:
+            if None in dropdown_values:
+                return "Please complete all selections before submitting."
 
+            # Filter DataFrame based on dropdown selections
+            filtered_df = df.copy()
             for column, value in zip(dropdown_columns, dropdown_values):
-                print(
-                    f"Column: {column}, Value: {value}, Unique values in DF: {
-                        df[column].unique()}")
-
                 if value is not None:
                     filtered_df = filtered_df[filtered_df[column] == value]
-                    print("Callback déclenché")
+                # # print(
+                # #     f"Column: {column}, Value: {value}, Unique values in DF: {
+                # #         df[column].unique()}")
 
-            # Calculez la moyenne de 'Score_ind'
-            mean_score_ind = filtered_df['Score_ind'].mean()
-            mean_classes = int(filtered_df['Classes'].mean())
+                # if value is not None:
+                #     filtered_df = filtered_df[filtered_df[column] == value]
+                #     print("Callback déclenché")
+
+            mean_score_ind = filtered_df['Score_ind'].mean() if not filtered_df.empty else None
+            mean_classes = int(filtered_df['Classes'].mean()) if not filtered_df.empty else None
 
             print(mean_score_ind, mean_classes)
             if mean_classes < 3:
@@ -298,3 +339,4 @@ def register_callbacks(app):
                                                 "color": "#ffffff",
                                                 'font-weight': 'bold',
                                                 "font-size": "20px"})
+        return "Veuillez faire toutes les sélections avant de soumettre."

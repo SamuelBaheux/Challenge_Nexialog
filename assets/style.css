@@ -397,3 +397,88 @@ Slider
 .custom-slider .rc-slider-dot-active{
     border-color : #FFFFFF;
 }
+
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+chatbot
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.message-container {
+    background-color: #007BFF; /* Blue background */
+    color: white;
+    border-radius: 20px; /* Oval shape */
+    padding: 10px 20px;
+    margin: 5px 0 15px 0;
+    text-align: left;
+    width: 48%; /* Adjusted to take roughly half of the screen */
+    float: left; /* Align to the left */
+    margin-bottom: 10px; /* Espace au-dessous du message */
+    position: relative; /* Position relative pour utiliser le décalage top */
+    top: -25px; /* Décaler légèrement vers le haut */
+}
+
+.dropdown-container {
+    background-color: #28A745; /* Green background */
+    color: white;
+    border-radius: 20px; /* Oval shape */
+    padding: 10px 20px;
+    margin: 15px 0 5px 0; 
+    /* text-align: right; */
+    width: 48%; /* Adjusted to take roughly half of the screen */
+    float: right; /* Align to the right */
+    position: relative; /* Position relative pour utiliser le décalage top */
+    top: 25px; /* Décaler légèrement vers le bas */
+}
+
+.form-input.row {
+    width: 100%;
+    clear: both;
+    /* If additional spacing is necessary, adjust padding or margin here */
+    padding-bottom: 30px; /* Add space at the bottom if needed */
+}
+
+/* Pseudo-élément pour créer la pointe de la bulle */
+.message-container:before, .dropdown-container:before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 15px solid transparent;
+    border-bottom-color: #007BFF; /* Couleur de fond de .message-container */
+}
+
+/* Positionner la pointe pour .message-container */
+.message-container:before {
+    top: 100%; /* Au bas du container */
+    left: 20px; /* Ajuster pour aligner avec le texte */
+    border-bottom-color: #007BFF; /* Couleur de fond de .message-container */
+}
+
+/* Positionner la pointe pour .dropdown-container */
+.dropdown-container:before {
+    top: 100%; /* Au bas du container */
+    right: 20px; /* Ajuster pour aligner avec le dropdown */
+    border-bottom-color: #28A745; /* Couleur de fond de .dropdown-container */
+}
+
+/* Enhancements to make the dropdown look better within the container */
+.selection-dropdown .Select-control, .selection-dropdown .Select-value, .selection-dropdown .Select-placeholder {
+    color: white; /* Ensuring text is white for visibility */
+}
+
+.selection-dropdown .Select-menu-outer {
+    background-color: #28A745; /* Ensuring dropdown menu matches the container */
+}
+
+.message-label {
+    display: block; /* Ensure the label is a block to fit the full width of the container */
+}
+
+.selection-dropdown .Select-control {
+    background-color: transparent; /* Make dropdown transparent inside the green container */
+    border: none;
+}
+
+.launch-button {
+    width: 100%; /* Optional: make the button full width */
+    text-align: center; /* Center-align the text in the button */
+}

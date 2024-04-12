@@ -2,5 +2,5 @@
 .idea
 .DS_Store
 .gitattributes
-.nexia_venv
+.venv
 datas
