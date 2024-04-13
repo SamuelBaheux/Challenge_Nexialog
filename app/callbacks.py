@@ -150,7 +150,7 @@ def register_callbacks(app):
                 model_challenger.get_segmentation(dataprep.target)
                 model_challenger.get_default_proba(dataprep.target, dataprep.date)
                 dataprep.init_model_name('xgb')
-                return ('tab2', {"display": "flex"}, "loaded", build_xgboost_model(), {"display": "flex"}, chatbot(), {"display": "none"}, dash.no_update)
+                return ('tab3', {"display": "none"}, "loaded", dash.no_update, {"display": "flex"}, chatbot(), {"display": "flex"},  build_xgboost_model())
 
             elif model_choice == "both":
                 model_classique.init_model('logit')
