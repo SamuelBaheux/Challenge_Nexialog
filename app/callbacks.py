@@ -241,18 +241,18 @@ def register_callbacks(app):
 
     ######## chatbot
     @app.callback(
-        Output('dynamic-dropdown-container', 'children'),
-        [Input({'type': 'dynamic-dropdown', 'index': ALL}, 'value')],
-        [State('dynamic-dropdown-container', 'children')]
+        Output('dynamic-radioitems-container', 'children'),
+        [Input({'type': 'dynamic-radioitems', 'index': ALL}, 'value')],
+        [State('dynamic-radioitems-container', 'children')]
     )
-    def add_dropdown(values, children):
+    def add_radioitems(values, children):
         if not values or None in values:
             return dash.no_update
         df = pd.read_csv("/Users/jinzhou/Cours_M2/S2/Challenge_Nexialog/datas/df_segmentation.csv")
         df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
-                "RATE_DOWN_PAYMENT_disc_int",
-                "AMT_PAYMENT_disc_int", "NAME_INCOME_TYPE_discret",
-                "OCCUPATION_TYPE_discret", 'Score_ind', "Classes"]]
+                 "RATE_DOWN_PAYMENT_disc_int", "AMT_PAYMENT_disc_int",
+                 "NAME_INCOME_TYPE_discret", "OCCUPATION_TYPE_discret",
+                 'Score_ind', "Classes"]]
         dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
 
         next_index = len(values)
@@ -262,19 +262,18 @@ def register_callbacks(app):
                     html.Label(f'Pour la variable {dropdown_columns[next_index]}:', className='label-inline message-label'),
                 ], className='message-container'),
                 html.Div([
-                    dcc.Dropdown(
-                        id={'type': 'dynamic-dropdown', 'index': next_index},
+                    dcc.RadioItems(
+                        id={'type': 'dynamic-radioitems', 'index': next_index},
                         options=[{'label': str(v), 'value': v} for v in df[dropdown_columns[next_index]].dropna().unique()],
-                        placeholder="Sélectionnez...",
-                        className='dropdown-inline selection-dropdown'
+                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
+                        className='radio-inline selection-radio'
                     ),
-                ], className='dropdown-container'),
+                ], className='radioitems-container', style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
             ], className='form-input row', style={'margin-bottom': '50px'})
             children.append(new_element)
 
+        # Gérer l'affichage du bouton de lancement après le dernier choix
         button_exists = any(isinstance(child, html.Button) and child.id == 'launch-chatbot-modeling' for child in children)
-
-        # Si tous les dropdowns sont affichés et que le bouton n'existe pas, ajoutez le bouton
         if next_index == len(dropdown_columns) and not button_exists:
             children.append(html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'block'}))
 
@@ -283,7 +282,7 @@ def register_callbacks(app):
     @app.callback(
         Output('score-ind-result', 'children'),
         [Input('launch-chatbot-modeling', 'n_clicks')],
-        [State({'type': 'dynamic-dropdown', 'index': ALL}, 'value')]
+        [State({'type': 'dynamic-radioitems', 'index': ALL}, 'value')]
     )
 
     def update_score_ind(n_clicks, dropdown_values):

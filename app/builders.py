@@ -539,19 +539,19 @@ def chatbot():
             html.Br(),
         ], className='container'),
 
-        html.Div(id='dynamic-dropdown-container', children=[
+        html.Div(id='dynamic-radioitems-container', children=[
             html.Div([
                 html.Div([
                     html.Label(f'Pour la variable {dropdown_columns[0]}:', className='label-inline message-label'),
                 ], className='message-container'),
                 html.Div([
-                    dcc.Dropdown(
-                        id={'type': 'dynamic-dropdown', 'index': 0},
+                    dcc.RadioItems(
+                        id={'type': 'dynamic-radioitems', 'index': 0},
                         options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if pd.notnull(value)],
-                        placeholder="Sélectionnez...",
-                        className='dropdown-inline selection-dropdown'
+                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
+                        className='radio-inline selection-radio'
                     ),
-                ], className='dropdown-container'),
+                ], className='radioitems-container', style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
             ], className='form-input row', style={'margin-bottom': '50px'})
         ]),
 
