@@ -67,7 +67,7 @@ def plot_hist(column):
 
     return histogramme
 
-def courbe_roc():
+def courbe_roc(model):
     metrics = model.get_metrics()
     fpr = metrics["fpr"]
     tpr = metrics["tpr"]
@@ -103,7 +103,7 @@ def gini_coefficient(values):
     gini_index = (2 * np.sum(cumulative_values_sum) / (n * np.sum(sorted_values))) - (n + 1) / n
     return 1 - gini_index
 
-def create_gini_figure():
+def create_gini_figure(model):
     df = model.df_score.copy()
     if "date_trimestrielle" not in df.columns :
         df[dataprep.date] = pd.to_datetime(df[dataprep.date])
@@ -140,7 +140,7 @@ def create_gini_figure():
 
 
 
-def create_stability_figure():
+def create_stability_figure(model):
     df = model.df_score.copy()
     if "date_trimestrielle" not in df.columns :
         df[dataprep.date] = pd.to_datetime(df[dataprep.date])
@@ -176,9 +176,9 @@ def create_stability_figure():
     return fig
 
 def plot_shap_values():
-    if model.model_name == "xgb" :
-        shap_values = model.model.shap_values
-        train = model.model.X_train
+    if model_challenger.model_name == "xgb" :
+        shap_values = model_challenger.model.shap_values
+        train = model_challenger.model.X_train
 
         shap_values = pd.DataFrame(shap_values, columns=train.columns)
         train.reset_index(inplace=True, drop=True)

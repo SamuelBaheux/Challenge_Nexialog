@@ -49,6 +49,7 @@ class Modelization():
         self.breaks[-1] = self.breaks[-2] + 50
 
         print(self.breaks)
+        self.breaks = [0.0, 210, 360, 460, 580, 700, 850.0]
 
         self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(self.breaks))
 

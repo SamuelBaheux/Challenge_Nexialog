@@ -7,12 +7,11 @@ from dash.dependencies import Input, Output, State, ALL
 import dash
 from dash import dcc
 
-from builders import build_all_panels, build_analyse_panel, chatbot
+from builders import build_logit_model, build_xgboost_model, build_both_model, build_analyse_panel, chatbot
 from data_preparation import *
 from plot_utils import *
 from plot_analyse import *
 from app_utils import *
-from vars import statement_list
 
 def register_callbacks(app):
 
@@ -84,13 +83,6 @@ def register_callbacks(app):
         else :
             return children, options, target_options, date_options, {'display': 'None'}
 
-    @app.callback(
-        Output('loading-statement', 'children'),
-        Input('interval-component', 'n_intervals')
-    )
-    def check_list_changes(n):
-        return(statement_list[-1])
-
     @app.callback(Output('hidden-div', 'children'),
                   [Input('target-dropdown', 'value')])
     def update_target(target_selected):
@@ -128,22 +120,27 @@ def register_callbacks(app):
 
             print("Entraînement du modèle")
             if model_choice == 'Logit':
-                model.init_model('logit')
-                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
-                model.run_model()
-                model.get_grid_score(dataprep.train, dataprep.target)
-                model.get_segmentation(dataprep.target)
-                model.get_default_proba(dataprep.target, dataprep.date)
+                model_classique.init_model('logit')
+                model_classique.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_classique.run_model()
+                model_classique.get_grid_score(dataprep.train, dataprep.target)
+                model_classique.get_segmentation(dataprep.target)
+                model_classique.get_default_proba(dataprep.target, dataprep.date)
+                dataprep.init_model_name('logit')
+
+                return ('tab2', {"display": "flex"}, "loaded", build_logit_model(), {"display": "flex"}, chatbot())
 
             elif model_choice == 'XGBoost':
-                model.init_model('xgb')
-                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
-                model.run_model()
-                model.get_grid_score(dataprep.train, dataprep.target)
-                model.get_segmentation(dataprep.target)
-                model.get_default_proba(dataprep.target, dataprep.date)
+                model_challenger.init_model('xgb')
+                model_challenger.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_challenger.run_model()
+                model_challenger.get_grid_score(dataprep.train, dataprep.target)
+                model_challenger.get_segmentation(dataprep.target)
+                model_challenger.get_default_proba(dataprep.target, dataprep.date)
+                dataprep.init_model_name('xgb')
 
-            return ('tab2', {"display": "flex"}, "loaded", build_all_panels(), {"display": "flex"}, chatbot())
+                return ('tab2', {"display": "flex"}, "loaded", build_xgboost_model(), {"display": "flex"}, chatbot())
+
 
         return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update,  {"display": "none"}, dash.no_update
 
@@ -158,11 +155,8 @@ def register_callbacks(app):
     def toggle_loading_div(n_clicks, features, model_choice, current_style):
         if n_clicks and n_clicks > 0:
             if model_choice is None or features is None:
-                # Si les entrées ne sont pas valides, ne changez pas le style
                 return dash.no_update
-            # Si le bouton est cliqué et les entrées sont valides, affichez loading-div
             return {'display': 'block'}
-        # Dans d'autres cas, gardez loading-div caché
         return {'display': 'none'}
 
     @app.callback(
@@ -218,6 +212,11 @@ def register_callbacks(app):
         prevent_initial_call = True
     )
     def update_breaks_graph(breaks, graph_type):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         if breaks is not None :
             model.update_segmentation(breaks, dataprep.target)
 
@@ -256,10 +255,15 @@ def register_callbacks(app):
         [Input('graph-type-selector', 'value')]
     )
     def update_graph(selected_graph):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         if selected_graph == 'gini':
-            fig = create_gini_figure()
+            fig = create_gini_figure(model)
         elif selected_graph == 'taux':
-            fig = create_stability_figure()
+            fig = create_stability_figure(model)
         return fig
 
     @app.callback(
@@ -268,6 +272,11 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def download_df_score(n_clicks):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         return dcc.send_data_frame(model.df_score.to_csv, "data_score.csv", index=False)
 
     @app.callback(
@@ -276,6 +285,11 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def download_grille_score(n_clicks):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         return dcc.send_data_frame(model.grid_score.to_csv, "grille_score.csv", index=False)
 
     @app.callback(
@@ -284,6 +298,11 @@ def register_callbacks(app):
         prevent_initial_call=True
     )
     def download_model(n_clicks):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
 
@@ -294,6 +313,11 @@ def register_callbacks(app):
         [State('dynamic-radioitems-container', 'children')]
     )
     def add_radioitems(values, children):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         if not values or None in values:
             return dash.no_update
 
@@ -332,6 +356,11 @@ def register_callbacks(app):
     )
 
     def update_score_ind(n_clicks, dropdown_values):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         df = model.df_score
         dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target,dataprep.date,
                                                   "date_trimestrielle"]).tolist()

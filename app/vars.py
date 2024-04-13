@@ -4,8 +4,9 @@ from modelization import *
 from analyse import *
 
 dataprep = DashDataPreparation()
-model = Modelization()
+model_challenger = Modelization()
+model_classique = Modelization()
 analyse = Analyse()
-statement_list = ["test"]
+
 
 dictionnaire = pd.read_csv("./data/Columns_Description.csv")

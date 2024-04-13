@@ -24,7 +24,7 @@ def build_tabs():
                                                 dcc.Tab(id='analyse-tab',
                                                         label='Analyse',
                                                         className="custom-tab",
-                                                        value='tab9',
+                                                        value='tab0',
                                                         selected_className="custom-tab--selected",
                                                         children=analyse_layout()),
                                                 dcc.Tab(id="Specs-tab",
@@ -35,15 +35,21 @@ def build_tabs():
                                                         children=create_layout(),
                                                 ),
                                                 dcc.Tab(id="Control-chart-tab",
-                                                        label="Resultats",
+                                                        label="Modèle Classique",
                                                         value="tab2",
                                                         className="custom-tab",
                                                         selected_className="custom-tab--selected"
                                                 ),
+                                                dcc.Tab(id="Control-chart-tab-2",
+                                                        label="Modèle Challenger",
+                                                        value="tab3",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected"
+                                                        ),
                                                 dcc.Tab(id='chat-tab',
                                                         label='Chatbot',
                                                         className="custom-tab",
-                                                        value='tab3',
+                                                        value='tab4',
                                                         selected_className="custom-tab--selected"),
                 ],
             )
@@ -151,7 +157,8 @@ def create_layout():
                         id='model-choice',
                         options=[
                             {'label': 'Logit', 'value': 'Logit'},
-                            {'label': 'XGBoost', 'value': 'XGBoost'}
+                            {'label': 'XGBoost', 'value': 'XGBoost'},
+                            {'label': 'Les deux', 'value': 'both'},
                         ],
                         value='Logit',
                         className='dropdown-inline',
@@ -260,14 +267,12 @@ def render_this(render_list):
     return decorator
 
 
-@render_this(graph_right)
 def title_layout():
     return (html.Div(className='results-title',
                      children=[html.Label("1.Vérification des hypothèses"), html.Br()]))
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_0():
     return html.Div(children=[
         html.Div(className='graphpart',
                  children=[
@@ -288,23 +293,20 @@ def title_layout():
         style={'display': 'flex', 'flexDirection': 'row'})
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_1():
     return (html.Div(className='results-title',
                    children=[html.Br(), html.Label("2.Performances du modèle"), html.Br()]))
 
 
 
-@render_this(graph_right)
-def stability_plot():
+def roc_plot(model):
     return html.Div(className='graphpart',
                     children=[
-                        dcc.Graph(figure=courbe_roc())
+                        dcc.Graph(figure=courbe_roc(model))
                     ]
                     )
 
-@render_this(graph_right)
-def shap_values():
+def shap_values(model):
     if model.model_name == 'xgb' :
         return html.Div(className='graphpart',
                         children=[
@@ -315,14 +317,12 @@ def shap_values():
         return html.Div()
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_2():
     return (html.Div(className='results-title',
                      children=[html.Br(), html.Label("3.Grille de Score"), html.Br()]))
 
 
-@render_this(graph_right)
-def table():
+def table(model):
     return dash_table.DataTable(round(model.grid_score, 2).to_dict('records'),
                                 [{"name": i, "id": i} for i in model.grid_score.columns],
                                 style_header={
@@ -346,13 +346,11 @@ def table():
                                 )
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_3():
     return (html.Div(className='results-title',
                      children=[html.Br(), html.Label("4.Segmentation"), html.Br()]))
 
-@render_this(graph_right)
-def test():
+def slider_breaks(model):
     return html.Div(children=[
         html.Div(id = "slider-container", children=[dcc.RangeSlider(0,
                                            1000,
@@ -370,8 +368,7 @@ def test():
                  style={'width': '95%', 'margin':"auto"}),
         html.Br(),])
 
-@render_this(graph_right)
-def test():
+def segmentation(model):
     return html.Div(children=[
         html.Div(children=[html.Br(),
                            html.Div([
@@ -413,13 +410,11 @@ def test():
     ], style={'display': 'flex', 'flexDirection': 'row'})
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_4():
     return (html.Div(className='results-title',
                      children=[html.Label("5. MOC")]))
 
-@render_this(graph_right)
-def table():
+def default_proba(model):
 
     return dash_table.DataTable(round(model.default_proba, 4).to_dict('records'), [{"name": i, "id": i} for i in model.default_proba.columns],
                                 style_header={
@@ -445,14 +440,12 @@ def table():
 
 
 
-@render_this(graph_left)
-def title_layout():
+def title_layout_5():
     return (html.Div(className='left-title',
                      children=[html.Label("Données"),
                                html.Br()]))
 
-@render_this(graph_left)
-def title_layout():
+def info_data(model):
    return(html.Div([html.Div(
        className='data-summary',
        children=[
@@ -476,13 +469,11 @@ def title_layout():
    )
 
 
-@render_this(graph_left)
-def title_layout():
+def title_layout_7():
     return (html.Div(className='left-title',
                      children=[html.Br(), html.Label("Métriques"), html.Br()]))
 
-@render_this(graph_left)
-def stability_plot():
+def metrics(model):
     dic_metrics = model.get_segmentation_metrics(dataprep.target, dataprep.date)
     roc_auc = model.get_metrics()["roc_auc"]*100
     return html.Div(className='graphpart',
@@ -498,12 +489,10 @@ def stability_plot():
                     ]
                     )
 
-@render_this(graph_left)
-def title_layout():
+def title_layout_8():
     return (html.Div(className='left-title',
                      children=[html.Br(), html.Label("Artefacts")]))
 
-@render_this(graph_left)
 def download_df_score():
     return html.Div(
                     children=[
@@ -514,7 +503,6 @@ def download_df_score():
                     )
 
 
-@render_this(graph_left)
 def download_grille_score():
     return html.Div(
                     children=[
@@ -525,7 +513,6 @@ def download_grille_score():
                     )
 
 
-@render_this(graph_left)
 def download_model():
     return html.Div(
                     children=[
@@ -536,7 +523,85 @@ def download_model():
                     )
 
 
-def build_all_panels():
+def setup_models_panels(model, left_list, right_list):
+
+    @render_this(right_list)
+    def render():
+        return title_layout()
+
+    @render_this(right_list)
+    def render():
+        return title_layout_0()
+
+    @render_this(right_list)
+    def render():
+        return title_layout_1()
+
+    @render_this(right_list)
+    def render():
+        return roc_plot(model)
+
+    @render_this(right_list)
+    def render():
+        return shap_values(model)
+
+    @render_this(right_list)
+    def render():
+        return title_layout_2()
+
+    @render_this(right_list)
+    def render():
+        return table(model)
+
+    @render_this(right_list)
+    def render():
+        return title_layout_3()
+
+    @render_this(right_list)
+    def render():
+        return shap_values(model)
+
+    @render_this(right_list)
+    def render():
+        return slider_breaks(model)
+
+    @render_this(right_list)
+    def render():
+        return segmentation(model)
+    @render_this(right_list)
+    def render():
+        return title_layout_4()
+
+    @render_this(right_list)
+    def render():
+        return default_proba(model)
+
+    @render_this(left_list)
+    def render():
+        return title_layout_5()
+
+    @render_this(left_list)
+    def render():
+        return info_data(model)
+    @render_this(left_list)
+    def render():
+        return title_layout_7()
+
+    @render_this(left_list)
+    def render():
+        return metrics(model)
+    @render_this(left_list)
+    def render():
+        return download_df_score()
+
+    @render_this(left_list)
+    def render():
+        return download_grille_score()
+    @render_this(left_list)
+    def render():
+        return download_model()
+
+def build_all_panels_mod(graph_left, graph_right):
     other_panels = [panel() for panel in graph_right]
     auc_metric_panel = [panel() for panel in graph_left]
     layout = html.Div(children=[
@@ -552,9 +617,49 @@ def build_all_panels():
         )])
 
     return layout
+    
+
+def build_both_model():
+    graph_left_classique = []
+    graph_right_classique = []
+
+    graph_left_challenger = []
+    graph_right_challenger = []
+
+    setup_models_panels(model_classique, graph_left_classique, graph_right_classique)
+    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger)
+
+    layout_classique = build_all_panels_mod(graph_left_classique, graph_right_classique)
+    layout_challenger = build_all_panels_mod(graph_left_challenger, graph_right_challenger)
+
+    return [layout_classique, layout_challenger]
+
+def build_logit_model():
+    graph_left_classique = []
+    graph_right_classique = []
+
+    setup_models_panels(model_classique, graph_left_classique, graph_right_classique)
+
+    layout_classique = build_all_panels_mod(graph_left_classique, graph_right_classique)
+
+    return layout_classique
+
+def build_xgboost_model():
+    graph_left_challenger = []
+    graph_right_challenger = []
+
+    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger)
+    layout_challenger = build_all_panels_mod(graph_left_challenger, graph_right_challenger)
+
+    return layout_challenger
 
 ################################################ ONGLET 3 : Chatbot #################################################
 def chatbot():
+    if dataprep.model_name == "logit":
+        model = model_classique
+    elif dataprep.model_name == "xgb":
+        model = model_challenger
+
     df = model.df_score
     dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
     return html.Div([
