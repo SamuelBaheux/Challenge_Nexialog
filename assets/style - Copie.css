@@ -410,7 +410,6 @@ Slider
     border-color : #FFFFFF;
 }
 
-
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 chatbot
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -423,25 +422,16 @@ chatbot
 }
 
 .message-container {
-    background-image: url("/assets/bulle.jpeg"); /* Assurez-vous que le chemin est correct */
-    background-size: contain; /* Ajuste l'image à la taille du contenu */
-    background-repeat: no-repeat; /* Ne pas répéter l'image */
-    border-radius: 15px; /* Forme ovale */
-    padding: 20px 30px;
-    font-size: 1.2em;
-    width: auto; /* Laisser la largeur s'ajuster au contenu */
-    min-width: 35%; /* Largeur minimale pour maintenir une forme esthétique */
-    margin: auto; /* Ajouter automatiquement un espace autour de chaque conteneur */
-    color: white; /* Couleur du texte */
+    background-color: #007BFF; /* Blue background */
+    color: white;
     text-align: left;
     margin-left: 2%;
-    float: left; /* Aligner à gauche */
+    float: left; /* Align to the left */
     margin-bottom: 75px;
     font-size: 30px;
-    position: relative;
+    position: relative; /* Position relative pour utiliser le décalage top */
     top: -35px; /* Décaler légèrement vers le haut */
 }
-
 
 /* Stylisation générale des containers des RadioItems pour correspondre à l'esthétique des dropdowns */
 .radioitems-container {

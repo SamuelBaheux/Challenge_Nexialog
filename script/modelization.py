@@ -29,10 +29,8 @@ class Modelization():
             self.df_score = GS.get_individual_score()
             self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_disc_int")[0])
             self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_discrete")[0])
-            return(self.grid_score)
 
         else :
-            print(self.results)
             gs = GridScoreXGB(train_prepared, self.results, target)
             print("Calcul de la grille de score ...")
             self.grid_score = gs.compute_grid_score()
@@ -40,7 +38,6 @@ class Modelization():
             self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_disc_int")[0])
             self.grid_score["Variable"] = self.grid_score["Variable"].apply(lambda x: x.split("_discrete")[0])
             self.grid_score["Coefficient"] = self.grid_score["Coefficient"].astype("float")
-            return(self.grid_score)
 
     def get_segmentation(self, target):
         scores_clients = self.df_score["Score_ind"].sample(30000, replace = False)
@@ -52,6 +49,7 @@ class Modelization():
         self.breaks[-1] = self.breaks[-2] + 50
 
         print(self.breaks)
+        self.breaks = [0.0, 210, 360, 460, 580, 700, 850.0]
 
         self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(self.breaks))
 
@@ -60,7 +58,7 @@ class Modelization():
             Population=(target, "size")
         )
         self.resultats['Taux_Individus'] = (self.resultats['Population'] / self.df_score.shape[0]) * 100
-        self.resultats["CHR"] = range(1,8)
+        self.resultats["CHR"] = range(1,self.resultats.shape[0]+1)
         self.resultats = self.resultats[['CHR', "Taux_Défaut", "Taux_Individus"]]
 
     def update_segmentation(self, new_breaks, target):
@@ -147,7 +145,6 @@ class Modelization():
         self.MOC_A.columns = ["CHR", "MOC_A"]
         self.MOC_A["MOC_A"] = self.MOC_A["MOC_A"].apply(lambda x : 0 if x < 0 else x)
 
-        print(self.MOC_A)
         return(self.MOC_A)
 
     def get_default_proba(self, target, date):
@@ -158,8 +155,6 @@ class Modelization():
         default_proba["MOC_A"] = moc_a["MOC_A"]
         default_proba["Moc_C"] = default_proba["Moc_C"].apply(lambda x: 0 if x < 0 else x)
         default_proba["Probabilité_Défaut"] = default_proba["LRA"] + default_proba["Moc_C"] + default_proba["MOC_A"]
-        default_proba = default_proba[['Classe', 'LRA', 'Probabilité_Défaut']]
-
-        return(default_proba)
+        self.default_proba = default_proba[['Classe', 'LRA', 'Probabilité_Défaut']]
 
 

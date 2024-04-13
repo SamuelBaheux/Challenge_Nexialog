@@ -3,22 +3,61 @@ import sys
 
 sys.path.append('./script')
 
-from dash.dependencies import Input, Output, State, MATCH, ALL
+from dash.dependencies import Input, Output, State, ALL
 import dash
-
-import json
 from dash import dcc
 
-from builders import build_all_panels
+from builders import build_logit_model, build_xgboost_model, build_both_model, build_analyse_panel, chatbot
 from data_preparation import *
 from plot_utils import *
+from plot_analyse import *
 from app_utils import *
-from vars import statement_list
-
-
-import pandas as pd
 
 def register_callbacks(app):
+
+    ####################################### ANALYSE ########################################
+
+    @app.callback([Output('output-data-upload-analyse', 'children'),
+                   Output('target-dropdown-analyse', 'options'),
+                   Output('date-dropdown-analyse', 'options')],
+                  [Input('upload-data-analyse', 'contents')],
+                  [State('upload-data-analyse', 'filename')])
+    def update_output(contents, filename):
+        if contents is not None:
+            df, filename = parse_contents(contents, filename)
+            if isinstance(df, pd.DataFrame):
+                analyse.init_data(df)
+                target_options = analyse.get_features()
+                date_options = analyse.get_features()
+
+                return [html.Div(html.H5(f'Le fichier {filename} a été téléchargé avec succès'))], target_options, date_options
+        else:
+            return dash.no_update,[], []
+
+    @app.callback([Output("Graph-Container", "children")],
+                  [Input("target-dropdown-analyse", "value"),
+                   Input("date-dropdown-analyse", "value"),
+                   Input("launch-button-analyse", "n_clicks")])
+    def display_graph(target, date, n_clicks):
+        if n_clicks and n_clicks > 0:
+            analyse.init_target(target)
+            analyse.init_date(date)
+            return build_analyse_panel()
+        else :
+            return dash.no_update
+
+    @app.callback(
+        [Output("stability-animated-graph", "figure"),
+         Output("density-plot", "figure")],
+        [Input("plot-stability-dropdown", "value")]
+    )
+    def update_graph(selected_variable):
+        fig = plot_stability_plotly_analyse(selected_variable)
+        fig_d = plot_marginal_density(selected_variable)
+        return([fig, fig_d])
+
+
+    ####################################### MODÉLISATION ########################################
     @app.callback([Output('output-data-upload', 'children'),
                    Output('variables-dropdown', 'options'),
                    Output('target-dropdown', 'options'),
@@ -54,13 +93,6 @@ def register_callbacks(app):
         else :
             return children, options, target_options, date_options, {'display': 'None'}
 
-    @app.callback(
-        Output('loading-statement', 'children'),
-        Input('interval-component', 'n_intervals')
-    )
-    def check_list_changes(n):
-        return(statement_list[-1])
-
     @app.callback(Output('hidden-div', 'children'),
                   [Input('target-dropdown', 'value')])
     def update_target(target_selected):
@@ -78,13 +110,16 @@ def register_callbacks(app):
 
     @app.callback(
         [Output('app-tabs', 'value'),
-        Output('Control-chart-tab', 'style'),
-        Output('Chatbot-tab', 'style'),  # Ajout de cet Output pour contrôler la visibilité de l'onglet chatbot
-        Output("loading-output", "children"),
-        Output('Control-chart-tab', 'children')],
+         Output('Control-chart-tab', 'style'),
+         Output("loading-output", "children"),
+         Output('Control-chart-tab', 'children'),
+         Output("chat-tab", "style"),
+         Output("chat-tab", "children"),
+         Output("Control-chart-tab-2", "style"),
+         Output("Control-chart-tab-2", "children")],
         [Input('launch-button', 'n_clicks'),
-        Input("variables-dropdown", 'value'),
-        Input('model-choice', 'value')],
+         Input("variables-dropdown", 'value'),
+         Input('model-choice', 'value')],
         prevent_initial_call=True)
     def update_result(n_clicks, features, model_choice):
         if n_clicks and n_clicks > 0:
@@ -97,35 +132,63 @@ def register_callbacks(app):
 
             print("Entraînement du modèle")
             if model_choice == 'Logit':
-                model.init_model('logit')
-                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
-                model.run_model()
+                model_classique.init_model('logit')
+                model_classique.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_classique.run_model()
+                model_classique.get_grid_score(dataprep.train, dataprep.target)
+                model_classique.get_segmentation(dataprep.target)
+                model_classique.get_default_proba(dataprep.target, dataprep.date)
+                dataprep.init_model_name('logit')
+
+                return ('tab2', {"display": "flex"}, "loaded", build_logit_model(), {"display": "flex"}, chatbot(), {"display": "none"}, dash.no_update)
 
             elif model_choice == 'XGBoost':
-                model.init_model('xgb')
-                model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
-                model.run_model()
+                model_challenger.init_model('xgb')
+                model_challenger.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_challenger.run_model()
+                model_challenger.get_grid_score(dataprep.train, dataprep.target)
+                model_challenger.get_segmentation(dataprep.target)
+                model_challenger.get_default_proba(dataprep.target, dataprep.date)
+                dataprep.init_model_name('xgb')
+                return ('tab3', {"display": "none"}, "loaded", dash.no_update, {"display": "flex"}, chatbot(), {"display": "flex"},  build_xgboost_model())
 
-            return ('tab2', {"display": "flex"}, {"display": "flex"}, "loaded", build_all_panels())  # Rendez l'onglet chatbot visible
-        return dash.no_update, {"display": "none"}, {"display": "none"}, dash.no_update, dash.no_update
+            elif model_choice == "both":
+                model_classique.init_model('logit')
+                model_classique.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_classique.run_model()
+                model_classique.get_grid_score(dataprep.train, dataprep.target)
+                model_classique.get_segmentation(dataprep.target)
+                model_classique.get_default_proba(dataprep.target, dataprep.date)
 
+                model_challenger.init_model('xgb')
+                model_challenger.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_challenger.run_model()
+                model_challenger.get_grid_score(dataprep.train, dataprep.target)
+                model_challenger.get_segmentation(dataprep.target)
+                model_challenger.get_default_proba(dataprep.target, dataprep.date)
+
+                dataprep.init_model_name('logit')
+
+                logit_layout, xgb_layout = build_both_model()
+                return ('tab2', {"display": "flex"}, "loaded", logit_layout, {"display": "flex"}, chatbot(), {"display": "flex"}, xgb_layout)
+
+
+
+        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update,  {"display": "none"}, dash.no_update, {"display": "none"}, dash.no_update
 
     @app.callback(
         Output('loading-div', 'style'),
         [Input('launch-button', 'n_clicks'),
          Input("variables-dropdown", 'value'),
          Input('model-choice', 'value')],
-        [State('loading-div', 'style')],  # Utilisez l'état actuel pour conditionner la mise à jour
+        [State('loading-div', 'style')],
         prevent_initial_call=True
     )
     def toggle_loading_div(n_clicks, features, model_choice, current_style):
         if n_clicks and n_clicks > 0:
             if model_choice is None or features is None:
-                # Si les entrées ne sont pas valides, ne changez pas le style
                 return dash.no_update
-            # Si le bouton est cliqué et les entrées sont valides, affichez loading-div
             return {'display': 'block'}
-        # Dans d'autres cas, gardez loading-div caché
         return {'display': 'none'}
 
     @app.callback(
@@ -172,31 +235,53 @@ def register_callbacks(app):
 
             return info
 
+
     @app.callback(
-        [Output('class-display', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
-         Output('table-id', 'data')],
-        [Input('breaks-slider', 'value'),
-         Input('graph-type-selector', 'value')],
+        [Output('class-display-clas', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
+         Output('table-id-clas', 'data')],
+        [Input('breaks-slider-clas', 'value'),
+         Input('graph-type-selector-clas', 'value')],
         prevent_initial_call = True
     )
     def update_breaks_graph(breaks, graph_type):
         if breaks is not None :
-            model.update_segmentation(breaks, dataprep.target)
+            model_classique.update_segmentation(breaks, dataprep.target)
 
             if graph_type == 'gini':
-                fig = create_gini_figure()
+                fig = create_gini_figure(model_classique)
             elif graph_type == 'taux':
-                fig = create_stability_figure()
+                fig = create_stability_figure(model_classique)
 
-            table_data = round(model.resultats, 2).to_dict('records')
+            table_data = round(model_classique.resultats, 2).to_dict('records')
+
+            return fig, table_data
+
+    @app.callback(
+        [Output('class-display-chal', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
+         Output('table-id-chal', 'data')],
+        [Input('breaks-slider-chal', 'value'),
+         Input('graph-type-selector-chal', 'value')],
+        prevent_initial_call = True
+    )
+    def update_breaks_graph(breaks, graph_type):
+        if breaks is not None :
+            model_challenger.update_segmentation(breaks, dataprep.target)
+
+            if graph_type == 'gini':
+                fig = create_gini_figure(model_challenger)
+            elif graph_type == 'taux':
+                fig = create_stability_figure(model_challenger)
+
+            table_data = round(model_challenger.resultats, 2).to_dict('records')
 
             return fig, table_data
 
 
+
     @app.callback(
-        [Output('stability-graph', 'figure'),
-         Output('histo-graph', 'figure')],
-        [Input('stability-dropdown', 'value')]
+        [Output('stability-graph-clas', 'figure'),
+         Output('histo-graph-clas', 'figure')],
+        [Input('stability-dropdown-clas', 'value')]
     )
     def update_graph(selected_variable):
         fig_stab = plot_stability_plotly(selected_variable)
@@ -204,14 +289,35 @@ def register_callbacks(app):
         return [fig_stab, fig_hist]
 
     @app.callback(
-        Output('class-display', 'figure'),
-        [Input('graph-type-selector', 'value')]
+        [Output('stability-graph-chal', 'figure'),
+         Output('histo-graph-chal', 'figure')],
+        [Input('stability-dropdown-chal', 'value')]
+    )
+    def update_graph(selected_variable):
+        fig_stab = plot_stability_plotly(selected_variable)
+        fig_hist = plot_hist(selected_variable)
+        return [fig_stab, fig_hist]
+
+    @app.callback(
+        Output('class-display-clas', 'figure'),
+        [Input('graph-type-selector-clas', 'value')]
     )
     def update_graph(selected_graph):
         if selected_graph == 'gini':
-            fig = create_gini_figure()
+            fig = create_gini_figure(model_classique)
         elif selected_graph == 'taux':
-            fig = create_stability_figure()
+            fig = create_stability_figure(model_classique)
+        return fig
+
+    @app.callback(
+        Output('class-display-chal', 'figure'),
+        [Input('graph-type-selector-chal', 'value')]
+    )
+    def update_graph(selected_graph):
+        if selected_graph == 'gini':
+            fig = create_gini_figure(model_challenger)
+        elif selected_graph == 'taux':
+            fig = create_stability_figure(model_challenger)
         return fig
 
     @app.callback(
@@ -220,6 +326,11 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def download_df_score(n_clicks):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         return dcc.send_data_frame(model.df_score.to_csv, "data_score.csv", index=False)
 
     @app.callback(
@@ -228,6 +339,11 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def download_grille_score(n_clicks):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         return dcc.send_data_frame(model.grid_score.to_csv, "grille_score.csv", index=False)
 
     @app.callback(
@@ -236,106 +352,135 @@ def register_callbacks(app):
         prevent_initial_call=True
     )
     def download_model(n_clicks):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
 
-    ######## chatbot
+    ####################################### CHATBOT ########################################
     @app.callback(
         Output('dynamic-radioitems-container', 'children'),
         [Input({'type': 'dynamic-radioitems', 'index': ALL}, 'value')],
         [State('dynamic-radioitems-container', 'children')]
     )
     def add_radioitems(values, children):
+        if dataprep.model_name == "logit" :
+            model = model_classique
+        elif dataprep.model_name == "xgb":
+            model = model_challenger
+
         if not values or None in values:
             return dash.no_update
-        df = pd.read_csv("/Users/jinzhou/Cours_M2/S2/Challenge_Nexialog/datas/df_segmentation.csv")
-        df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
-                 "RATE_DOWN_PAYMENT_disc_int", "AMT_PAYMENT_disc_int",
-                 "NAME_INCOME_TYPE_discret", "OCCUPATION_TYPE_discret",
-                 'Score_ind', "Classes"]]
-        dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
 
+        df = model.df_score
+        dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target,dataprep.date,
+                                                  "date_trimestrielle"]).tolist()
+        def format_option_label(value):
+            try:
+                value_clean = value.strip('[]')
+                if ';' in value_clean:
+                    parts = value_clean.split(';')
+                    formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
+                elif value_clean.replace('.', '', 1).isdigit():
+                    formatted = f"{float(value_clean):.0f}"
+                else:
+                    formatted = ' '.join(word.capitalize() for word in value.replace('_', ' ').split())
+                return formatted
+            except Exception as e:
+                print(f"Error formatting value {value}: {e}")
+                return value 
+        
         next_index = len(values)
         if next_index < len(dropdown_columns):
             new_element = html.Div([
                 html.Div([
                     html.Label(f'Pour la variable {dropdown_columns[next_index]}:', className='label-inline message-label'),
-                ], className='message-container'),
+                ], className='message-container', style={
+                'background-image': r'url("C:\Users\jinzhou\Cours_M2\S2\Challenge_Nexialog\assets\images\bulle.jpeg")',  # Set the background image
+                'background-size': 'contain',  # Ensure the image is scaled to fit
+                'background-repeat': 'no-repeat',  # Do not repeat the image
+                'border-radius': '20px',
+                'color': 'white',
+                'margin-bottom': '50px',
+                'padding': '10px 20px',
+                'font-size': '20px'}),
                 html.Div([
                     dcc.RadioItems(
                         id={'type': 'dynamic-radioitems', 'index': next_index},
-                        options=[{'label': str(v), 'value': v} for v in df[dropdown_columns[next_index]].dropna().unique()],
-                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
+                        # options=[{'label': str(v), 'value': v} for v in df[dropdown_columns[next_index]].dropna().unique()],
+                        # options=[
+                        #     {
+                        #         'label': (
+                        #             f"[{int(float(v.strip('[]').split(';')[0]))};{int(float(v.strip('[]').split(';')[1]))}]" if ';' in v else
+                        #             (f"{float(v):.0f}" if v.replace('.', '', 1).isdigit() else
+                        #             ' '.join(word.capitalize() for word in v.replace('_', ' ').split()))
+                        #         ),
+                        #         'value': v
+                        #     } for v in df[dropdown_columns[next_index]].dropna().unique()],
+                        options=[                  
+                        {'label': format_option_label(v), 'value': v}
+                        for v in df[dropdown_columns[next_index]].dropna().unique()
+                        ],
+                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  
                         className='radio-inline selection-radio'
                     ),
-                ], className='radioitems-container', style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
+                ], className='radioitems-container', style={'background-color': '8B0000', 'border-radius': '20px', 'color': 'white'}),
             ], className='form-input row', style={'margin-bottom': '50px'})
             children.append(new_element)
-
-        # Gérer l'affichage du bouton de lancement après le dernier choix
-        button_exists = any(isinstance(child, html.Button) and child.id == 'launch-chatbot-modeling' for child in children)
-        if next_index == len(dropdown_columns) and not button_exists:
-            children.append(html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'block'}))
-
         return children
 
     @app.callback(
         Output('score-ind-result', 'children'),
-        [Input('launch-chatbot-modeling', 'n_clicks')],
-        [State({'type': 'dynamic-radioitems', 'index': ALL}, 'value')]
+        [Input({'type': 'dynamic-radioitems', 'index': ALL}, 'value')],
+        prevent_initial_call=True
     )
+    def update_score_ind(dropdown_values):
+        if None in dropdown_values:
+            return dash.no_update  # Retourne dash.no_update si toutes les sélections ne sont pas complétées.
 
-    def update_score_ind(n_clicks, dropdown_values):
-        df = pd.read_csv("/Users/jinzhou/Cours_M2/S2/Challenge_Nexialog/datas/df_segmentation.csv", index_col=[0])
-        df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
-                 "RATE_DOWN_PAYMENT_disc_int", "AMT_PAYMENT_disc_int",
-                 "NAME_INCOME_TYPE_discret", "OCCUPATION_TYPE_discret",
-                 'Score_ind', "Classes"]]
+        df = model_classique.df_score if dataprep.model_name == "logit" else model_challenger.df_score
+        dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target, dataprep.date, "date_trimestrielle"]).tolist()
 
-        dropdown_columns = df.columns.difference(
-            ['Score_ind', 'Classes']).tolist()
+        if len(dropdown_values) < len(dropdown_columns):
+            return dash.no_update
 
-        if n_clicks > 0 and None not in dropdown_values:
-            if None in dropdown_values:
-                return "Please complete all selections before submitting."
+        model = model_classique if dataprep.model_name == "logit" else model_challenger
+        filtered_df = df.copy()
+        for column, value in zip(dropdown_columns, dropdown_values):
+            if value is not None:
+                filtered_df = filtered_df[filtered_df[column] == value]
 
-            # Filter DataFrame based on dropdown selections
-            filtered_df = df.copy()
-            for column, value in zip(dropdown_columns, dropdown_values):
-                if value is not None:
-                    filtered_df = filtered_df[filtered_df[column] == value]
-                # # print(
-                # #     f"Column: {column}, Value: {value}, Unique values in DF: {
-                # #         df[column].unique()}")
+        mean_score_ind = filtered_df['Score_ind'].mean() if not filtered_df.empty else None
+        mean_classes = int(filtered_df['Classes'].mean()) if not filtered_df.empty else None
 
-                # if value is not None:
-                #     filtered_df = filtered_df[filtered_df[column] == value]
-                #     print("Callback déclenché")
+        message_lines = [
+            f"Au vu de vos choix, votre score est {mean_score_ind:.2f}, vous êtes donc dans la classe {mean_classes}."
+        ]
 
-            mean_score_ind = filtered_df['Score_ind'].mean() if not filtered_df.empty else None
-            mean_classes = int(filtered_df['Classes'].mean()) if not filtered_df.empty else None
+        if mean_classes > 5:
+            message_lines.append("Un crédit vous sera octroyé.")
+        elif 3 >= mean_classes >= 5:
+            message_lines.append("Un crédit vous sera octroyé, mais avec un taux d'intérêt élevé.")
+        else:
+            message_lines.append("Malheureusement, aucun crédit ne vous sera octroyé.")
 
-            print(mean_score_ind, mean_classes)
-            if mean_classes < 3:
-                message = f"""
-            Votre score est de : {mean_score_ind:.2f} \n
-            Vous êtes dans la classe {mean_classes} \n
-            Un crédit vous sera octroyé
-            """
-            elif 5 >= mean_classes >= 3:
-                message = f"""
-                Votre score est de : {mean_score_ind:.2f} \n
-                Vous êtes dans la classe {mean_classes} \n
-                Un crédit vous sera octroyé, mais avec un taux d'intérêt élevé
-                """
-            else:
-                message = f"""
-                Votre score est de : {mean_score_ind:.2f} \n
-                Vous êtes dans la classe {mean_classes} \n
-                Aucun crédit ne vous sera octroyé
-                """
-            return dcc.Markdown(message, style={'margin-top': '20px',
-                                                "color": "#ffffff",
-                                                'font-weight': 'bold',
-                                                "font-size": "20px"})
-        return "Veuillez faire toutes les sélections avant de soumettre."
+        message_divs = [html.Div(line, className='message-line') for line in message_lines]
+
+        return html.Div([
+            html.Div(message_divs, className='message-container', style={
+                'background-image': r'url("C:\Users\jinzhou\Cours_M2\S2\Challenge_Nexialog\assets\images\bulle.jpeg")',  # Set the background image
+                'background-size': 'contain',  # Ensure the image is scaled to fit
+                'background-repeat': 'no-repeat',  # Do not repeat the image
+                'border-radius': '20px',
+                'color': 'white',
+                'margin-bottom': '50px',
+                'padding': '10px 20px',
+                'font-size': '20px'
+                #      style={
+                # 'background-color': '#007BFF', 'border-radius': '20px', 'color': 'white',
+                # 'margin-bottom': '50px', 'padding': '10px 20px', 'font-size': '20px'
+            }),
+        ], className='form-input row')

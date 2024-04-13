@@ -1,9 +1,10 @@
 import sys
 
 sys.path.append("./script/")
-import dash
+
 from dash import dcc, html, dash_table
 from plot_utils import *
+from plot_analyse import *
 
 graph_left = []
 graph_right = []
@@ -21,6 +22,12 @@ def build_tabs():
                                             value="tab1",
                                             className="custom-tabs",
                                             children=[
+                                                dcc.Tab(id='analyse-tab',
+                                                        label='Analyse',
+                                                        className="custom-tab",
+                                                        value='tab0',
+                                                        selected_className="custom-tab--selected",
+                                                        children=analyse_layout()),
                                                 dcc.Tab(id="Specs-tab",
                                                         label="Modélisation",
                                                         value="tab1",
@@ -29,26 +36,91 @@ def build_tabs():
                                                         children=create_layout(),
                                                 ),
                                                 dcc.Tab(id="Control-chart-tab",
-                                                        label="Resultats",
+                                                        label="Modèle Classique",
                                                         value="tab2",
                                                         className="custom-tab",
                                                         selected_className="custom-tab--selected"
-                                                
                                                 ),
-                                                dcc.Tab(id="Chatbot-tab",
-                                                    label="chatbot",
-                                                    value="tab3",
-                                                    className="custom-tab",
-                                                    selected_className="custom-tab--selected",
-                                                    style={"display": "none"},  # Cachez l'onglet par défaut
-                                                    children=chatbot())
-
+                                                dcc.Tab(id="Control-chart-tab-2",
+                                                        label="Modèle Challenger",
+                                                        value="tab3",
+                                                        className="custom-tab",
+                                                        selected_className="custom-tab--selected"
+                                                        ),
+                                                dcc.Tab(id='chat-tab',
+                                                        label='Calculateur d\'octroi',
+                                                        className="custom-tab",
+                                                        value='tab4',
+                                                        selected_className="custom-tab--selected"),
                 ],
             )
         ],
     )
 ])
 
+################################################ ONGLET 0 : Analyse #################################################
+
+def analyse_layout():
+    return html.Div(className='hub', children = [
+
+        html.Div([dcc.Upload(id='upload-data-analyse', className="uploader", children=html.Div(
+            ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
+        )), html.Div(id='output-data-upload-analyse', style={"color": "#ffffff", "textAlign": "center"}),
+                  ]),
+
+        html.Br(),
+
+        html.Div(className='form-input row', children=[
+            html.Div(className='logo-and-label col', children=[
+                html.Label('Choix de la cible', className='label-inline'),
+            ]),
+            html.Div(className='form-dropdown col', children=[
+                dcc.Dropdown(id='target-dropdown-analyse',
+                             options=dataprep.get_features(),
+                             multi=False,
+                             placeholder="Choisir la cible",
+                             className='dropdown-inline',
+                             style={'background-color': '#4e5567'}),
+            ])
+        ]),
+
+        html.Br(),
+
+        html.Div(className='form-input row', children=[
+            html.Div(className='logo-and-label col', children=[
+                html.Label('Choix de la variable date', className='label-inline'),
+            ]),
+            html.Div(className='form-dropdown col', children=[
+                dcc.Dropdown(id='date-dropdown-analyse',
+                             options=dataprep.get_features(),
+                             multi=False,
+                             placeholder="Choisir la date",
+                             className='dropdown-inline',
+                             style={'background-color': '#4e5567'}),
+            ])
+        ]),
+
+        html.Br(),
+        html.Button('Lancer l\'analyse', id='launch-button-analyse', n_clicks=0, className='launch-button-mod'),
+
+        html.Div(id = "Graph-Container", children=[])
+
+    ])
+
+def build_analyse_panel():
+    return ([
+        html.Div(children=[
+                     dcc.Dropdown(
+                         id='plot-stability-dropdown',
+                         className='dropdown-results',
+                         options=analyse.get_features(),
+                         value=analyse.get_features()[2],
+                         style={'marginBottom': '20px', "marginTop":'40px'}
+                     ),
+                     dcc.Graph(id='stability-animated-graph'),
+                    dcc.Graph(id="density-plot")
+    ])
+    ])
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
@@ -58,44 +130,36 @@ def create_layout():
         html.Div(className='container', children=[
 
             html.Div(id='md_title_0', children=[
-                html.Label(className='md_title',
-                           children='1. Importer les données :')
+                html.Label(className='md_title', children='1. Importer les données :')
             ]),
             html.Br(),
 
-            html.Div([dcc.Upload(id='upload-data', className="uploader",
-                                 children=html.Div(
-                                     ['Glisser et déposer ou ',
-                                      html.A('Sélectionner le fichier')]
-                )), html.Div(id='output-data-upload', style={"color": "#ffffff",
-                                                             "textAlign": "center"}),
+            html.Div([dcc.Upload(id='upload-data', className = "uploader", children=html.Div(
+                    ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
+                )), html.Div(id='output-data-upload', style={"color":"#ffffff", "textAlign":"center"}),
             ]),
 
             html.Br(),
             html.Br(),
 
             html.Div(id='md_title_1', children=[
-               html.Label(className='md_title',
-                          children='2. Paramétrer la modélisation :')
+               html.Label(className='md_title', children='2. Paramétrer la modélisation :')
             ]),
 
             html.Br(),
 
             html.Div(className='form-input row', children=[
                 html.Div(className='logo-and-label col', children=[
-                    html.Img(src='./assets/images/model.png',
-                             className='logo-inline',
-                             style={'marginLeft': '4px'}),
-
-                    html.Label('Choix du Modèle', className='label-inline',
-                               style={'marginLeft': '4px'}),
+                    html.Img(src='./assets/images/model.png', className='logo-inline', style={'marginLeft':'4px'}),
+                    html.Label('Choix du Modèle', className='label-inline', style={'marginLeft':'4px'}),
                 ]),
                 html.Div(className='form-dropdown col', children=[
                     dcc.Dropdown(
                         id='model-choice',
                         options=[
                             {'label': 'Logit', 'value': 'Logit'},
-                            {'label': 'XGBoost', 'value': 'XGBoost'}
+                            {'label': 'XGBoost', 'value': 'XGBoost'},
+                            {'label': 'Les deux', 'value': 'both'},
                         ],
                         value='Logit',
                         className='dropdown-inline',
@@ -117,7 +181,7 @@ def create_layout():
                                  multi=False,
                                  placeholder="Choisir la cible",
                                  className='dropdown-inline',
-                                 style={'background-color': '#4e5567'}),
+                                 style={'background-color':'#4e5567'}),
                 ])
             ]),
 
@@ -134,7 +198,7 @@ def create_layout():
                                  multi=False,
                                  placeholder="Choisir la date",
                                  className='dropdown-inline',
-                                 style={'background-color': '#4e5567'}),
+                                 style={'background-color':'#4e5567'}),
                 ])
             ]),
 
@@ -145,10 +209,8 @@ def create_layout():
 
             html.Div(className='form-input row', children=[
                 html.Div(className='logo-and-label col', children=[
-                    html.Img(src='./assets/images/check.png',
-                             className='logo-inline'),
-                    html.Label('Choix des variables explicatives',
-                               className='label-inline'),
+                    html.Img(src='./assets/images/check.png', className='logo-inline'),
+                    html.Label('Choix des variables explicatives', className='label-inline'),
                 ]),
                 html.Div(className='form-dropdown col', children=[
                     dcc.Dropdown(id='variables-dropdown',
@@ -156,18 +218,15 @@ def create_layout():
                                  multi=True,
                                  placeholder="Choisir des variables",
                                  className='dropdown-inline',
-                                 style={'background-color': '#4e5567'}),
+                                 style={'background-color':'#4e5567'}),
                 ])
             ]),
 
             html.Div(id='variables-info', className='variables-info',
-                     children=[html.Br(),
-                               dcc.Markdown(id='variables-info-markdown',
-                                            children=''), html.Br()]),
+                     children=[html.Br(), dcc.Markdown(id='variables-info-markdown', children=''), html.Br()]),
 
             html.Div(className='form-input row', children=[
-                html.Div(id='predefined_vars_button',
-                         className='predefined-vars', children=[
+                html.Div(id = 'predefined_vars_button', className='predefined-vars', children=[
                     html.Button('Interprétabilité', id='interpretabilite-button', n_clicks=0,
                                 className='button-inline'),
                     html.Button('Performance', id='performance-button', n_clicks=0, className='button-inline'),
@@ -182,22 +241,18 @@ def create_layout():
                              id="loading",
                              children=[html.Div(id="loading-output",
                                                 className="loading-page"),
-                                       #dcc.Interval(id='interval-component', interval=1 * 1000, n_intervals=0),
-                                       html.Div(id='test_loading',
-                                                children=[html.H3("",
-                                                                  id="loading-statement", 
-                                                                  style={'color': '#FFFFFF'})])],
+                                       html.Div(id='test_loading', children=[html.H3("", id = "loading-statement",  style={'color':'#FFFFFF'})])],
                              type="default",
                              fullscreen=True,
                          ),
                      ],
                      ),
             html.Br(),
-            html.Br(),
-            html.Button('Lancer la Modélisation', id='launch-button',
-                        n_clicks=0, className='launch-button'),
+            html.Button('Lancer la Modélisation', id='launch-button', n_clicks=0, className='launch-button-mod'),
         ])
     ])
+
+
 
 ################################################ ONGLET 2 : RÉSULTATS #################################################
 
@@ -212,20 +267,18 @@ def render_this(render_list):
 
     return decorator
 
-@render_this(graph_right)
+
 def title_layout():
     return (html.Div(className='results-title',
-                     children=[html.Label("1.Vérification des hypothèses"),
-                               html.Br()]))
+                     children=[html.Label("1.Vérification des hypothèses"), html.Br()]))
 
 
-@render_this(graph_right)
-def title_layout():
+def stability_plot(model_name):
     return html.Div(children=[
         html.Div(className='graphpart',
                  children=[
                      dcc.Dropdown(
-                         id='stability-dropdown',
+                         id=f'stability-dropdown-{model_name}',
                          className='dropdown-results',
                          options=[{'label': label, 'value': col} for col, label in
                                   zip(*dataprep.get_explicative_features())],
@@ -233,31 +286,28 @@ def title_layout():
                          style={'marginBottom': '20px'}
 
                      ),
-                     dcc.Graph(id='stability-graph')
+                     dcc.Graph(id=f'stability-graph-{model_name}')
                  ], style={'width': '65%'}),
         html.Div(className='graphpart',
-                 children=[dcc.Graph(id='histo-graph')],
+                 children=[dcc.Graph(id=f'histo-graph-{model_name}')],
                  style={'width': '35%', 'margin-top': "2px"})],
         style={'display': 'flex', 'flexDirection': 'row'})
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_1():
     return (html.Div(className='results-title',
                    children=[html.Br(), html.Label("2.Performances du modèle"), html.Br()]))
 
 
 
-@render_this(graph_right)
-def stability_plot():
+def roc_plot(model):
     return html.Div(className='graphpart',
                     children=[
-                        dcc.Graph(figure=roc_curve())
+                        dcc.Graph(figure=courbe_roc(model))
                     ]
                     )
 
-@render_this(graph_right)
-def shap_values():
+def shap_values(model):
     if model.model_name == 'xgb' :
         return html.Div(className='graphpart',
                         children=[
@@ -268,20 +318,14 @@ def shap_values():
         return html.Div()
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_2():
     return (html.Div(className='results-title',
-                     children=[html.Br(), html.Label("3.Grille de Score"),
-                               html.Br()]))
+                     children=[html.Br(), html.Label("3.Grille de Score"), html.Br()]))
 
 
-@render_this(graph_right)
-def table():
-    grid_score = model.get_grid_score(dataprep.train,
-                                      dataprep.target)
-
-    return dash_table.DataTable(round(grid_score, 2).to_dict('records'),
-                                [{"name": i, "id": i} for i in grid_score.columns],
+def table(model):
+    return dash_table.DataTable(round(model.grid_score, 2).to_dict('records'),
+                                [{"name": i, "id": i} for i in model.grid_score.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
@@ -303,18 +347,15 @@ def table():
                                 )
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_3():
     return (html.Div(className='results-title',
                      children=[html.Br(), html.Label("4.Segmentation"), html.Br()]))
 
-@render_this(graph_right)
-def test():
-    model.get_segmentation(dataprep.target)
+def slider_breaks(model, model_name):
     return html.Div(children=[
         html.Div(id = "slider-container", children=[dcc.RangeSlider(0,
                                            1000,
-                                           id="breaks-slider",
+                                           id = f"breaks-slider-{model_name}",
                                            value=model.breaks,
                                            marks={i: {'label': str(i), 'style': {'color': '#ffffff', 'fontSize': '14px'}}
                                                   for i in range(0, 1001, 250)},
@@ -322,21 +363,18 @@ def test():
                                             tooltip={
                                                 "placement": "top",
                                                 "always_visible": True,
-                                                "style": {"color": "white",
-                                                          "fontSize": "12px"},
+                                                "style": {"color": "white", "fontSize": "12px"},
                                             },
                                            className="custom-slider")],
                  style={'width': '95%', 'margin':"auto"}),
         html.Br(),])
 
-
-@render_this(graph_right)
-def test():
+def segmentation(model, model_name):
     return html.Div(children=[
         html.Div(children=[html.Br(),
                            html.Div([
                                dcc.Dropdown(
-                                   id='graph-type-selector',
+                                   id=f'graph-type-selector-{model_name}',
                                    className='dropdown-results',
                                    options=[
                                        {'label': 'Gini', 'value': 'gini'},
@@ -345,7 +383,7 @@ def test():
                                    value='gini',
                                    style={'marginBottom': '20px'}
                                ),
-                               dcc.Graph(id='class-display', className='graphpart')
+                               dcc.Graph(id=f'class-display-{model_name}', className='graphpart')
                            ])], style={'width': '65%'}),
         html.Div([html.Br(), html.Label("Segmentation - Tableau Récapitulatif", className="data-summary"), html.Br(),
             dash_table.DataTable(round(model.resultats, 2).to_dict('records'),
@@ -368,21 +406,18 @@ def test():
                                      'padding': '15px',
                                      'fontWeight': 'normal'
                                  },
-                                 id="table-id")
-        ], style={'width': '35%', 'margin-top': "20px"}),
+                                 id=f"table-id-{model_name}")
+        ], style={'width': '35%', 'margin-top':"20px"}),
     ], style={'display': 'flex', 'flexDirection': 'row'})
 
 
-@render_this(graph_right)
-def title_layout():
+def title_layout_4():
     return (html.Div(className='results-title',
                      children=[html.Label("5. MOC")]))
 
-@render_this(graph_right)
-def table():
-    proba_defaut = model.get_default_proba(dataprep.target, dataprep.date)
-    return dash_table.DataTable(round(proba_defaut, 4).to_dict('records'),
-                                [{"name": i, "id": i} for i in proba_defaut.columns],
+def default_proba(model):
+
+    return dash_table.DataTable(round(model.default_proba, 4).to_dict('records'), [{"name": i, "id": i} for i in model.default_proba.columns],
                                 style_header={
                                     'backgroundColor': 'rgb(76, 82, 94)',
                                     'color': 'white',
@@ -406,16 +441,12 @@ def table():
 
 
 
-
-@render_this(graph_left)
-def title_layout():
+def title_layout_5():
     return (html.Div(className='left-title',
                      children=[html.Label("Données"),
                                html.Br()]))
 
-
-@render_this(graph_left)
-def title_layout():
+def info_data(model):
    return(html.Div([html.Div(
        className='data-summary',
        children=[
@@ -439,13 +470,11 @@ def title_layout():
    )
 
 
-@render_this(graph_left)
-def title_layout():
+def title_layout_7():
     return (html.Div(className='left-title',
                      children=[html.Br(), html.Label("Métriques"), html.Br()]))
 
-@render_this(graph_left)
-def stability_plot():
+def metrics(model):
     dic_metrics = model.get_segmentation_metrics(dataprep.target, dataprep.date)
     roc_auc = model.get_metrics()["roc_auc"]*100
     return html.Div(className='graphpart',
@@ -461,48 +490,115 @@ def stability_plot():
                     ]
                     )
 
-@render_this(graph_left)
-def title_layout():
+def title_layout_8():
     return (html.Div(className='left-title',
                      children=[html.Br(), html.Label("Artefacts")]))
 
-@render_this(graph_left)
 def download_df_score():
     return html.Div(
                     children=[
                         html.Br(),
-                        html.Button(["Données"], id="btn_df_score",
-                                    className='download-button'),
+                        html.Button(["Données"], id="btn_df_score", className='download-button'),
                         dcc.Download(id="download-df-score"),
                     ], style={'textAlign': 'center'}
                     )
 
 
-@render_this(graph_left)
 def download_grille_score():
     return html.Div(
                     children=[
                         html.Br(),
-                        html.Button("Grille de score", id="btn_grille_score",
-                                    className='download-button'),
+                        html.Button("Grille de score", id="btn_grille_score", className='download-button'),
                         dcc.Download(id="download-grille-score"),
                     ], style={'textAlign': 'center'}
                     )
 
 
-@render_this(graph_left)
 def download_model():
     return html.Div(
                     children=[
                         html.Br(),
-                        html.Button("Modèle", id="btn_model",
-                                    className='download-button'),
+                        html.Button("Modèle", id="btn_model", className='download-button'),
                         dcc.Download(id="download-model"),
                     ], style={'textAlign': 'center'}
                     )
 
 
-def build_all_panels():
+def setup_models_panels(model, left_list, right_list, model_name):
+
+    @render_this(right_list)
+    def render():
+        return title_layout()
+
+    @render_this(right_list)
+    def render():
+        return stability_plot(model_name)
+
+    @render_this(right_list)
+    def render():
+        return title_layout_1()
+
+    @render_this(right_list)
+    def render():
+        return roc_plot(model)
+
+    @render_this(right_list)
+    def render():
+        return shap_values(model)
+
+    @render_this(right_list)
+    def render():
+        return title_layout_2()
+
+    @render_this(right_list)
+    def render():
+        return table(model)
+
+    @render_this(right_list)
+    def render():
+        return title_layout_3()
+
+    @render_this(right_list)
+    def render():
+        return slider_breaks(model, model_name)
+
+    @render_this(right_list)
+    def render():
+        return segmentation(model, model_name)
+    @render_this(right_list)
+    def render():
+        return title_layout_4()
+
+    @render_this(right_list)
+    def render():
+        return default_proba(model)
+
+    @render_this(left_list)
+    def render():
+        return title_layout_5()
+
+    @render_this(left_list)
+    def render():
+        return info_data(model)
+    @render_this(left_list)
+    def render():
+        return title_layout_7()
+
+    @render_this(left_list)
+    def render():
+        return metrics(model)
+    @render_this(left_list)
+    def render():
+        return download_df_score()
+
+    @render_this(left_list)
+    def render():
+        return download_grille_score()
+    @render_this(left_list)
+    def render():
+        return download_model()
+
+def build_all_panels_mod(graph_left, graph_right):
     other_panels = [panel() for panel in graph_right]
     auc_metric_panel = [panel() for panel in graph_left]
     layout = html.Div(children=[
@@ -518,19 +614,66 @@ def build_all_panels():
         )])
 
     return layout
+    
 
-################################################ ONGLET 3 : CHATBOT #################################################
-import pandas as pd
-from vars import model
+def build_both_model():
+    graph_left_classique = []
+    graph_right_classique = []
 
-df = pd.read_csv("/Users/jinzhou/Cours_M2/S2/Challenge_Nexialog/datas/df_segmentation.csv")
-df = df[['REGION_RATING_CLIENT_W_CITY', 'DAYS_CREDIT_ENDDATE_disc_int',
-         "RATE_DOWN_PAYMENT_disc_int",
-         "AMT_PAYMENT_disc_int", "NAME_INCOME_TYPE_discret",
-         "OCCUPATION_TYPE_discret", 'Score_ind', "Classes"]]
-dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
+    graph_left_challenger = []
+    graph_right_challenger = []
 
+    setup_models_panels(model_classique, graph_left_classique, graph_right_classique, "clas")
+    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger, "chal")
+
+    layout_classique = build_all_panels_mod(graph_left_classique, graph_right_classique)
+    layout_challenger = build_all_panels_mod(graph_left_challenger, graph_right_challenger)
+
+    return layout_classique, layout_challenger
+
+def build_logit_model():
+    graph_left_classique = []
+    graph_right_classique = []
+
+    setup_models_panels(model_classique, graph_left_classique, graph_right_classique, "clas")
+
+    layout_classique = build_all_panels_mod(graph_left_classique, graph_right_classique)
+
+    return layout_classique
+
+def build_xgboost_model():
+    graph_left_challenger = []
+    graph_right_challenger = []
+
+    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger, "chal")
+    layout_challenger = build_all_panels_mod(graph_left_challenger, graph_right_challenger)
+
+    return layout_challenger
+
+################################################ ONGLET 3 : Chatbot #################################################
+def format_option_label(value):
+    try:
+        value_clean = value.strip('[]')
+        if ';' in value_clean:
+            parts = value_clean.split(';')
+            formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
+        elif value_clean.replace('.', '', 1).isdigit():
+            formatted = f"{float(value_clean):.0f}"
+        else:
+            formatted = ' '.join(word.capitalize() for word in value.replace('_', ' ').split())
+        return formatted
+    except Exception as e:
+        print(f"Error formatting value {value}: {e}")
+        return value 
+    
 def chatbot():
+    if dataprep.model_name == "logit":
+        model = model_classique
+    elif dataprep.model_name == "xgb":
+        model = model_challenger
+
+    df = model.df_score
+    dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
     return html.Div([
         html.Div([
             html.Div(id='md_title_chatbot', style={'margin-bottom': '50px'}, children=[
@@ -542,19 +685,25 @@ def chatbot():
         html.Div(id='dynamic-radioitems-container', children=[
             html.Div([
                 html.Div([
-                    html.Label(f'Pour la variable {dropdown_columns[0]}:', className='label-inline message-label'),
-                ], className='message-container'),
+                    html.Label(f'Pour la variable {dropdown_columns[0]}', className='label-inline message-label'),
+                ], className='message-container', style={
+                    'background-image': 'url("/assets/bulle.jpeg")',
+                    'background-size': 'contain',
+                    'background-repeat': 'no-repeat',
+                    'border-radius': '20px',
+                    'color': 'white'}),
                 html.Div([
                     dcc.RadioItems(
                         id={'type': 'dynamic-radioitems', 'index': 0},
-                        options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if pd.notnull(value)],
+                        # options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if pd.notnull(value)],
+                        options=[{'label': format_option_label(str(value)), 'value': value} for value in df[dropdown_columns[0]].dropna().unique()],
                         labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
                         className='radio-inline selection-radio'
                     ),
-                ], className='radioitems-container', style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
+                ], className='radioitems-container',
+                    style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
             ], className='form-input row', style={'margin-bottom': '50px'})
         ]),
 
-        html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'none'}),
         html.Div(id='score-ind-result'),
     ], className='hub')

@@ -141,11 +141,9 @@ class DashDataPreparation():
         self.train = df
 
     def init_target(self, target):
-        print(target)
         self.target = target
 
     def init_date(self, date):
-        print(date)
         self.date = date
 
     def get_features(self):
@@ -178,21 +176,21 @@ class DashDataPreparation():
         vars_ins_selected = [var for var in selected_features if var in vars_ins]
 
         if len(vars_bur_selected) > 0 :
-            df_bur = pd.read_csv('./data/bureau.csv')
+            df_bur = pd.read_csv('./datas/bureau.csv')
             vars_bur_selected.append('SK_ID_CURR')
             df_bur_group = df_bur[vars_bur_selected].groupby('SK_ID_CURR').sum()
             df_bur_group.reset_index(inplace=True)
             self.train = self.train.merge(df_bur_group, on='SK_ID_CURR', how='left')
 
         if len(vars_prev_selected) > 0:
-            df_prev = pd.read_csv('./data/previous_application.csv')
+            df_prev = pd.read_csv('./datas/previous_application.csv')
             vars_prev_selected.append('SK_ID_CURR')
             df_prev_group = df_prev[vars_prev_selected].groupby('SK_ID_CURR').sum()
             df_prev_group.reset_index(inplace=True)
             self.train = self.train.merge(df_prev_group, on='SK_ID_CURR', how='left')
 
         if len(vars_ins_selected) > 0 :
-            df_ins = pd.read_csv('./data/installments_payments.csv')
+            df_ins = pd.read_csv('./datas/installments_payments.csv')
             df_ins_group = df_ins[['SK_ID_CURR', 'AMT_PAYMENT']].groupby('SK_ID_CURR').sum()
             df_ins_group.reset_index(inplace=True)
             self.train = self.train.merge(df_ins_group, on='SK_ID_CURR', how='left')
@@ -394,6 +392,9 @@ class DashDataPreparation():
         features_label = [var.split('_disc_int')[0] for var in features]
         features_label = [var.split('_discret')[0] for var in features_label]
         return(features, features_label)
+
+    def init_model_name(self, model_name):
+        self.model_name = model_name
 
 
 class ConstantFeatures():
