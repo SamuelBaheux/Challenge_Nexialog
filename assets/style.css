@@ -289,6 +289,7 @@ Tabs
 	justify-content: center;
 }
 
+#Control-chart-tab-2.custom-tab,
 #Specs-tab.custom-tab,
 #analyse-tab.custom-tab,
 #chat-tab.custom-tab,
@@ -307,6 +308,7 @@ Tabs
 	width: 94%;
 }
 
+#Control-chart-tab-2.custom-tab--selected,
 #Specs-tab.custom-tab--selected,
 #chat-tab.custom-tab--selected,
 #analyse-tab.custom-tab--selected,
@@ -317,20 +319,20 @@ Tabs
 	justify-content: center;
 }
 
-#Specs-tab.custom-tab {
-	margin-right: 3px;
+#Control-chart-tab-2.custom-tab {
+	margin-left: 5px;
 }
 
-#Control-chart-tab.custom-tab {
-	margin-left: 3px;
+#Specs-tab.custom-tab {
+	margin-right: 5px;
 }
 
 #chat-tab.custom-tab {
-	margin-left: 3px;
+	margin-left: 5px;
 }
 
 #analyse-tab.custom-tab {
-	margin-right: 3px;
+	margin-right: 5px;
 }
 
 
