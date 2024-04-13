@@ -392,67 +392,58 @@ def register_callbacks(app):
                         labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
                         className='radio-inline selection-radio'
                     ),
-                ], className='radioitems-container', style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
+                ], className='radioitems-container', style={'background-color': '8B0000', 'border-radius': '20px', 'color': 'white'}),
             ], className='form-input row', style={'margin-bottom': '50px'})
             children.append(new_element)
 
         # Gérer l'affichage du bouton de lancement après le dernier choix
-        button_exists = any(isinstance(child, html.Button) and child.id == 'launch-chatbot-modeling' for child in children)
-        if next_index == len(dropdown_columns) and not button_exists:
-            children.append(html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'block'}))
+      #  button_exists = any(isinstance(child, html.Button) and child.id == 'launch-chatbot-modeling' for child in children)
+      #  if next_index == len(dropdown_columns) and not button_exists:
+      #      children.append(html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'block'}))
 
         return children
 
+
     @app.callback(
         Output('score-ind-result', 'children'),
-        [Input('launch-chatbot-modeling', 'n_clicks')],
-        [State({'type': 'dynamic-radioitems', 'index': ALL}, 'value')]
+        [Input({'type': 'dynamic-radioitems', 'index': ALL}, 'value')],
+        prevent_initial_call=True
     )
+    def update_score_ind(dropdown_values):
+        if None in dropdown_values:
+            return dash.no_update  # Retourne dash.no_update si toutes les sélections ne sont pas complétées.
 
-    def update_score_ind(n_clicks, dropdown_values):
-        if dataprep.model_name == "logit" :
-            model = model_classique
-        elif dataprep.model_name == "xgb":
-            model = model_challenger
+        df = model_classique.df_score if dataprep.model_name == "logit" else model_challenger.df_score
+        dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target, dataprep.date, "date_trimestrielle"]).tolist()
 
-        df = model.df_score
-        dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target,dataprep.date,
-                                                  "date_trimestrielle"]).tolist()
+        if len(dropdown_values) < len(dropdown_columns):
+            return dash.no_update
 
-        if n_clicks > 0 and None not in dropdown_values:
-            if None in dropdown_values:
-                return "Please complete all selections before submitting."
+        model = model_classique if dataprep.model_name == "logit" else model_challenger
+        filtered_df = df.copy()
+        for column, value in zip(dropdown_columns, dropdown_values):
+            if value is not None:
+                filtered_df = filtered_df[filtered_df[column] == value]
 
-            # Filter DataFrame based on dropdown selections
-            filtered_df = df.copy()
-            for column, value in zip(dropdown_columns, dropdown_values):
-                if value is not None:
-                    filtered_df = filtered_df[filtered_df[column] == value]
+        mean_score_ind = filtered_df['Score_ind'].mean() if not filtered_df.empty else None
+        mean_classes = int(filtered_df['Classes'].mean()) if not filtered_df.empty else None
 
-            mean_score_ind = filtered_df['Score_ind'].mean() if not filtered_df.empty else None
-            mean_classes = int(filtered_df['Classes'].mean()) if not filtered_df.empty else None
+        message_lines = [
+            f"Au vu de vos choix, votre score est {mean_score_ind:.2f}, vous êtes donc dans la classe {mean_classes}."
+        ]
 
-            print(mean_score_ind, mean_classes)
-            if mean_classes < 3:
-                message = f"""
-            Votre score est de : {mean_score_ind:.2f} \n
-            Vous êtes dans la classe {mean_classes} \n
-            Un crédit vous sera octroyé
-            """
-            elif 5 >= mean_classes >= 3:
-                message = f"""
-                Votre score est de : {mean_score_ind:.2f} \n
-                Vous êtes dans la classe {mean_classes} \n
-                Un crédit vous sera octroyé, mais avec un taux d'intérêt élevé
-                """
-            else:
-                message = f"""
-                Votre score est de : {mean_score_ind:.2f} \n
-                Vous êtes dans la classe {mean_classes} \n
-                Aucun crédit ne vous sera octroyé
-                """
-            return dcc.Markdown(message, style={'margin-top': '20px',
-                                                "color": "#ffffff",
-                                                'font-weight': 'bold',
-                                                "font-size": "20px"})
-        return "Veuillez faire toutes les sélections avant de soumettre."
+        if mean_classes > 5:
+            message_lines.append("Un crédit vous sera octroyé.")
+        elif 3 >= mean_classes >= 5:
+            message_lines.append("Un crédit vous sera octroyé, mais avec un taux d'intérêt élevé.")
+        else:
+            message_lines.append("Malheureusement, aucun crédit ne vous sera octroyé.")
+
+        message_divs = [html.Div(line, className='message-line') for line in message_lines]
+
+        return html.Div([
+            html.Div(message_divs, className='message-container', style={
+                'background-color': '#007BFF', 'border-radius': '20px', 'color': 'white',
+                'margin-bottom': '50px', 'padding': '10px 20px', 'font-size': '20px'
+            }),
+        ], className='form-input row')

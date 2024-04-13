@@ -676,8 +676,7 @@ def chatbot():
                         id={'type': 'dynamic-radioitems', 'index': 0},
                         options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if
                                  pd.notnull(value)],
-                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},
-                        # Espacement et alignement horizontal
+                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
                         className='radio-inline selection-radio'
                     ),
                 ], className='radioitems-container',
@@ -685,7 +684,5 @@ def chatbot():
             ], className='form-input row', style={'margin-bottom': '50px'})
         ]),
 
-        html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0,
-                    className='launch-button', style={'margin-top': '20px', 'display': 'none'}),
         html.Div(id='score-ind-result'),
     ], className='hub')

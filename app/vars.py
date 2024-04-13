@@ -9,4 +9,4 @@ model_classique = Modelization()
 analyse = Analyse()
 
 
-dictionnaire = pd.read_csv("./data/Columns_Description.csv")
+dictionnaire = pd.read_csv("./datas/Columns_Description.csv")
