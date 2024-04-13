@@ -395,12 +395,6 @@ def register_callbacks(app):
                 ], className='radioitems-container', style={'background-color': '8B0000', 'border-radius': '20px', 'color': 'white'}),
             ], className='form-input row', style={'margin-bottom': '50px'})
             children.append(new_element)
-
-        # Gérer l'affichage du bouton de lancement après le dernier choix
-      #  button_exists = any(isinstance(child, html.Button) and child.id == 'launch-chatbot-modeling' for child in children)
-      #  if next_index == len(dropdown_columns) and not button_exists:
-      #      children.append(html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'block'}))
-
         return children
 
 

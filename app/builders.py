@@ -47,7 +47,7 @@ def build_tabs():
                                                         selected_className="custom-tab--selected"
                                                         ),
                                                 dcc.Tab(id='chat-tab',
-                                                        label='Chatbot',
+                                                        label='Calculateur d\'octroi',
                                                         className="custom-tab",
                                                         value='tab4',
                                                         selected_className="custom-tab--selected"),
@@ -669,7 +669,7 @@ def chatbot():
         html.Div(id='dynamic-radioitems-container', children=[
             html.Div([
                 html.Div([
-                    html.Label(f'Pour la variable {dropdown_columns[0]}:', className='label-inline message-label'),
+                    html.Label(f'Pour la variable {dropdown_columns[0]}', className='label-inline message-label'),
                 ], className='message-container'),
                 html.Div([
                     dcc.RadioItems(
