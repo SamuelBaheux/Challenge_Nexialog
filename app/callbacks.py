@@ -36,9 +36,13 @@ def register_callbacks(app):
             return dash.no_update,[], []
 
     @app.callback([Output("Graph-Container", "children")],
-                  [Input("launch-button-analyse", "n_clicks")])
-    def display_graph(n_clicks):
+                  [Input("target-dropdown-analyse", "value"),
+                   Input("date-dropdown-analyse", "value"),
+                   Input("launch-button-analyse", "n_clicks")])
+    def display_graph(target, date, n_clicks):
         if n_clicks and n_clicks > 0:
+            analyse.init_target(target)
+            analyse.init_date(date)
             return build_analyse_panel()
         else :
             return dash.no_update
@@ -236,6 +240,16 @@ def register_callbacks(app):
         fig_stab = plot_stability_plotly(selected_variable)
         fig_hist = plot_hist(selected_variable)
         return [fig_stab, fig_hist]
+
+    @app.callback(
+        [Output("stability-animated-graph", "figure"),
+         Output("density-plot", "figure")],
+        [Input("plot-stability-dropdown", "value")]
+    )
+    def update_graph(selected_variable):
+        fig = plot_stability_plotly_analyse(selected_variable)
+        fig_d = plot_marginal_density(selected_variable)
+        return([fig, fig_d])
 
     @app.callback(
         Output('class-display', 'figure'),

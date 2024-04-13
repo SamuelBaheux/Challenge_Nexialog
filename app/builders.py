@@ -102,11 +102,17 @@ def analyse_layout():
 
 def build_analyse_panel():
     return ([
-        dcc.Graph(figure=missing_values())
-        # Tu rajoutes ici les différents graphiques que tu fais
-        # Si tu veux faire des styles différent (taille des graphs, disposition, ...) tu peux rajouter des
-        # html.Div dans cette liste
-        # tu peux rajouter tout ce que tu veux dans la liste (des html.Label, ...)
+        html.Div(children=[
+                     dcc.Dropdown(
+                         id='plot-stability-dropdown',
+                         className='dropdown-results',
+                         options=analyse.get_features(),
+                         value=analyse.get_features()[2],
+                         style={'marginBottom': '20px', "marginTop":'40px'}
+                     ),
+                     dcc.Graph(id='stability-animated-graph'),
+                    dcc.Graph(id="density-plot")
+    ])
     ])
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
