@@ -272,12 +272,12 @@ def title_layout():
                      children=[html.Label("1.Vérification des hypothèses"), html.Br()]))
 
 
-def title_layout_0():
+def stability_plot(model_name):
     return html.Div(children=[
         html.Div(className='graphpart',
                  children=[
                      dcc.Dropdown(
-                         id='stability-dropdown',
+                         id=f'stability-dropdown-{model_name}',
                          className='dropdown-results',
                          options=[{'label': label, 'value': col} for col, label in
                                   zip(*dataprep.get_explicative_features())],
@@ -285,10 +285,10 @@ def title_layout_0():
                          style={'marginBottom': '20px'}
 
                      ),
-                     dcc.Graph(id='stability-graph')
+                     dcc.Graph(id=f'stability-graph-{model_name}')
                  ], style={'width': '65%'}),
         html.Div(className='graphpart',
-                 children=[dcc.Graph(id='histo-graph')],
+                 children=[dcc.Graph(id=f'histo-graph-{model_name}')],
                  style={'width': '35%', 'margin-top': "2px"})],
         style={'display': 'flex', 'flexDirection': 'row'})
 
@@ -350,11 +350,11 @@ def title_layout_3():
     return (html.Div(className='results-title',
                      children=[html.Br(), html.Label("4.Segmentation"), html.Br()]))
 
-def slider_breaks(model):
+def slider_breaks(model, model_name):
     return html.Div(children=[
         html.Div(id = "slider-container", children=[dcc.RangeSlider(0,
                                            1000,
-                                           id = "breaks-slider",
+                                           id = f"breaks-slider-{model_name}",
                                            value=model.breaks,
                                            marks={i: {'label': str(i), 'style': {'color': '#ffffff', 'fontSize': '14px'}}
                                                   for i in range(0, 1001, 250)},
@@ -368,12 +368,12 @@ def slider_breaks(model):
                  style={'width': '95%', 'margin':"auto"}),
         html.Br(),])
 
-def segmentation(model):
+def segmentation(model, model_name):
     return html.Div(children=[
         html.Div(children=[html.Br(),
                            html.Div([
                                dcc.Dropdown(
-                                   id='graph-type-selector',
+                                   id=f'graph-type-selector-{model_name}',
                                    className='dropdown-results',
                                    options=[
                                        {'label': 'Gini', 'value': 'gini'},
@@ -382,7 +382,7 @@ def segmentation(model):
                                    value='gini',
                                    style={'marginBottom': '20px'}
                                ),
-                               dcc.Graph(id='class-display', className='graphpart')
+                               dcc.Graph(id=f'class-display-{model_name}', className='graphpart')
                            ])], style={'width': '65%'}),
         html.Div([html.Br(), html.Label("Segmentation - Tableau Récapitulatif", className="data-summary"), html.Br(),
             dash_table.DataTable(round(model.resultats, 2).to_dict('records'),
@@ -405,7 +405,7 @@ def segmentation(model):
                                      'padding': '15px',
                                      'fontWeight': 'normal'
                                  },
-                                 id="table-id")
+                                 id=f"table-id-{model_name}")
         ], style={'width': '35%', 'margin-top':"20px"}),
     ], style={'display': 'flex', 'flexDirection': 'row'})
 
@@ -523,7 +523,7 @@ def download_model():
                     )
 
 
-def setup_models_panels(model, left_list, right_list):
+def setup_models_panels(model, left_list, right_list, model_name):
 
     @render_this(right_list)
     def render():
@@ -531,7 +531,7 @@ def setup_models_panels(model, left_list, right_list):
 
     @render_this(right_list)
     def render():
-        return title_layout_0()
+        return stability_plot(model_name)
 
     @render_this(right_list)
     def render():
@@ -559,15 +559,11 @@ def setup_models_panels(model, left_list, right_list):
 
     @render_this(right_list)
     def render():
-        return shap_values(model)
+        return slider_breaks(model, model_name)
 
     @render_this(right_list)
     def render():
-        return slider_breaks(model)
-
-    @render_this(right_list)
-    def render():
-        return segmentation(model)
+        return segmentation(model, model_name)
     @render_this(right_list)
     def render():
         return title_layout_4()
@@ -626,19 +622,19 @@ def build_both_model():
     graph_left_challenger = []
     graph_right_challenger = []
 
-    setup_models_panels(model_classique, graph_left_classique, graph_right_classique)
-    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger)
+    setup_models_panels(model_classique, graph_left_classique, graph_right_classique, "clas")
+    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger, "chal")
 
     layout_classique = build_all_panels_mod(graph_left_classique, graph_right_classique)
     layout_challenger = build_all_panels_mod(graph_left_challenger, graph_right_challenger)
 
-    return [layout_classique, layout_challenger]
+    return layout_classique, layout_challenger
 
 def build_logit_model():
     graph_left_classique = []
     graph_right_classique = []
 
-    setup_models_panels(model_classique, graph_left_classique, graph_right_classique)
+    setup_models_panels(model_classique, graph_left_classique, graph_right_classique, "clas")
 
     layout_classique = build_all_panels_mod(graph_left_classique, graph_right_classique)
 
@@ -648,7 +644,7 @@ def build_xgboost_model():
     graph_left_challenger = []
     graph_right_challenger = []
 
-    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger)
+    setup_models_panels(model_challenger, graph_left_challenger, graph_right_challenger, "chal")
     layout_challenger = build_all_panels_mod(graph_left_challenger, graph_right_challenger)
 
     return layout_challenger

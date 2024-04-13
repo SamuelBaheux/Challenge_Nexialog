@@ -46,6 +46,16 @@ def register_callbacks(app):
         else :
             return dash.no_update
 
+    @app.callback(
+        [Output("stability-animated-graph", "figure"),
+         Output("density-plot", "figure")],
+        [Input("plot-stability-dropdown", "value")]
+    )
+    def update_graph(selected_variable):
+        fig = plot_stability_plotly_analyse(selected_variable)
+        fig_d = plot_marginal_density(selected_variable)
+        return([fig, fig_d])
+
 
     ####################################### MODÉLISATION ########################################
     @app.callback([Output('output-data-upload', 'children'),
@@ -104,7 +114,9 @@ def register_callbacks(app):
          Output("loading-output", "children"),
          Output('Control-chart-tab', 'children'),
          Output("chat-tab", "style"),
-         Output("chat-tab", "children")],
+         Output("chat-tab", "children"),
+         Output("Control-chart-tab-2", "style"),
+         Output("Control-chart-tab-2", "children")],
         [Input('launch-button', 'n_clicks'),
          Input("variables-dropdown", 'value'),
          Input('model-choice', 'value')],
@@ -128,7 +140,7 @@ def register_callbacks(app):
                 model_classique.get_default_proba(dataprep.target, dataprep.date)
                 dataprep.init_model_name('logit')
 
-                return ('tab2', {"display": "flex"}, "loaded", build_logit_model(), {"display": "flex"}, chatbot())
+                return ('tab2', {"display": "flex"}, "loaded", build_logit_model(), {"display": "flex"}, chatbot(), {"display": "none"}, dash.no_update)
 
             elif model_choice == 'XGBoost':
                 model_challenger.init_model('xgb')
@@ -138,18 +150,38 @@ def register_callbacks(app):
                 model_challenger.get_segmentation(dataprep.target)
                 model_challenger.get_default_proba(dataprep.target, dataprep.date)
                 dataprep.init_model_name('xgb')
+                return ('tab2', {"display": "flex"}, "loaded", build_xgboost_model(), {"display": "flex"}, chatbot(), {"display": "none"}, dash.no_update)
 
-                return ('tab2', {"display": "flex"}, "loaded", build_xgboost_model(), {"display": "flex"}, chatbot())
+            elif model_choice == "both":
+                model_classique.init_model('logit')
+                model_classique.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_classique.run_model()
+                model_classique.get_grid_score(dataprep.train, dataprep.target)
+                model_classique.get_segmentation(dataprep.target)
+                model_classique.get_default_proba(dataprep.target, dataprep.date)
+
+                model_challenger.init_model('xgb')
+                model_challenger.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
+                model_challenger.run_model()
+                model_challenger.get_grid_score(dataprep.train, dataprep.target)
+                model_challenger.get_segmentation(dataprep.target)
+                model_challenger.get_default_proba(dataprep.target, dataprep.date)
+
+                dataprep.init_model_name('logit')
+
+                logit_layout, xgb_layout = build_both_model()
+                return ('tab2', {"display": "flex"}, "loaded", logit_layout, {"display": "flex"}, chatbot(), {"display": "flex"}, xgb_layout)
 
 
-        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update,  {"display": "none"}, dash.no_update
+
+        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update,  {"display": "none"}, dash.no_update, {"display": "none"}, dash.no_update
 
     @app.callback(
         Output('loading-div', 'style'),
         [Input('launch-button', 'n_clicks'),
          Input("variables-dropdown", 'value'),
          Input('model-choice', 'value')],
-        [State('loading-div', 'style')],  # Utilisez l'état actuel pour conditionner la mise à jour
+        [State('loading-div', 'style')],
         prevent_initial_call=True
     )
     def toggle_loading_div(n_clicks, features, model_choice, current_style):
@@ -205,35 +237,51 @@ def register_callbacks(app):
 
 
     @app.callback(
-        [Output('class-display', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
-         Output('table-id', 'data')],
-        [Input('breaks-slider', 'value'),
-         Input('graph-type-selector', 'value')],
+        [Output('class-display-clas', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
+         Output('table-id-clas', 'data')],
+        [Input('breaks-slider-clas', 'value'),
+         Input('graph-type-selector-clas', 'value')],
         prevent_initial_call = True
     )
     def update_breaks_graph(breaks, graph_type):
-        if dataprep.model_name == "logit" :
-            model = model_classique
-        elif dataprep.model_name == "xgb":
-            model = model_challenger
-
         if breaks is not None :
-            model.update_segmentation(breaks, dataprep.target)
+            model_classique.update_segmentation(breaks, dataprep.target)
 
             if graph_type == 'gini':
-                fig = create_gini_figure()
+                fig = create_gini_figure(model_classique)
             elif graph_type == 'taux':
-                fig = create_stability_figure()
+                fig = create_stability_figure(model_classique)
 
-            table_data = round(model.resultats, 2).to_dict('records')
+            table_data = round(model_classique.resultats, 2).to_dict('records')
+
+            return fig, table_data
+
+    @app.callback(
+        [Output('class-display-chal', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
+         Output('table-id-chal', 'data')],
+        [Input('breaks-slider-chal', 'value'),
+         Input('graph-type-selector-chal', 'value')],
+        prevent_initial_call = True
+    )
+    def update_breaks_graph(breaks, graph_type):
+        if breaks is not None :
+            model_challenger.update_segmentation(breaks, dataprep.target)
+
+            if graph_type == 'gini':
+                fig = create_gini_figure(model_challenger)
+            elif graph_type == 'taux':
+                fig = create_stability_figure(model_challenger)
+
+            table_data = round(model_challenger.resultats, 2).to_dict('records')
 
             return fig, table_data
 
 
+
     @app.callback(
-        [Output('stability-graph', 'figure'),
-         Output('histo-graph', 'figure')],
-        [Input('stability-dropdown', 'value')]
+        [Output('stability-graph-clas', 'figure'),
+         Output('histo-graph-clas', 'figure')],
+        [Input('stability-dropdown-clas', 'value')]
     )
     def update_graph(selected_variable):
         fig_stab = plot_stability_plotly(selected_variable)
@@ -241,29 +289,35 @@ def register_callbacks(app):
         return [fig_stab, fig_hist]
 
     @app.callback(
-        [Output("stability-animated-graph", "figure"),
-         Output("density-plot", "figure")],
-        [Input("plot-stability-dropdown", "value")]
+        [Output('stability-graph-chal', 'figure'),
+         Output('histo-graph-chal', 'figure')],
+        [Input('stability-dropdown-chal', 'value')]
     )
     def update_graph(selected_variable):
-        fig = plot_stability_plotly_analyse(selected_variable)
-        fig_d = plot_marginal_density(selected_variable)
-        return([fig, fig_d])
+        fig_stab = plot_stability_plotly(selected_variable)
+        fig_hist = plot_hist(selected_variable)
+        return [fig_stab, fig_hist]
 
     @app.callback(
-        Output('class-display', 'figure'),
-        [Input('graph-type-selector', 'value')]
+        Output('class-display-clas', 'figure'),
+        [Input('graph-type-selector-clas', 'value')]
     )
     def update_graph(selected_graph):
-        if dataprep.model_name == "logit" :
-            model = model_classique
-        elif dataprep.model_name == "xgb":
-            model = model_challenger
-
         if selected_graph == 'gini':
-            fig = create_gini_figure(model)
+            fig = create_gini_figure(model_classique)
         elif selected_graph == 'taux':
-            fig = create_stability_figure(model)
+            fig = create_stability_figure(model_classique)
+        return fig
+
+    @app.callback(
+        Output('class-display-chal', 'figure'),
+        [Input('graph-type-selector-chal', 'value')]
+    )
+    def update_graph(selected_graph):
+        if selected_graph == 'gini':
+            fig = create_gini_figure(model_challenger)
+        elif selected_graph == 'taux':
+            fig = create_stability_figure(model_challenger)
         return fig
 
     @app.callback(
