@@ -3,11 +3,11 @@ import sys
 
 sys.path.append('./script')
 
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, ALL
 import dash
 from dash import dcc
 
-from builders import build_all_panels, build_analyse_panel
+from builders import build_all_panels, build_analyse_panel, chatbot
 from data_preparation import *
 from plot_utils import *
 from plot_analyse import *
@@ -106,7 +106,9 @@ def register_callbacks(app):
         [Output('app-tabs', 'value'),
          Output('Control-chart-tab', 'style'),
          Output("loading-output", "children"),
-         Output('Control-chart-tab', 'children')],
+         Output('Control-chart-tab', 'children'),
+         Output("chat-tab", "style"),
+         Output("chat-tab", "children")],
         [Input('launch-button', 'n_clicks'),
          Input("variables-dropdown", 'value'),
          Input('model-choice', 'value')],
@@ -125,15 +127,21 @@ def register_callbacks(app):
                 model.init_model('logit')
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
                 model.run_model()
+                model.get_grid_score(dataprep.train, dataprep.target)
+                model.get_segmentation(dataprep.target)
+                model.get_default_proba(dataprep.target, dataprep.date)
 
             elif model_choice == 'XGBoost':
                 model.init_model('xgb')
                 model.init_data(train_prepared, dataprep.discretizer.intervalles_dic, dataprep.target, dataprep.date)
                 model.run_model()
+                model.get_grid_score(dataprep.train, dataprep.target)
+                model.get_segmentation(dataprep.target)
+                model.get_default_proba(dataprep.target, dataprep.date)
 
-            return ('tab2', {"display": "flex"}, "loaded", build_all_panels())
+            return ('tab2', {"display": "flex"}, "loaded", build_all_panels(), {"display": "flex"}, chatbot())
 
-        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update
+        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update,  {"display": "none"}, dash.no_update
 
     @app.callback(
         Output('loading-div', 'style'),
@@ -196,6 +204,7 @@ def register_callbacks(app):
                     info += f"- {features}\n"
 
             return info
+
 
     @app.callback(
         [Output('class-display', 'figure', allow_duplicate=True),  # Mise à jour de la figure du graphique
@@ -263,3 +272,90 @@ def register_callbacks(app):
     def download_model(n_clicks):
         serialized_model = pickle.dumps(model.model)
         return dcc.send_bytes(serialized_model, "model.pickle")
+
+    ####################################### CHATBOT ########################################
+    @app.callback(
+        Output('dynamic-radioitems-container', 'children'),
+        [Input({'type': 'dynamic-radioitems', 'index': ALL}, 'value')],
+        [State('dynamic-radioitems-container', 'children')]
+    )
+    def add_radioitems(values, children):
+        if not values or None in values:
+            return dash.no_update
+
+        df = model.df_score
+        dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target,dataprep.date,
+                                                  "date_trimestrielle"]).tolist()
+
+        next_index = len(values)
+        if next_index < len(dropdown_columns):
+            new_element = html.Div([
+                html.Div([
+                    html.Label(f'Pour la variable {dropdown_columns[next_index]}:', className='label-inline message-label'),
+                ], className='message-container'),
+                html.Div([
+                    dcc.RadioItems(
+                        id={'type': 'dynamic-radioitems', 'index': next_index},
+                        options=[{'label': str(v), 'value': v} for v in df[dropdown_columns[next_index]].dropna().unique()],
+                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
+                        className='radio-inline selection-radio'
+                    ),
+                ], className='radioitems-container', style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
+            ], className='form-input row', style={'margin-bottom': '50px'})
+            children.append(new_element)
+
+        # Gérer l'affichage du bouton de lancement après le dernier choix
+        button_exists = any(isinstance(child, html.Button) and child.id == 'launch-chatbot-modeling' for child in children)
+        if next_index == len(dropdown_columns) and not button_exists:
+            children.append(html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0, className='launch-button', style={'margin-top': '20px', 'display': 'block'}))
+
+        return children
+
+    @app.callback(
+        Output('score-ind-result', 'children'),
+        [Input('launch-chatbot-modeling', 'n_clicks')],
+        [State({'type': 'dynamic-radioitems', 'index': ALL}, 'value')]
+    )
+
+    def update_score_ind(n_clicks, dropdown_values):
+        df = model.df_score
+        dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target,dataprep.date,
+                                                  "date_trimestrielle"]).tolist()
+
+        if n_clicks > 0 and None not in dropdown_values:
+            if None in dropdown_values:
+                return "Please complete all selections before submitting."
+
+            # Filter DataFrame based on dropdown selections
+            filtered_df = df.copy()
+            for column, value in zip(dropdown_columns, dropdown_values):
+                if value is not None:
+                    filtered_df = filtered_df[filtered_df[column] == value]
+
+            mean_score_ind = filtered_df['Score_ind'].mean() if not filtered_df.empty else None
+            mean_classes = int(filtered_df['Classes'].mean()) if not filtered_df.empty else None
+
+            print(mean_score_ind, mean_classes)
+            if mean_classes < 3:
+                message = f"""
+            Votre score est de : {mean_score_ind:.2f} \n
+            Vous êtes dans la classe {mean_classes} \n
+            Un crédit vous sera octroyé
+            """
+            elif 5 >= mean_classes >= 3:
+                message = f"""
+                Votre score est de : {mean_score_ind:.2f} \n
+                Vous êtes dans la classe {mean_classes} \n
+                Un crédit vous sera octroyé, mais avec un taux d'intérêt élevé
+                """
+            else:
+                message = f"""
+                Votre score est de : {mean_score_ind:.2f} \n
+                Vous êtes dans la classe {mean_classes} \n
+                Aucun crédit ne vous sera octroyé
+                """
+            return dcc.Markdown(message, style={'margin-top': '20px',
+                                                "color": "#ffffff",
+                                                'font-weight': 'bold',
+                                                "font-size": "20px"})
+        return "Veuillez faire toutes les sélections avant de soumettre."

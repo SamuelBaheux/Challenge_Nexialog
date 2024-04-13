@@ -67,7 +67,7 @@ def plot_hist(column):
 
     return histogramme
 
-def roc_curve():
+def courbe_roc():
     metrics = model.get_metrics()
     fpr = metrics["fpr"]
     tpr = metrics["tpr"]

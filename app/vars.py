@@ -8,5 +8,4 @@ model = Modelization()
 analyse = Analyse()
 statement_list = ["test"]
 
-df = pd.read_csv("./data/df_score.csv")
 dictionnaire = pd.read_csv("./data/Columns_Description.csv")
