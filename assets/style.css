@@ -199,7 +199,7 @@ Boutons
     background-color: #B10031; /* Couleur de fond du bouton au survol */
 }
 
-.launch-button{
+.launch-button-mod{
     background-color: #B10031; /* Couleur de fond du bouton */
     color: white; /* Couleur du texte du bouton */
     border: none; /* Aucune bordure */
@@ -290,6 +290,8 @@ Tabs
 }
 
 #Specs-tab.custom-tab,
+#analyse-tab.custom-tab,
+#chat-tab.custom-tab,
 #Control-chart-tab.custom-tab {
 	background-color: #7e7e81;
 	letter-spacing: 1px;
@@ -306,6 +308,8 @@ Tabs
 }
 
 #Specs-tab.custom-tab--selected,
+#chat-tab.custom-tab--selected,
+#analyse-tab.custom-tab--selected,
 #Control-chart-tab.custom-tab--selected {
 	border-bottom: #B10031 solid 4px !important;
     background-color: #B10031;
@@ -319,6 +323,14 @@ Tabs
 
 #Control-chart-tab.custom-tab {
 	margin-left: 3px;
+}
+
+#chat-tab.custom-tab {
+	margin-left: 3px;
+}
+
+#analyse-tab.custom-tab {
+	margin-right: 3px;
 }
 
 
@@ -398,3 +410,60 @@ Slider
     border-color : #FFFFFF;
 }
 
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+chatbot
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.message-container, .radioitems-container {
+    border-radius: 15px; /* Forme ovale */
+    padding: 20px 30px;
+    font-size: 1.2em;
+    width: 35%; /* Réduire la largeur pour ne pas atteindre le milieu */
+    margin: auto; /* Ajouter automatiquement un espace autour de chaque conteneur */
+}
+
+.message-container {
+    background-color: #007BFF; /* Blue background */
+    color: white;
+    text-align: left;
+    margin-left: 2%;
+    float: left; /* Align to the left */
+    margin-bottom: 75px;
+    font-size: 30px;
+    position: relative; /* Position relative pour utiliser le décalage top */
+    top: -35px; /* Décaler légèrement vers le haut */
+}
+
+/* Stylisation générale des containers des RadioItems pour correspondre à l'esthétique des dropdowns */
+.radioitems-container {
+    background-color: #8B0000; /* Dark red background */
+    color: white;
+    margin-right: 2%;
+    float: right; /* Aligné à droite */
+    margin-bottom: 10px;
+    top: 15px; /* Légèrement décalé vers le bas */
+}
+.radio-inline.selection-radio {
+    display: flex; /* Use flexbox for inner alignment */
+    flex-direction: row; /* Align items in a row */
+    justify-content: flex-end; /* Align items to the end (right) */
+}
+
+.radio-inline.selection-radio .Select-control, .radio-inline.selection-radio .Select-value, .radio-inline.selection-radio .Select-placeholder {
+    color: white; /* White text color for dropdown items */
+}
+
+.radio-inline.selection-radio label {
+    display: block; /* Ensure labels are block level for better control */
+    margin-right: 40px; /* Space between radio buttons */
+    color: white; /* White text color for labels */
+    font-size: 20px;
+}
+
+.radio-inline.selection-radio input[type="radio"] {
+    accent-color: white; /* White color for the radio button if supported */
+}
+
+.label-inline.message-label{
+    font-size: 20px;
+}
