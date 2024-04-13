@@ -109,17 +109,20 @@ def analyse_layout():
 def build_analyse_panel():
     return ([
         html.Div(children=[
-                     dcc.Dropdown(
-                         id='plot-stability-dropdown',
-                         className='dropdown-results',
-                         options=analyse.get_features(),
-                         value=analyse.get_features()[2],
-                         style={'marginBottom': '20px', "marginTop":'40px'}
-                     ),
-                     dcc.Graph(id='stability-animated-graph'),
-                    dcc.Graph(id="density-plot")
+            dcc.Graph(id="missing-values-plot"),
+            dcc.Graph(id="plot_correlation_matrix"),
+            dcc.Dropdown(
+                id='plot-stability-dropdown',
+                className='dropdown-results',
+                options=analyse.get_features(),
+                value=analyse.get_features()[2],
+                style={'marginBottom': '20px', "marginTop": '40px'}
+            ),
+            dcc.Graph(id='stability-animated-graph'),
+            dcc.Graph(id="density-plot")
+        ])
     ])
-    ])
+
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
