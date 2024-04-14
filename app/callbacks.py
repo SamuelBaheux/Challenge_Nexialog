@@ -397,29 +397,11 @@ def register_callbacks(app):
         if next_index < len(dropdown_columns):
             new_element = html.Div([
                 html.Div([
-                    html.Label(f'Pour la variable {dropdown_columns[next_index]}:', className='label-inline message-label'),
-                ], className='message-container', style={
-                'background-image': r'url("C:\Users\jinzhou\Cours_M2\S2\Challenge_Nexialog\assets\images\bulle.jpeg")',  # Set the background image
-                'background-size': 'contain',  # Ensure the image is scaled to fit
-                'background-repeat': 'no-repeat',  # Do not repeat the image
-                'border-radius': '20px',
-                'color': 'white',
-                'margin-bottom': '50px',
-                'padding': '10px 20px',
-                'font-size': '20px'}),
+                    html.Label(f'Pour la variable {dropdown_columns[next_index]} :', className='label-inline message-label'),
+                ], className='message-container'),
                 html.Div([
                     dcc.RadioItems(
                         id={'type': 'dynamic-radioitems', 'index': next_index},
-                        # options=[{'label': str(v), 'value': v} for v in df[dropdown_columns[next_index]].dropna().unique()],
-                        # options=[
-                        #     {
-                        #         'label': (
-                        #             f"[{int(float(v.strip('[]').split(';')[0]))};{int(float(v.strip('[]').split(';')[1]))}]" if ';' in v else
-                        #             (f"{float(v):.0f}" if v.replace('.', '', 1).isdigit() else
-                        #             ' '.join(word.capitalize() for word in v.replace('_', ' ').split()))
-                        #         ),
-                        #         'value': v
-                        #     } for v in df[dropdown_columns[next_index]].dropna().unique()],
                         options=[                  
                         {'label': format_option_label(v), 'value': v}
                         for v in df[dropdown_columns[next_index]].dropna().unique()
@@ -427,7 +409,7 @@ def register_callbacks(app):
                         labelStyle={'display': 'inline-block', 'margin-right': '20px'},  
                         className='radio-inline selection-radio'
                     ),
-                ], className='radioitems-container', style={'background-color': '8B0000', 'border-radius': '20px', 'color': 'white'}),
+                ], className='radioitems-container'),
             ], className='form-input row', style={'margin-bottom': '50px'})
             children.append(new_element)
         return children
@@ -439,7 +421,7 @@ def register_callbacks(app):
     )
     def update_score_ind(dropdown_values):
         if None in dropdown_values:
-            return dash.no_update  # Retourne dash.no_update si toutes les sélections ne sont pas complétées.
+            return dash.no_update  
 
         df = model_classique.df_score if dataprep.model_name == "logit" else model_challenger.df_score
         dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target, dataprep.date, "date_trimestrielle"]).tolist()
@@ -470,17 +452,9 @@ def register_callbacks(app):
         message_divs = [html.Div(line, className='message-line') for line in message_lines]
 
         return html.Div([
-            html.Div(message_divs, className='message-container', style={
-                'background-image': r'url("C:\Users\jinzhou\Cours_M2\S2\Challenge_Nexialog\assets\images\bulle.jpeg")',  # Set the background image
-                'background-size': 'contain',  # Ensure the image is scaled to fit
-                'background-repeat': 'no-repeat',  # Do not repeat the image
-                'border-radius': '20px',
-                'color': 'white',
-                'margin-bottom': '50px',
-                'padding': '10px 20px',
-                'font-size': '20px'
-                #      style={
-                # 'background-color': '#007BFF', 'border-radius': '20px', 'color': 'white',
-                # 'margin-bottom': '50px', 'padding': '10px 20px', 'font-size': '20px'
-            }),
+            html.Div(message_divs, className='score-result-container'),
         ], className='form-input row')
+
+        # return html.Div([
+        #     html.Div(message_divs, className='message-container'),
+        # ], className='form-input row')

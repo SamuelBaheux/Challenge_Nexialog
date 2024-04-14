@@ -438,9 +438,6 @@ def default_proba(model):
                                 },
                                 )
 
-
-
-
 def title_layout_5():
     return (html.Div(className='left-title',
                      children=[html.Label("Données"),
@@ -686,22 +683,15 @@ def chatbot():
             html.Div([
                 html.Div([
                     html.Label(f'Pour la variable {dropdown_columns[0]}', className='label-inline message-label'),
-                ], className='message-container', style={
-                    'background-image': 'url("/assets/bulle.jpeg")',
-                    'background-size': 'contain',
-                    'background-repeat': 'no-repeat',
-                    'border-radius': '20px',
-                    'color': 'white'}),
+                ], className='message-container'),
                 html.Div([
                     dcc.RadioItems(
                         id={'type': 'dynamic-radioitems', 'index': 0},
-                        # options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if pd.notnull(value)],
                         options=[{'label': format_option_label(str(value)), 'value': value} for value in df[dropdown_columns[0]].dropna().unique()],
-                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
+                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  
                         className='radio-inline selection-radio'
                     ),
-                ], className='radioitems-container',
-                    style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
+                ], className='radioitems-container'),
             ], className='form-input row', style={'margin-bottom': '50px'})
         ]),
 
