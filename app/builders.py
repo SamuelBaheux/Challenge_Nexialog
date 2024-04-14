@@ -345,6 +345,10 @@ def table(model):
                                 },
                                 )
 
+def graph_dist(model):
+    return html.Div(className='graphpart',
+                    children = [dcc.Graph(figure=update_graph_dist_column("Score_ind", model))])
+
 
 def title_layout_3():
     return (html.Div(className='results-title',
@@ -552,6 +556,10 @@ def setup_models_panels(model, left_list, right_list, model_name):
     @render_this(right_list)
     def render():
         return table(model)
+
+    @render_this(right_list)
+    def render():
+        return graph_dist(model)
 
     @render_this(right_list)
     def render():

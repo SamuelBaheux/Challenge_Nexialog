@@ -71,17 +71,17 @@ body {
     width: 100%;
 }
 
-.left-panel{
-    position: -webkit-sticky; /* Pour la compatibilité avec Safari */
-    position: sticky;
-    top: 0; /* Ce sera le point à partir duquel le panneau deviendra 'collant' */
-    width: 15%; /* Ajustez selon le besoin */
-    height: 100vh; /* S'étend sur toute la hauteur de la fenêtre d'affichage */
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    background-color: #4e5567;
-    border-radius: 10px;
+.left-panel {
+    position: -webkit-sticky !important; /* Pour la compatibilité avec Safari */
+    position: sticky !important;
+    top: 0 !important; /* Ce sera le point à partir duquel le panneau deviendra 'collant' */
+    width: 15% !important; /* Ajustez selon le besoin */
+    height: 100vh !important; /* S'étend sur toute la hauteur de la fenêtre d'affichage */
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 20px !important;
+    background-color: #4e5567 !important;
+    border-radius: 10px !important;
 }
 
 .right-panel{

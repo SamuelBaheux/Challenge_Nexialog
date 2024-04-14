@@ -1,6 +1,7 @@
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
 
 from vars import *
 
@@ -253,6 +254,42 @@ def plot_metrics_leftpanel(metrics) :
 
     return(fig)
 
+def update_graph_dist_column(selected_column, model):
+    default = model.df_score[model.df_score[dataprep.target] == 1][selected_column]
+    not_default = model.df_score[model.df_score[dataprep.target] == 0][selected_column]
+
+    column_data_type = default.dtype
+
+    if column_data_type in ['int64', 'float64']:
+
+        fig = ff.create_distplot(hist_data=[default, not_default],
+                                 group_labels=['Défaut', 'Non Défaut'],
+                                 bin_size=0.2,
+                                 show_rug=False,
+                                 show_hist=False)
+
+        fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
+        fig.update_traces(fill='tozeroy')
+        fig.update_layout(**custom_layout)
+
+    else:
+        categories = sorted(set(default.unique()))
+        fig = go.Figure()
+
+        fig.add_trace(go.Histogram(x=default,
+                                   nbinsx=len(categories),
+                                   name='Défaut',
+                                   opacity=0.7))
+
+        fig.add_trace(go.Histogram(x=not_default,
+                                   nbinsx=len(categories),
+                                   name='Non Défaut',
+                                   opacity=0.7))
+
+        fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
+        fig.update_layout(**custom_layout)
+
+    return fig
 
 
 
