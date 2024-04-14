@@ -119,6 +119,7 @@ def build_analyse_panel():
                 style={'marginBottom': '20px', "marginTop": '40px'}
             ),
             dcc.Graph(id='stability-animated-graph'),
+            dcc.Graph(id='categorical-distribution-plot'),
             dcc.Graph(id="density-plot")
         ])
     ])

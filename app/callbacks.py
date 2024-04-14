@@ -33,22 +33,6 @@ def register_callbacks(app):
                 return [html.Div(html.H5(f'Le fichier {filename} a été téléchargé avec succès'))], target_options, date_options
         else:
             return dash.no_update,[], []
-    
-    #@app.callback(
-   # Output("plot_correlation_matrix", "figure"),
-   # [Input("launch-button-analyse", "n_clicks")],  # Trigger sur le bouton de lancement
-   # [State("target-dropdown-analyse", "value"),  # Récupère la variable cible
-   #  State("upload-data-analyse", "contents")]  # Récupère les données téléchargées
-   # )
-   # def update_correlation_matrix(n_clicks, target_variable, contents):
-   #     if n_clicks > 0 and contents and target_variable:
-   #         df, filename = parse_contents(contents)
-   #         if isinstance(df, pd.DataFrame):
-   #             return plot_correlation_matrix(df, target_variable)
-   #         else:
-   #             print("Le contenu téléchargé n'est pas un DataFrame valide.")
-   #             return go.Figure()
-   #     return go.Figure()  # Retourner une figure vide par défaut si les conditions ne sont pas remplies
 
     @app.callback([Output("Graph-Container", "children")],
                   [Input("target-dropdown-analyse", "value"),
@@ -66,20 +50,27 @@ def register_callbacks(app):
         [Output("stability-animated-graph", "figure"),
         Output("density-plot", "figure"),
         Output("missing-values-plot", "figure"),
-        Output("plot_correlation_matrix", "figure")],  # Assurez-vous qu'il y a 4 sorties
+        Output("plot_correlation_matrix", "figure"),
+        Output("categorical-distribution-plot", "figure")],  # Ajout du graphique catégoriel
         [Input("plot-stability-dropdown", "value"),
-        Input("target-dropdown-analyse", "value")]  # Deux inputs
+        Input("target-dropdown-analyse", "value")]
     )
     def update_graph(selected_variable, target_variable):
         if not selected_variable or not target_variable:
-            return [go.Figure() for _ in range(4)]  # Retourne 4 figures vides si les variables ne sont pas définies
+            return [go.Figure() for _ in range(5)]  # Retourner 5 figures vides si les variables ne sont pas définies
 
         fig = plot_stability_plotly_analyse(selected_variable)
         fig_d = plot_marginal_density(selected_variable)
         fig_m = missing_values()
-        fig_c = plot_correlation_matrix(target_variable)  # Assurez-vous que cette fonction attend les bons paramètres
+        fig_c = plot_correlation_matrix(target_variable)
 
-        return [fig, fig_d, fig_m, fig_c]  # Retourner une liste de 4 figures
+        if analyse.df[selected_variable].dtype.name == 'object':
+            fig_e = plot_categorical_distribution(selected_variable)
+        else:
+            fig_e = go.Figure()  # Retourner une figure vide si la variable n'est pas catégorielle
+
+        return [fig, fig_d, fig_m, fig_c, fig_e]
+
 
 
 
