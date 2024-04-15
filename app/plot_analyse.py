@@ -39,8 +39,6 @@ def missing_values():
 
     fig.update_layout(
         title='Pourcentage de valeurs manquantes par colonne',
-        xaxis=dict(title='Colonnes'),
-        yaxis=dict(title='Pourcentage de valeurs manquantes'),
         bargap=0.1,
         bargroupgap=0.1
     )
@@ -49,6 +47,8 @@ def missing_values():
         fig.update_layout(**custom_layout)
 
     return fig
+
+
 def plot_correlation_matrix(target_variable):
     n_top = 10
     if target_variable not in analyse.df.columns:
@@ -70,9 +70,7 @@ def plot_correlation_matrix(target_variable):
     ))
 
     fig.update_layout(
-        title=f'Top {n_top} des variables les plus corrélées à {target_variable}',
-        xaxis_title="Variables",
-        yaxis_title="Coefficient de corrélation",
+        title=f'Top {n_top} des variables les plus corrélées à {analyse.target}',
         xaxis_tickangle=-45
     )
 
@@ -101,7 +99,7 @@ def plot_categorical_distribution(categorical_var):
                                    name='Non Défaut',
                                    opacity=0.7))
 
-        fig.update_layout(title=f'Distribution of {categorical_var}')
+        fig.update_layout(title=f'Distribution de {categorical_var}')
         fig.update_layout(**custom_layout)
 
     else:
@@ -149,7 +147,8 @@ def plot_stability_animated(variable):
                                              y=stability_taux_df[col][:i+1],
                                              mode='lines', name=f'Classe {col}') for col in stability_taux_df.columns]) for i in range(0, len(stability_taux_df), step)]
     fig = go.Figure(
-        data=[go.Scatter(x=stability_taux_df.index, y=stability_taux_df[col], mode='lines', name=f'Classe {col}') for col in stability_taux_df.columns],
+        data=[go.Scatter(x=stability_taux_df.index, y=stability_taux_df[col],
+                         mode='lines', name=f'Classe {col}') for col in stability_taux_df.columns],
         layout=go.Layout(
             title=f'Stabilité de taux pour {variable}',
             xaxis_title='Date',
@@ -163,7 +162,8 @@ def plot_stability_animated(variable):
         type="buttons",
         buttons=[dict(label="Play",
                       method="animate",
-                      args=[None, dict(frame=dict(duration=30, redraw=False), fromcurrent=True, mode="immediate")])]
+                      args=[None, dict(frame=dict(duration=30, redraw=False),
+                                       fromcurrent=True, mode="immediate")])]
     )])
     fig.update_layout(**custom_layout)
 

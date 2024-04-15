@@ -112,8 +112,15 @@ def analyse_layout():
 def build_analyse_panel():
     return ([
         html.Div(children=[
+            html.Br(),
+            html.H3("Graphiques généraux sur nos données",
+                    style={"marginBottom": "20px", 'color': "#ffffff"}),
             dcc.Graph(id="missing-values-plot"),
             dcc.Graph(id="plot_correlation_matrix"),
+            html.Br(),
+            html.Br(),
+            html.H3("Analyse spécifique des données",
+                    style={"marginBottom": "20px", 'color': "#ffffff"}),
             dcc.Dropdown(
                 id='plot-stability-dropdown',
                 className='dropdown-results',
@@ -121,6 +128,7 @@ def build_analyse_panel():
                 value=analyse.get_features()[2],
                 style={'marginBottom': '20px', "marginTop": '40px'}
             ),
+
             dcc.Graph(id='stability-animated-graph'),
             html.Div(id="categorical-distribution-plot-container", children=[
             dcc.Graph(id="categorical-distribution-plot")
