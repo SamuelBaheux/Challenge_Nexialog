@@ -420,29 +420,8 @@ def title_layout_4():
                      children=[html.Label("5. MOC")]))
 
 def default_proba(model):
-
-    return dash_table.DataTable(round(model.default_proba, 4).to_dict('records'), [{"name": i, "id": i} for i in model.default_proba.columns],
-                                style_header={
-                                    'backgroundColor': 'rgb(76, 82, 94)',
-                                    'color': 'white',
-                                    'fontSize': '20px',
-                                    'height': '50px',
-                                    'whiteSpace': 'normal',
-                                    'padding': '15px',
-                                    'fontWeight': 'bold'
-                                },
-                                style_data={
-                                    'backgroundColor': 'rgb(78, 85, 103)',
-                                    'color': 'white',
-                                    'fontSize': '16px',
-                                    'height': '40px',
-                                    'whiteSpace': 'normal',
-                                    'padding': '15px',
-                                    'fontWeight': 'normal'
-                                },
-                                )
-
-
+    return html.Div(className='graphpart',
+                    children=[dcc.Graph(figure=proba_defaut(model.default_proba))])
 
 
 def title_layout_5():
@@ -483,7 +462,7 @@ def gauges_combined(model):
 
     return html.Div(className='metricspart',
                     children=[
-                        html.Label("Segmentation :", className='left-panel-metric'),
+                        html.Label("Segmentation", className='left-panel-metric'),
                         daq.Gauge(
                             id="score-gauge",
                             max=100,
@@ -500,7 +479,7 @@ def gauges_combined(model):
                             value=dic_metrics["count_seg"],
                             showCurrentValue=True,
                         ),
-                        html.Label("Monotonie :", className='left-panel-metric'),
+                        html.Label("Monotonie", className='left-panel-metric'),
                         daq.Gauge(
                             id="score-gauge",
                             max=100,

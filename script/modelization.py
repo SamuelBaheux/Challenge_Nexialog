@@ -155,6 +155,6 @@ class Modelization():
         default_proba["MOC_A"] = moc_a["MOC_A"]
         default_proba["Moc_C"] = default_proba["Moc_C"].apply(lambda x: 0 if x < 0 else x)
         default_proba["Probabilité_Défaut"] = default_proba["LRA"] + default_proba["Moc_C"] + default_proba["MOC_A"]
-        self.default_proba = default_proba[['Classe', 'LRA', 'Probabilité_Défaut']]
+        self.default_proba = default_proba
 
 

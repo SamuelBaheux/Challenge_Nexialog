@@ -176,8 +176,9 @@ Textes
 
 .left-panel-metric{
     color: white ;
-    font-weight: normal;
-    font-size: 18px ;
+    font-weight: bold;
+    font-size: 19px ;
+    text-align: center;
 }
 
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––

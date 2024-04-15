@@ -305,5 +305,29 @@ def update_graph_dist_column(selected_column, model):
 
     return fig
 
+def proba_defaut(grouped):
+    fig = go.Figure()
+    grouped["Classes"] = range(1,grouped.shape[0]+1)
+
+    for component in ['LRA', 'MOC_A', 'Moc_C']:
+        fig.add_trace(go.Bar(
+            x=grouped['Classes'],
+            y=grouped[component],
+            name=component,
+        ))
+
+    # Mise en page du graphique
+    fig.update_layout(
+        barmode='stack',  # Mode empilé
+        title='Probabilité de défaut par classe',
+        xaxis_title='Classes',
+        yaxis_title='Probabilité de défaut'
+    )
+
+    fig.update_layout(**custom_layout)
+    fig.update_layout(
+        height=600,
+    )
+    return(fig)
 
 
