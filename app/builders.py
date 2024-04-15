@@ -3,6 +3,7 @@ import sys
 sys.path.append("./script/")
 
 from dash import dcc, html, dash_table
+import dash_daq as daq
 from plot_utils import *
 from plot_analyse import *
 
@@ -477,10 +478,53 @@ def title_layout_7():
     return (html.Div(className='left-title',
                      children=[html.Br(), html.Label("Métriques"), html.Br()]))
 
+def gauges_combined(model):
+    dic_metrics = model.get_segmentation_metrics(dataprep.target, dataprep.date)
+
+    return html.Div(className='metricspart',
+                    children=[
+                        html.Label("Segmentation :", className='left-panel-metric'),
+                        daq.Gauge(
+                            id="score-gauge",
+                            max=100,
+                            min=0,
+                            size=130,
+                            color={
+                                "gradient": True,
+                                "ranges": {
+                                    "red": [0, 50],
+                                    "yellow": [50, 70],
+                                    "green": [70, 100],
+                                },
+                            },
+                            value=dic_metrics["count_seg"],
+                            showCurrentValue=True,
+                        ),
+                        html.Label("Monotonie :", className='left-panel-metric'),
+                        daq.Gauge(
+                            id="score-gauge",
+                            max=100,
+                            min=0,
+                            size=130,
+                            color={
+                                "gradient": True,
+                                "ranges": {
+                                    "red": [0, 50],
+                                    "yellow": [50, 70],
+                                    "green": [70, 100],
+                                },
+                            },
+                            value=dic_metrics["count_monotonie"],
+                            showCurrentValue=True,
+                        )
+                    ]
+                    )
+
+
 def metrics(model):
     dic_metrics = model.get_segmentation_metrics(dataprep.target, dataprep.date)
     roc_auc = model.get_metrics()["roc_auc"]*100
-    return html.Div(className='graphpart',
+    return html.Div(className='dash-graph-container',
                     children=[
                         html.Label("ROC-AUC :", className='left-panel-metric'),
                         dcc.Graph(figure=plot_metrics_leftpanel(roc_auc)),
@@ -495,7 +539,7 @@ def metrics(model):
 
 def title_layout_8():
     return (html.Div(className='left-title',
-                     children=[html.Br(), html.Label("Artefacts")]))
+                     children=[html.Label("Artefacts")]))
 
 def download_df_score():
     return html.Div(
@@ -593,7 +637,12 @@ def setup_models_panels(model, left_list, right_list, model_name):
 
     @render_this(left_list)
     def render():
-        return metrics(model)
+        return gauges_combined(model)
+
+    @render_this(left_list)
+    def render():
+        return title_layout_8()
+
     @render_this(left_list)
     def render():
         return download_df_score()

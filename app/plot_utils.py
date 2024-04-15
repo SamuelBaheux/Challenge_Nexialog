@@ -270,6 +270,13 @@ def update_graph_dist_column(selected_column, model):
 
         fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
         fig.update_traces(fill='tozeroy')
+        fig.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ))
         fig.update_layout(**custom_layout)
 
     else:
@@ -285,6 +292,13 @@ def update_graph_dist_column(selected_column, model):
                                    nbinsx=len(categories),
                                    name='Non Défaut',
                                    opacity=0.7))
+        fig.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ))
 
         fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
         fig.update_layout(**custom_layout)
