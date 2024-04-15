@@ -60,7 +60,8 @@ def build_tabs():
 ################################################ ONGLET 0 : Analyse #################################################
 
 def analyse_layout():
-    return html.Div(className='hub', children = [
+
+    return html.Div(className='hub', children=[
 
         html.Div([dcc.Upload(id='upload-data-analyse', className="uploader", children=html.Div(
             ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
@@ -100,9 +101,11 @@ def analyse_layout():
         ]),
 
         html.Br(),
-        html.Button('Lancer l\'analyse', id='launch-button-analyse', n_clicks=0, className='launch-button-mod'),
+        html.Button('Lancer l\'analyse', id='launch-button-analyse',
+                    n_clicks=0,
+                    className='launch-button-mod'),
 
-        html.Div(id = "Graph-Container", children=[])
+        html.Div(id="Graph-Container", children=[])
 
     ])
 
@@ -119,11 +122,11 @@ def build_analyse_panel():
                 style={'marginBottom': '20px', "marginTop": '40px'}
             ),
             dcc.Graph(id='stability-animated-graph'),
-            dcc.Graph(id='categorical-distribution-plot'),
-            dcc.Graph(id="density-plot")
+            html.Div(id="categorical-distribution-plot-container", children=[
+            dcc.Graph(id="categorical-distribution-plot")
+            ]),
         ])
     ])
-
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
@@ -229,7 +232,7 @@ def create_layout():
                      children=[html.Br(), dcc.Markdown(id='variables-info-markdown', children=''), html.Br()]),
 
             html.Div(className='form-input row', children=[
-                html.Div(id = 'predefined_vars_button', className='predefined-vars', children=[
+                html.Div(id='predefined_vars_button', className='predefined-vars', children=[
                     html.Button('Interprétabilité', id='interpretabilite-button', n_clicks=0,
                                 className='button-inline'),
                     html.Button('Performance', id='performance-button', n_clicks=0, className='button-inline'),

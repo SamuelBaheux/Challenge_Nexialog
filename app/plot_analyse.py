@@ -82,20 +82,33 @@ def plot_correlation_matrix(target_variable):
     return fig
 
 def plot_categorical_distribution(categorical_var):
-    if categorical_var not in analyse.df.columns:
-        print(f"La colonne '{categorical_var}' est absente.")
-        return go.Figure()
+    default = analyse.df[analyse.df[analyse.target] == 1][categorical_var]
+    not_default = analyse.df[analyse.df[analyse.target] == 0][categorical_var]
 
+    column_data_type = default.dtype
 
-    fig = px.histogram(analyse.df, x=categorical_var, color=categorical_var,
-                       title=f'Distribution de la variable {categorical_var}',
-                       labels={categorical_var: 'Catégories'},
-                       template='plotly_dark')
+    if column_data_type == 'object':
+        categories = sorted(set(default.unique()))
+        fig = go.Figure()
 
-    fig.update_layout(**custom_layout)
-    fig.update_traces(marker_line_width=1.5, opacity=0.8)
+        fig.add_trace(go.Histogram(x=default,
+                                   nbinsx=len(categories),
+                                   name='Défaut',
+                                   opacity=0.7))
+
+        fig.add_trace(go.Histogram(x=not_default,
+                                   nbinsx=len(categories),
+                                   name='Non Défaut',
+                                   opacity=0.7))
+
+        fig.update_layout(title=f'Distribution of {categorical_var}')
+        fig.update_layout(**custom_layout)
+
+    else:
+        fig = None
 
     return fig
+
 
 def plot_stability_plotly_analyse(variable):
     stability_df = analyse.df.groupby([analyse.date, variable])[analyse.target].mean().unstack()
@@ -114,7 +127,7 @@ def plot_stability_plotly_analyse(variable):
                       yaxis_title='Proportion de la cible',
                       legend_title='Classes',
                       margin=dict(l=20, r=20, t=40, b=20),
-                      height = 500)
+                      height=500)
 
     fig.update_layout(legend=dict(
         orientation="h",
@@ -127,11 +140,14 @@ def plot_stability_plotly_analyse(variable):
 
     return fig
 
+
 def plot_stability_animated(variable):
     stability_taux_df = analyse.df.groupby(['date_mensuelle', variable])[analyse.target].mean().unstack()
     num_frames = 60
     step = len(stability_taux_df) // num_frames
-    frames_data = [go.Frame(data=[go.Scatter(x=stability_taux_df.index[:i+1], y=stability_taux_df[col][:i+1], mode='lines', name=f'Classe {col}') for col in stability_taux_df.columns]) for i in range(0, len(stability_taux_df), step)]
+    frames_data = [go.Frame(data=[go.Scatter(x=stability_taux_df.index[:i+1],
+                                             y=stability_taux_df[col][:i+1],
+                                             mode='lines', name=f'Classe {col}') for col in stability_taux_df.columns]) for i in range(0, len(stability_taux_df), step)]
     fig = go.Figure(
         data=[go.Scatter(x=stability_taux_df.index, y=stability_taux_df[col], mode='lines', name=f'Classe {col}') for col in stability_taux_df.columns],
         layout=go.Layout(
@@ -149,23 +165,6 @@ def plot_stability_animated(variable):
                       method="animate",
                       args=[None, dict(frame=dict(duration=30, redraw=False), fromcurrent=True, mode="immediate")])]
     )])
-
-    return(fig)
-
-def plot_marginal_density(var):
-    colors = ['rgba(0, 0, 255, 0.5)', 'rgba(255, 165, 0, 0.5)']
-
-    serie1 = analyse.df[analyse.df[analyse.target] == 1][var]
-    serie2 = analyse.df[analyse.df[analyse.target] == 0][var]
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Violin(x=serie1, line_color=colors[0], box_visible=False, width=1.5, side='positive'))
-    fig.add_trace(go.Violin(x=serie2, line_color=colors[1], box_visible=False, width=1.5, side='positive'))
-
-    fig.update_traces(orientation='h', points=False, width=1000)
-    fig.update_layout(xaxis_showgrid=False, xaxis_zeroline=False, height=600)
-
     fig.update_layout(**custom_layout)
 
-    return(fig)
+    return fig

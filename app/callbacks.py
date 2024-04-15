@@ -45,35 +45,29 @@ def register_callbacks(app):
             return build_analyse_panel()
         else :
             return dash.no_update
-
     @app.callback(
         [Output("stability-animated-graph", "figure"),
-        Output("density-plot", "figure"),
         Output("missing-values-plot", "figure"),
         Output("plot_correlation_matrix", "figure"),
-        Output("categorical-distribution-plot", "figure")],  # Ajout du graphique catégoriel
+        Output("categorical-distribution-plot", "figure"),
+        Output("categorical-distribution-plot-container", "style")],  # Ajouter Output pour gérer la visibilité
         [Input("plot-stability-dropdown", "value"),
         Input("target-dropdown-analyse", "value")]
     )
     def update_graph(selected_variable, target_variable):
         if not selected_variable or not target_variable:
-            return [go.Figure() for _ in range(5)]  # Retourner 5 figures vides si les variables ne sont pas définies
+            return [go.Figure() for _ in range(5)] + [{"display": "none"}]  # Retourner 5 figures vides
 
         fig = plot_stability_plotly_analyse(selected_variable)
-        fig_d = plot_marginal_density(selected_variable)
+        # fig_d = plot_marginal_density(selected_variable)
         fig_m = missing_values()
         fig_c = plot_correlation_matrix(target_variable)
 
         if analyse.df[selected_variable].dtype.name == 'object':
             fig_e = plot_categorical_distribution(selected_variable)
+            return [fig, fig_m, fig_c, fig_e, {"display": "block"}]
         else:
-            fig_e = go.Figure()  # Retourner une figure vide si la variable n'est pas catégorielle
-
-        return [fig, fig_d, fig_m, fig_c, fig_e]
-
-
-
-
+            return [fig, fig_m, fig_c, go.Figure(), {"display": "none"}]  # Pas de graphique et cacher le conteneur
 
     ####################################### MODÉLISATION ########################################
     @app.callback([Output('output-data-upload', 'children'),
