@@ -63,50 +63,6 @@ def build_tabs():
     )
 ])
 
-################################################ ONGLET 5 : Denotching #################################################
-
-def layout_denot():
-    return html.Div( className='hub', children = [
-        html.Div(id='md_title_0', children=[
-            html.Label(className='md_title',
-                       children='Impact d\'une dénotation sur la Probabilité de Défaut',
-                       style={"textAlign" :"center"}),
-            html.Br()
-        ]),
-
-        html.Div(children=[
-            html.Label("Décalage des seuils :", className='label-inline'),
-            html.Button("-25", id='button-25', className='denot-button', n_clicks=0),
-            html.Button("-50", id='button-50', className='denot-button', n_clicks=0),
-            html.Button("-75", id='button-75', className='denot-button', n_clicks=0),
-            html.Button("-100", id='button-100', className='denot-button', n_clicks=0),
-        ], style={"display":"flex"}),
-
-        html.Br(),
-        html.Br(),
-
-        html.Div(id = "denotching-graph", children=[
-            html.Label(children="Comparaison de la Probabilité de défaut : Avant / Après",
-                       style={'font-size': "22px", "color": "#FFFFFF"}),
-            dcc.Graph(id = "compare_PD"),
-            html.Br(),
-            html.Div([
-                html.Div([
-                    html.Label(children = "Comparaison de la Monotonie : Avant / Après",
-                               style={'font-size':"22px", "color": "#FFFFFF"}),
-                    dcc.Graph(id="compare_monotonie")
-                ], style={'width': '50%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
-
-                html.Div([
-                    html.Label(children = "Comparaison de la Population : Avant / Après",
-                               style={'font-size': "22px", "color": "#FFFFFF"}),
-                    dcc.Graph(id="compare_pop")
-                ], style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'})
-            ], style={'display': 'flex', 'width': '100%'})
-        ], style={'display' : "None"}),
-    ])
-
-
 ################################################ ONGLET 0 : Analyse #################################################
 
 def analyse_layout():
@@ -821,7 +777,10 @@ def format_option_label(value):
         value_clean = value.strip('[]')
         if ';' in value_clean:
             parts = value_clean.split(';')
-            formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
+            if parts[0].split(".")[0] == '0' :
+                formatted = f"[{float(parts[0])};{float(parts[1])}]"
+            else :
+                formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
         elif value_clean.replace('.', '', 1).isdigit():
             formatted = f"{float(value_clean):.0f}"
         else:
@@ -830,6 +789,23 @@ def format_option_label(value):
     except Exception as e:
         print(f"Error formatting value {value}: {e}")
         return value
+
+def format_option_column(column):
+    if column == 'AMT_CREDIT_SUM_DEBT_disc_int' :
+        return("Quel est votre montant de dette en cours ?")
+    elif column == 'AMT_CREDIT_SUM_disc_int' :
+        return ("Quel est votre montant de crédit en cours ?")
+    if column == "DAYS_EMPLOYED_disc_int" :
+        return("Depuis combien de jours êtes vous en emploi ?")
+    if column == "EXT_SOURCE_1_disc_int" :
+        return("Quel est votre score sur le score externe 1 ? ")
+    if column == "EXT_SOURCE_2_disc_int" :
+        return("Quel est votre score sur le score externe 2 ? ")
+    if column == "EXT_SOURCE_3_disc_int" :
+        return("Quel est votre score sur le score externe 3 ? ")
+    if column == "NAME_INCOME_TYPE_discret" :
+        return("Dans quelle catégorie de revenu vous situez vous ? ")
+    return(f"Pour la variable {column} :")
 
 
 def chatbot():
@@ -851,7 +827,7 @@ def chatbot():
         html.Div(id='dynamic-radioitems-container', children=[
             html.Div([
                 html.Div([
-                    html.Label(f'Pour la variable {dropdown_columns[0]}', className='label-inline message-label'),
+                    html.Label(format_option_column(dropdown_columns[0]), className='label-inline message-label'),
                 ], className='message-container'),
                 html.Div([
                     dcc.RadioItems(
@@ -867,3 +843,48 @@ def chatbot():
 
         html.Div(id='score-ind-result'),
     ], className='hub')
+
+
+
+################################################ ONGLET 4 : Denotching #################################################
+
+def layout_denot():
+    return html.Div( className='hub', children = [
+        html.Div(id='md_title_0', children=[
+            html.Label(className='md_title',
+                       children='Impact d\'une dénotation sur la Probabilité de Défaut',
+                       style={"textAlign" :"center"}),
+            html.Br()
+        ]),
+
+        html.Div(children=[
+            html.Label("Décalage des seuils :", className='label-inline'),
+            html.Button("-25", id='button-25', className='denot-button', n_clicks=0),
+            html.Button("-50", id='button-50', className='denot-button', n_clicks=0),
+            html.Button("-75", id='button-75', className='denot-button', n_clicks=0),
+            html.Button("-100", id='button-100', className='denot-button', n_clicks=0),
+        ], style={"display":"flex"}),
+
+        html.Br(),
+        html.Br(),
+
+        html.Div(id = "denotching-graph", children=[
+            html.Label(children="Comparaison de la Probabilité de défaut : Avant / Après",
+                       style={'font-size': "22px", "color": "#FFFFFF"}),
+            dcc.Graph(id = "compare_PD"),
+            html.Br(),
+            html.Div([
+                html.Div([
+                    html.Label(children = "Comparaison de la Monotonie : Avant / Après",
+                               style={'font-size':"22px", "color": "#FFFFFF"}),
+                    dcc.Graph(id="compare_monotonie")
+                ], style={'width': '50%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
+
+                html.Div([
+                    html.Label(children = "Comparaison de la Population : Avant / Après",
+                               style={'font-size': "22px", "color": "#FFFFFF"}),
+                    dcc.Graph(id="compare_pop")
+                ], style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'})
+        ], style={'display' : "None"}),
+    ])

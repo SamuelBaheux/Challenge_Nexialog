@@ -403,26 +403,11 @@ def register_callbacks(app):
         dropdown_columns = df.columns.difference(['Score_ind', 'Classes', dataprep.target, dataprep.date,
                                                   "date_trimestrielle"]).tolist()
 
-        def format_option_label(value):
-            try:
-                value_clean = value.strip('[]')
-                if ';' in value_clean:
-                    parts = value_clean.split(';')
-                    formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
-                elif value_clean.replace('.', '', 1).isdigit():
-                    formatted = f"{float(value_clean):.0f}"
-                else:
-                    formatted = ' '.join(word.capitalize() for word in value.replace('_', ' ').split())
-                return formatted
-            except Exception as e:
-                print(f"Error formatting value {value}: {e}")
-                return value
-
         next_index = len(values)
         if next_index < len(dropdown_columns):
             new_element = html.Div([
                 html.Div([
-                    html.Label(f'Pour la variable {dropdown_columns[next_index]} :',
+                    html.Label(format_option_column(dropdown_columns[next_index]),
                                className='label-inline message-label'),
                 ], className='message-container'),
                 html.Div([
@@ -481,6 +466,8 @@ def register_callbacks(app):
         return html.Div([
             html.Div(message_divs, className='score-result-container'),
         ], style ={"color":"#FFFFFF"})
+
+    ####################################### DENOTCHING ########################################
 
     @app.callback(
         [Output('button-25', 'className'),
