@@ -7,7 +7,7 @@ from dash.dependencies import Input, Output, State, ALL
 import dash
 from dash import dcc
 
-from builders import build_logit_model, build_xgboost_model, build_both_model, build_analyse_panel, chatbot
+from builders import *
 from data_preparation import *
 from plot_utils import *
 from plot_analyse import *
@@ -34,27 +34,48 @@ def register_callbacks(app):
         else:
             return dash.no_update,[], []
 
-    @app.callback([Output("Graph-Container", "children")],
+    @app.callback([Output("analyze_glob_data", "style", allow_duplicate=True),
+                   Output("analyze_glob_data", "children", allow_duplicate=True),
+                   Output("analyze_var_data", "children", allow_duplicate=True)],
                   [Input("target-dropdown-analyse", "value"),
                    Input("date-dropdown-analyse", "value"),
-                   Input("launch-button-analyse", "n_clicks")])
+                   Input("launch-button-analyse", "n_clicks")],
+                  prevent_initial_call=True)
     def display_graph(target, date, n_clicks):
         if n_clicks and n_clicks > 0:
             analyse.init_target(target)
             analyse.init_date(date)
-            return build_analyse_panel()
+            return {'display': 'block'}, build_analyse_data(), build_analyse_feature()
         else :
             return dash.no_update
 
-    @app.callback(
-        [Output("stability-animated-graph", "figure"),
-         Output("density-plot", "figure")],
-        [Input("plot-stability-dropdown", "value")]
-    )
-    def update_graph(selected_variable):
-        fig = plot_stability_plotly_analyse(selected_variable)
-        fig_d = plot_marginal_density(selected_variable)
-        return([fig, fig_d])
+    @app.callback([Output("analyze_glob_data", "style", allow_duplicate=True),
+                   Output("analyze_var_data", "style", allow_duplicate=True)],
+                  [Input("analyse-var-button", "n_clicks")],
+                  prevent_initial_call=True)
+    def render(n_clicks):
+        if n_clicks and n_clicks > 0:
+            return {'display': 'None'},{'display': 'block'}
+        else :
+            return dash.no_update
+
+    @app.callback([Output("analyze_glob_data", "style", allow_duplicate=True),
+                   Output("analyze_var_data", "style", allow_duplicate=True)],
+                  [Input("analyse-global-button", "n_clicks")],
+                  prevent_initial_call=True
+                  )
+    def render(n_clicks):
+        if n_clicks and n_clicks > 0:
+            return {'display': 'block'},{'display': 'None'}
+        else :
+            return dash.no_update
+
+    @app.callback([Output("plot_stability", "figure"),
+                   Output("plot_distrib", "figure"),
+                   Output("variables-info-analyse", "children")],
+                  [Input("target-dropdown-analyse-var", "value")])
+    def render(var):
+        return plot_stability_analyse(var), plot_marginal_density(var), [dcc.Markdown(texte_analyse_var(var))]
 
 
     ####################################### MODÉLISATION ########################################
@@ -116,7 +137,10 @@ def register_callbacks(app):
          Output("chat-tab", "style"),
          Output("chat-tab", "children"),
          Output("Control-chart-tab-2", "style"),
-         Output("Control-chart-tab-2", "children")],
+         Output("Control-chart-tab-2", "children"),
+         Output("denotching-tab", "style"),
+         Output("denotching-tab", "children"),
+         ],
         [Input('launch-button', 'n_clicks'),
          Input("variables-dropdown", 'value'),
          Input('model-choice', 'value')],
@@ -140,7 +164,7 @@ def register_callbacks(app):
                 model_classique.get_default_proba(dataprep.target, dataprep.date)
                 dataprep.init_model_name('logit')
 
-                return ('tab2', {"display": "flex"}, "loaded", build_logit_model(), {"display": "flex"}, chatbot(), {"display": "none"}, dash.no_update)
+                return ('tab2', {"display": "flex"}, "loaded", build_logit_model(), {"display": "flex"}, chatbot(), {"display": "none"}, dash.no_update, {"display": "flex"}, layout_denot())
 
             elif model_choice == 'XGBoost':
                 model_challenger.init_model('xgb')
@@ -150,7 +174,7 @@ def register_callbacks(app):
                 model_challenger.get_segmentation(dataprep.target)
                 model_challenger.get_default_proba(dataprep.target, dataprep.date)
                 dataprep.init_model_name('xgb')
-                return ('tab3', {"display": "none"}, "loaded", dash.no_update, {"display": "flex"}, chatbot(), {"display": "flex"},  build_xgboost_model())
+                return ('tab3', {"display": "none"}, "loaded", dash.no_update, {"display": "flex"}, chatbot(), {"display": "flex"},  build_xgboost_model(), {"display": "flex"}, layout_denot())
 
             elif model_choice == "both":
                 model_classique.init_model('logit')
@@ -170,11 +194,11 @@ def register_callbacks(app):
                 dataprep.init_model_name('logit')
 
                 logit_layout, xgb_layout = build_both_model()
-                return ('tab2', {"display": "flex"}, "loaded", logit_layout, {"display": "flex"}, chatbot(), {"display": "flex"}, xgb_layout)
+                return ('tab2', {"display": "flex"}, "loaded", logit_layout, {"display": "flex"}, chatbot(), {"display": "flex"}, xgb_layout, {"display": "flex"}, layout_denot())
 
 
 
-        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update,  {"display": "none"}, dash.no_update, {"display": "none"}, dash.no_update
+        return dash.no_update, {"display": "none"}, dash.no_update, dash.no_update,  {"display": "none"}, dash.no_update, {"display": "none"}, dash.no_update, {"display": "none"}, dash.no_update
 
     @app.callback(
         Output('loading-div', 'style'),
@@ -456,3 +480,58 @@ def register_callbacks(app):
                                                 'font-weight': 'bold',
                                                 "font-size": "20px"})
         return "Veuillez faire toutes les sélections avant de soumettre."
+
+    @app.callback(
+        [Output('button-25', 'className'),
+         Output('button-50', 'className'),
+         Output('button-75', 'className'),
+         Output('button-100', 'className')],
+        [Input('button-25', 'n_clicks'),
+         Input('button-50', 'n_clicks'),
+         Input('button-75', 'n_clicks'),
+         Input('button-100', 'n_clicks')]
+    )
+    def update_button_styles(n_clicks_25, n_clicks_50, n_clicks_75, n_clicks_100):
+        # Determine which button was clicked last
+        ctx = dash.callback_context
+
+        if not ctx.triggered:
+            # No buttons have been clicked yet
+            button_id = None
+        else:
+            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        # Update classes based on which button was clicked
+        base_class = 'denot-button'
+        active_class = 'denot-button-clicked'  # Add this class in your CSS
+
+        return [
+            active_class if button_id == 'button-25' else base_class,
+            active_class if button_id == 'button-50' else base_class,
+            active_class if button_id == 'button-75' else base_class,
+            active_class if button_id == 'button-100' else base_class,
+        ]
+
+    @app.callback(
+        [Output("compare_PD", "figure"),
+         Output("compare_monotonie", "figure"),
+         Output("compare_pop", "figure"),
+         Output("denotching-graph", "style")],
+        [Input('button-25', 'n_clicks'),
+         Input('button-50', 'n_clicks'),
+         Input('button-75', 'n_clicks'),
+         Input('button-100', 'n_clicks')]
+    )
+    def render(n_clicks_25, n_clicks_50, n_clicks_75, n_clicks_100):
+        ctx = dash.callback_context
+
+        if not ctx.triggered:
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        else:
+            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        ampleur = int(button_id.split("-")[1])
+
+        model_classique.denotching(ampleur, dataprep.target, dataprep.date)
+
+        return compare_PD(), compare_monotonie(), compare_pop(), {"display":"block"}

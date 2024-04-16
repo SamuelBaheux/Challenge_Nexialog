@@ -157,4 +157,15 @@ class Modelization():
         default_proba["Probabilité_Défaut"] = default_proba["LRA"] + default_proba["Moc_C"] + default_proba["MOC_A"]
         self.default_proba = default_proba
 
+    def denotching(self, ampleur, target, date):
+        self.default_proba_before = self.default_proba.copy()
+        self.default_proba_before["Taux_Individus"] = self.resultats["Taux_Individus"]
+
+        new_breaks = [self.breaks[i] - [0,ampleur,ampleur,ampleur,ampleur,ampleur,ampleur][i] for i in range(len(self.breaks))]
+
+        self.update_segmentation(new_breaks, target)
+        self.get_default_proba(target, date)
+        self.default_proba["Taux_Individus"] = self.resultats["Taux_Individus"]
+
+
 

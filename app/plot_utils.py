@@ -330,4 +330,75 @@ def proba_defaut(grouped):
     )
     return(fig)
 
+def compare_PD():
+    default_proba_avant = model_classique.default_proba_before
+    default_proba_apres = model_classique.default_proba
 
+    classes = default_proba_avant['Classe']
+    prob_avant = default_proba_avant['Probabilité_Défaut']
+    prob_apres = default_proba_apres['Probabilité_Défaut']
+
+    diff_prob = [p2 - p1 for p1, p2 in zip(prob_avant, prob_apres)]
+
+    trace_avant = go.Bar(x=classes, y=prob_avant, name='Avant')
+    trace_apres = go.Bar(x=classes, y=prob_apres, name='Après')
+    trace_diff = go.Bar(x=classes, y=diff_prob, name='Différence')
+
+    fig = go.Figure(data=[trace_avant, trace_apres, trace_diff])
+
+    fig.update_layout(
+        xaxis=dict(title='Classe'),
+        yaxis=dict(title='Probabilité de Défaut'),
+        barmode='group',
+        margin=dict(l=0, r=0, t=10, b=0)
+    )
+
+    fig.update_layout(**custom_layout)
+
+    return(fig)
+
+def compare_monotonie():
+    default_proba_avant = model_classique.default_proba_before
+    default_proba_apres = model_classique.default_proba
+
+    classes = default_proba_avant['Classe']
+    prob_avant = default_proba_avant['Probabilité_Défaut']
+    prob_apres = default_proba_apres['Probabilité_Défaut']
+
+    trace_avant = go.Scatter(x=classes, y=prob_avant, mode='lines+markers', name='Avant', line=dict(color='blue'))
+    trace_apres = go.Scatter(x=classes, y=prob_apres, mode='lines+markers', name='Après', line=dict(color='red'))
+
+    fig1 = go.Figure(data=[trace_avant, trace_apres])
+    fig1.update_layout(margin=dict(l=0, r=0, t=10, b=0),
+                       xaxis_title='Classe',
+                       yaxis_title='Probabilité de Défaut')
+
+    fig1.update_layout(**custom_layout)
+
+    return(fig1)
+
+def compare_pop():
+    default_proba_avant = model_classique.default_proba_before
+    default_proba_apres = model_classique.default_proba
+
+    classes = default_proba_avant['Classe']
+    prop_avant = default_proba_avant['Taux_Individus']
+    prop_apres = default_proba_apres['Taux_Individus']
+
+    diff_prop = [p2 - p1 for p1, p2 in zip(prop_avant, prop_apres)]
+
+    trace_avant = go.Bar(x=classes, y=prop_avant, name='Avant')
+    trace_apres = go.Bar(x=classes, y=prop_apres, name='Après')
+    trace_diff = go.Bar(x=classes, y=diff_prop, name='Différence')
+
+    fig = go.Figure(data=[trace_avant, trace_apres, trace_diff])
+
+    fig.update_layout(
+        xaxis=dict(title='Classe'),
+        yaxis=dict(title='Taux de Population'),
+        barmode='group',
+        margin = dict(l=0, r=0, t=10, b=0)
+    )
+
+    fig.update_layout(**custom_layout)
+    return(fig)

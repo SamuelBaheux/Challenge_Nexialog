@@ -209,7 +209,40 @@ Boutons
     cursor: pointer; /* Style du curseur en forme de pointeur */
     display: block; /* Rendre le bouton block pour centrer */
     margin: auto;
-    width: 25%;
+    width: 30%;
+}
+
+.denot-button{
+    background-color: #B10031; /* Couleur de fond du bouton */
+    color: white; /* Couleur du texte du bouton */
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    display: block; /* Rendre le bouton block pour centrer */
+    margin: auto;
+    width: 15%;
+}
+
+.denot-button-clicked {
+    background-color: #808080;  /* Gris */
+    color: white;
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    display: block; /* Rendre le bouton block pour centrer */
+    margin: auto;
+    width: 15%;
+}
+
+.button-analyse-change{
+    background-color: #B10031; /* Couleur de fond du bouton */
+    color: white; /* Couleur du texte du bouton */
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    display: block; /* Rendre le bouton block pour centrer */
+    margin: auto;
+    width: 100%;
 }
 
 .button-inline {
@@ -293,6 +326,7 @@ Tabs
 
 #Control-chart-tab-2.custom-tab,
 #Specs-tab.custom-tab,
+#denotching-tab.custom-tab,
 #analyse-tab.custom-tab,
 #chat-tab.custom-tab,
 #Control-chart-tab.custom-tab {
@@ -311,6 +345,7 @@ Tabs
 }
 
 #Control-chart-tab-2.custom-tab--selected,
+#denotching-tab.custom-tab--selected,
 #Specs-tab.custom-tab--selected,
 #chat-tab.custom-tab--selected,
 #analyse-tab.custom-tab--selected,
@@ -322,6 +357,10 @@ Tabs
 }
 
 #Control-chart-tab-2.custom-tab {
+	margin-left: 5px;
+}
+
+#denotching-tab.custom-tab {
 	margin-left: 5px;
 }
 

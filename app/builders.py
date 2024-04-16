@@ -25,12 +25,12 @@ def build_tabs():
                                                 dcc.Tab(id='analyse-tab',
                                                         label='Analyse',
                                                         className="custom-tab",
-                                                        value='tab0',
+                                                        value='tab1',
                                                         selected_className="custom-tab--selected",
                                                         children=analyse_layout()),
                                                 dcc.Tab(id="Specs-tab",
                                                         label="Modélisation",
-                                                        value="tab1",
+                                                        value="tab0",
                                                         className="custom-tab",
                                                         selected_className="custom-tab--selected",
                                                         children=create_layout(),
@@ -52,11 +52,60 @@ def build_tabs():
                                                         className="custom-tab",
                                                         value='tab4',
                                                         selected_className="custom-tab--selected"),
+                                                dcc.Tab(id='denotching-tab',
+                                                        label='Denotching',
+                                                        className="custom-tab",
+                                                        value='tab5',
+                                                        selected_className="custom-tab--selected"),
                 ],
             )
         ],
     )
 ])
+
+################################################ ONGLET 5 : Denotching #################################################
+
+def layout_denot():
+    return html.Div( className='hub', children = [
+        html.Div(id='md_title_0', children=[
+            html.Label(className='md_title',
+                       children='Impact d\'une dénotation sur la Probabilité de Défaut',
+                       style={"textAlign" :"center"}),
+            html.Br()
+        ]),
+
+        html.Div(children=[
+            html.Label("Décalage des seuils :", className='label-inline'),
+            html.Button("-25", id='button-25', className='denot-button', n_clicks=0),
+            html.Button("-50", id='button-50', className='denot-button', n_clicks=0),
+            html.Button("-75", id='button-75', className='denot-button', n_clicks=0),
+            html.Button("-100", id='button-100', className='denot-button', n_clicks=0),
+        ], style={"display":"flex"}),
+
+        html.Br(),
+        html.Br(),
+
+        html.Div(id = "denotching-graph", children=[
+            html.Label(children="Comparaison de la Probabilité de défaut : Avant / Après",
+                       style={'font-size': "22px", "color": "#FFFFFF"}),
+            dcc.Graph(id = "compare_PD"),
+            html.Br(),
+            html.Div([
+                html.Div([
+                    html.Label(children = "Comparaison de la Monotonie : Avant / Après",
+                               style={'font-size':"22px", "color": "#FFFFFF"}),
+                    dcc.Graph(id="compare_monotonie")
+                ], style={'width': '50%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
+
+                html.Div([
+                    html.Label(children = "Comparaison de la Population : Avant / Après",
+                               style={'font-size': "22px", "color": "#FFFFFF"}),
+                    dcc.Graph(id="compare_pop")
+                ], style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'})
+        ], style={'display' : "None"}),
+    ])
+
 
 ################################################ ONGLET 0 : Analyse #################################################
 
@@ -102,25 +151,106 @@ def analyse_layout():
 
         html.Br(),
         html.Button('Lancer l\'analyse', id='launch-button-analyse', n_clicks=0, className='launch-button-mod'),
-
-        html.Div(id = "Graph-Container", children=[])
+        html.Br(),
+        html.Div(id = "analyze_glob_data", children=[], style={"display":'None'}),
+        html.Div(id="analyze_var_data", children=[], style={"display":'None'}),
 
     ])
 
-def build_analyse_panel():
-    return ([
-        html.Div(children=[
-                     dcc.Dropdown(
-                         id='plot-stability-dropdown',
-                         className='dropdown-results',
-                         options=analyse.get_features(),
-                         value=analyse.get_features()[2],
-                         style={'marginBottom': '20px', "marginTop":'40px'}
-                     ),
-                     dcc.Graph(id='stability-animated-graph'),
-                    dcc.Graph(id="density-plot")
-    ])
-    ])
+def build_analyse_data():
+    return [html.Div(
+        children=[
+            html.Br(),
+            html.Div(id='md_title_analyse_0', children=[
+                html.Label(className='md_title', children='1. Informations globale sur les données :')
+            ]),
+            html.Br(),
+            html.Label("Extrait des données :", style={'color': '#FFFFFF', 'fontSize': "19px", "fontWeight":"bold"}),
+            html.Br(),
+            html.Div([
+                html.Div([
+                    dash_table.DataTable(
+                        data=analyse.df.iloc[:10,:10].round(2).to_dict('records'),
+                        columns=[{"name": i, "id": i} for i in analyse.df.iloc[:10,:10].columns],
+                        style_header={
+                            'backgroundColor': 'rgb(76, 82, 94)',
+                            'color': 'white',
+                            'fontSize': '15px',
+                            'height': '50px',
+                            'whiteSpace': 'normal',
+                            'padding': '10px',
+                            'fontWeight': 'bold'
+                        },
+                        style_data={
+                            'backgroundColor': 'rgb(78, 85, 103)',
+                            'color': 'white',
+                            'fontSize': '10px',
+                            'height': '25px',
+                            'whiteSpace': 'normal',
+                            'padding': '10px',
+                            'fontWeight': 'normal'
+                        },
+                        id="table-id-analyse",
+                        column_selectable="multi",
+                        page_action="native",  # Pagination activée
+                        page_size=10  # Nombre de lignes par page
+                    ),
+                ], style={'width': '70%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
+
+                html.Div([
+                    html.Div(className='variables-info', children=[
+                        dcc.Markdown(texte_analyse_globale())
+                    ])
+                ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'}),
+
+            html.Br(),
+            html.Div(id='md_title_analyse_1', children=[
+                html.Label(className='md_title', children='2. Valeurs Manquantes et Corrélation :')
+            ]),
+            html.Br(),
+
+            html.Div([
+                html.Div([
+                    dcc.Graph(figure=missing_values())
+                ], style={'width': '65%', 'display': 'inline-block'}),
+
+                html.Div([
+                    dcc.Graph(figure=plot_correlation_matrix(True))
+                ], style={'width': '35%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'}),
+
+            html.Button('Vers l\'analyse par variable', id="analyse-var-button", className='button-analyse-change'),
+
+        ]
+    )]
+
+def build_analyse_feature():
+    return [html.Div(
+        children=[
+            dcc.Dropdown(id='target-dropdown-analyse-var',
+                         options=analyse.df.columns.to_list(),
+                         value=analyse.df.columns[2],
+                         multi=False,
+                         placeholder="Choisir la cible",
+                         style={'background-color': '#4e5567'}),
+
+            html.Div([
+                html.Div([dcc.Graph(id = "plot_distrib"),
+                ], style={'width': '70%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
+
+                html.Div([
+                    html.Br(),
+                    html.Div(className='variables-info', id='variables-info-analyse', children=[])
+                ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'}),
+
+            dcc.Graph(id = "plot_stability"),
+
+            html.Button('Analyse globale', id="analyse-global-button", className='button-analyse-change'),
+
+        ]
+    )]
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
