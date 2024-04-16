@@ -816,6 +816,22 @@ def build_xgboost_model():
     return layout_challenger
 
 ################################################ ONGLET 3 : Chatbot #################################################
+def format_option_label(value):
+    try:
+        value_clean = value.strip('[]')
+        if ';' in value_clean:
+            parts = value_clean.split(';')
+            formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
+        elif value_clean.replace('.', '', 1).isdigit():
+            formatted = f"{float(value_clean):.0f}"
+        else:
+            formatted = ' '.join(word.capitalize() for word in value.replace('_', ' ').split())
+        return formatted
+    except Exception as e:
+        print(f"Error formatting value {value}: {e}")
+        return value
+
+
 def chatbot():
     if dataprep.model_name == "logit":
         model = model_classique
@@ -835,23 +851,19 @@ def chatbot():
         html.Div(id='dynamic-radioitems-container', children=[
             html.Div([
                 html.Div([
-                    html.Label(f'Pour la variable {dropdown_columns[0]}:', className='label-inline message-label'),
+                    html.Label(f'Pour la variable {dropdown_columns[0]}', className='label-inline message-label'),
                 ], className='message-container'),
                 html.Div([
                     dcc.RadioItems(
                         id={'type': 'dynamic-radioitems', 'index': 0},
-                        options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if
-                                 pd.notnull(value)],
+                        options=[{'label': format_option_label(str(value)), 'value': value} for value in
+                                 df[dropdown_columns[0]].dropna().unique()],
                         labelStyle={'display': 'inline-block', 'margin-right': '20px'},
-                        # Espacement et alignement horizontal
                         className='radio-inline selection-radio'
                     ),
-                ], className='radioitems-container',
-                    style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
+                ], className='radioitems-container'),
             ], className='form-input row', style={'margin-bottom': '50px'})
         ]),
 
-        html.Button('Voir votre octroi de crédit', id='launch-chatbot-modeling', n_clicks=0,
-                    className='launch-button', style={'margin-top': '20px', 'display': 'none'}),
         html.Div(id='score-ind-result'),
     ], className='hub')

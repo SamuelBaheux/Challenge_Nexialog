@@ -464,54 +464,97 @@ Slider
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 chatbot
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.message-container, .radioitems-container {
-    border-radius: 15px; /* Forme ovale */
-    padding: 20px 30px;
-    font-size: 1.2em;
-    width: 35%; /* Réduire la largeur pour ne pas atteindre le milieu */
-    margin: auto; /* Ajouter automatiquement un espace autour de chaque conteneur */
+.message-container{
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    text-align: right;
+    background-image: url("/assets/images/bulle_bleu.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    border-radius: 20px;
+    width: fit-content;
+    min-width: 60%;
+    min-height: 60px;
+    margin: auto;
+    color: white;
+    padding: 20px;
+    padding-left: 70px;
+    margin-bottom: 70px;
+    font-size: 20px;
+    position: relative;
+    top: 55px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.message-container {
-    background-color: #007BFF; /* Blue background */
-    color: white;
+.score-result-container {
+    display: block;
+    justify-content: left;
+    align-items: center;
     text-align: left;
-    margin-left: 2%;
-    float: left; /* Align to the left */
-    margin-bottom: 75px;
-    font-size: 30px;
-    position: relative; /* Position relative pour utiliser le décalage top */
-    top: -35px; /* Décaler légèrement vers le haut */
+    width: 65%;
+    min-width: 500px;
+    padding: 10px 20px;
+    padding-left: 120px;
+    margin-bottom: 50px;
+    font-size: 20px;
+    position: relative;
+    background-image: url("/assets/images/bulle_bleu.png");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-radius: 20px;
+    min-height: 80px;
+    color: white;
+    margin-right: auto;
+    box-sizing: border-box;
+    margin-bottom: 90px;
+    top: 95px;
 }
 
-/* Stylisation générale des containers des RadioItems pour correspondre à l'esthétique des dropdowns */
 .radioitems-container {
-    background-color: #8B0000; /* Dark red background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: left;
+    background-image: url("/assets/images/bulle_rouge.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: fit-content;
+    padding: 20px;
+    min-width: 25%;
+    min-height: 60px;
+    margin: auto;
     color: white;
-    margin-right: 2%;
-    float: right; /* Aligné à droite */
+    padding: 20px;
     margin-bottom: 10px;
-    top: 15px; /* Légèrement décalé vers le bas */
+    font-size: 50px;
+    position: relative;
+    top: 95px;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 .radio-inline.selection-radio {
-    display: flex; /* Use flexbox for inner alignment */
-    flex-direction: row; /* Align items in a row */
-    justify-content: flex-end; /* Align items to the end (right) */
+    display: flex;
+    flex-direction: row;
+    padding-bottom: 20px;
+    justify-content: flex-end;
 }
 
 .radio-inline.selection-radio .Select-control, .radio-inline.selection-radio .Select-value, .radio-inline.selection-radio .Select-placeholder {
-    color: white; /* White text color for dropdown items */
+    color: white;
 }
 
 .radio-inline.selection-radio label {
-    display: block; /* Ensure labels are block level for better control */
-    margin-right: 40px; /* Space between radio buttons */
-    color: white; /* White text color for labels */
+    display: block;
+    margin-right: 80px;
+    color: white;
     font-size: 20px;
 }
 
 .radio-inline.selection-radio input[type="radio"] {
-    accent-color: white; /* White color for the radio button if supported */
+    accent-color: white;
 }
 
 .label-inline.message-label{
