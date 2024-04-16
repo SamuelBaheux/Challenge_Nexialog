@@ -10,7 +10,7 @@ from callbacks import *
 app = dash.Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 register_callbacks(app)
 
-app.title = "Challenge"
+app.title = "NexiaMod"
 server = app.server
 app.config["suppress_callback_exceptions"] = True
 

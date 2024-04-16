@@ -1,6 +1,7 @@
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
 
 from vars import *
 
@@ -67,7 +68,7 @@ def plot_hist(column):
 
     return histogramme
 
-def roc_curve():
+def courbe_roc(model):
     metrics = model.get_metrics()
     fpr = metrics["fpr"]
     tpr = metrics["tpr"]
@@ -103,7 +104,7 @@ def gini_coefficient(values):
     gini_index = (2 * np.sum(cumulative_values_sum) / (n * np.sum(sorted_values))) - (n + 1) / n
     return 1 - gini_index
 
-def create_gini_figure():
+def create_gini_figure(model):
     df = model.df_score.copy()
     if "date_trimestrielle" not in df.columns :
         df[dataprep.date] = pd.to_datetime(df[dataprep.date])
@@ -140,7 +141,7 @@ def create_gini_figure():
 
 
 
-def create_stability_figure():
+def create_stability_figure(model):
     df = model.df_score.copy()
     if "date_trimestrielle" not in df.columns :
         df[dataprep.date] = pd.to_datetime(df[dataprep.date])
@@ -176,9 +177,9 @@ def create_stability_figure():
     return fig
 
 def plot_shap_values():
-    if model.model_name == "xgb" :
-        shap_values = model.model.shap_values
-        train = model.model.X_train
+    if model_challenger.model_name == "xgb" :
+        shap_values = model_challenger.model.shap_values
+        train = model_challenger.model.X_train
 
         shap_values = pd.DataFrame(shap_values, columns=train.columns)
         train.reset_index(inplace=True, drop=True)
@@ -253,6 +254,151 @@ def plot_metrics_leftpanel(metrics) :
 
     return(fig)
 
+def update_graph_dist_column(selected_column, model):
+    default = model.df_score[model.df_score[dataprep.target] == 1][selected_column]
+    not_default = model.df_score[model.df_score[dataprep.target] == 0][selected_column]
 
+    column_data_type = default.dtype
 
+    if column_data_type in ['int64', 'float64']:
 
+        fig = ff.create_distplot(hist_data=[default, not_default],
+                                 group_labels=['Défaut', 'Non Défaut'],
+                                 bin_size=0.2,
+                                 show_rug=False,
+                                 show_hist=False)
+
+        fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
+        fig.update_traces(fill='tozeroy')
+        fig.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ))
+        fig.update_layout(**custom_layout)
+
+    else:
+        categories = sorted(set(default.unique()))
+        fig = go.Figure()
+
+        fig.add_trace(go.Histogram(x=default,
+                                   nbinsx=len(categories),
+                                   name='Défaut',
+                                   opacity=0.7))
+
+        fig.add_trace(go.Histogram(x=not_default,
+                                   nbinsx=len(categories),
+                                   name='Non Défaut',
+                                   opacity=0.7))
+        fig.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ))
+
+        fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
+        fig.update_layout(**custom_layout)
+
+    return fig
+
+def proba_defaut(grouped):
+    fig = go.Figure()
+    grouped["Classes"] = range(1,grouped.shape[0]+1)
+
+    for component in ['LRA', 'MOC_A', 'Moc_C']:
+        fig.add_trace(go.Bar(
+            x=grouped['Classes'],
+            y=grouped[component],
+            name=component,
+        ))
+
+    # Mise en page du graphique
+    fig.update_layout(
+        barmode='stack',  # Mode empilé
+        title='Probabilité de défaut par classe',
+        xaxis_title='Classes',
+        yaxis_title='Probabilité de défaut'
+    )
+
+    fig.update_layout(**custom_layout)
+    fig.update_layout(
+        height=600,
+    )
+    return(fig)
+
+def compare_PD():
+    default_proba_avant = model_classique.default_proba_before
+    default_proba_apres = model_classique.default_proba
+
+    classes = default_proba_avant['Classe']
+    prob_avant = default_proba_avant['Probabilité_Défaut']
+    prob_apres = default_proba_apres['Probabilité_Défaut']
+
+    diff_prob = [p2 - p1 for p1, p2 in zip(prob_avant, prob_apres)]
+
+    trace_avant = go.Bar(x=classes, y=prob_avant, name='Avant')
+    trace_apres = go.Bar(x=classes, y=prob_apres, name='Après')
+    trace_diff = go.Bar(x=classes, y=diff_prob, name='Différence')
+
+    fig = go.Figure(data=[trace_avant, trace_apres, trace_diff])
+
+    fig.update_layout(
+        xaxis=dict(title='Classe'),
+        yaxis=dict(title='Probabilité de Défaut'),
+        barmode='group',
+        margin=dict(l=0, r=0, t=10, b=0)
+    )
+
+    fig.update_layout(**custom_layout)
+
+    return(fig)
+
+def compare_monotonie():
+    default_proba_avant = model_classique.default_proba_before
+    default_proba_apres = model_classique.default_proba
+
+    classes = default_proba_avant['Classe']
+    prob_avant = default_proba_avant['Probabilité_Défaut']
+    prob_apres = default_proba_apres['Probabilité_Défaut']
+
+    trace_avant = go.Scatter(x=classes, y=prob_avant, mode='lines+markers', name='Avant', line=dict(color='blue'))
+    trace_apres = go.Scatter(x=classes, y=prob_apres, mode='lines+markers', name='Après', line=dict(color='red'))
+
+    fig1 = go.Figure(data=[trace_avant, trace_apres])
+    fig1.update_layout(margin=dict(l=0, r=0, t=10, b=0),
+                       xaxis_title='Classe',
+                       yaxis_title='Probabilité de Défaut')
+
+    fig1.update_layout(**custom_layout)
+
+    return(fig1)
+
+def compare_pop():
+    default_proba_avant = model_classique.default_proba_before
+    default_proba_apres = model_classique.default_proba
+
+    classes = default_proba_avant['Classe']
+    prop_avant = default_proba_avant['Taux_Individus']
+    prop_apres = default_proba_apres['Taux_Individus']
+
+    diff_prop = [p2 - p1 for p1, p2 in zip(prop_avant, prop_apres)]
+
+    trace_avant = go.Bar(x=classes, y=prop_avant, name='Avant')
+    trace_apres = go.Bar(x=classes, y=prop_apres, name='Après')
+    trace_diff = go.Bar(x=classes, y=diff_prop, name='Différence')
+
+    fig = go.Figure(data=[trace_avant, trace_apres, trace_diff])
+
+    fig.update_layout(
+        xaxis=dict(title='Classe'),
+        yaxis=dict(title='Taux de Population'),
+        barmode='group',
+        margin = dict(l=0, r=0, t=10, b=0)
+    )
+
+    fig.update_layout(**custom_layout)
+    return(fig)

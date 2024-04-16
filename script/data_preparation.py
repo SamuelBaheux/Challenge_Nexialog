@@ -141,11 +141,9 @@ class DashDataPreparation():
         self.train = df
 
     def init_target(self, target):
-        print(target)
         self.target = target
 
     def init_date(self, date):
-        print(date)
         self.date = date
 
     def get_features(self):
@@ -394,6 +392,9 @@ class DashDataPreparation():
         features_label = [var.split('_disc_int')[0] for var in features]
         features_label = [var.split('_discret')[0] for var in features_label]
         return(features, features_label)
+
+    def init_model_name(self, model_name):
+        self.model_name = model_name
 
 
 class ConstantFeatures():
