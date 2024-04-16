@@ -71,17 +71,17 @@ body {
     width: 100%;
 }
 
-.left-panel{
-    position: -webkit-sticky; /* Pour la compatibilité avec Safari */
-    position: sticky;
-    top: 0; /* Ce sera le point à partir duquel le panneau deviendra 'collant' */
-    width: 15%; /* Ajustez selon le besoin */
-    height: 100vh; /* S'étend sur toute la hauteur de la fenêtre d'affichage */
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    background-color: #4e5567;
-    border-radius: 10px;
+.left-panel {
+    position: -webkit-sticky !important; /* Pour la compatibilité avec Safari */
+    position: sticky !important;
+    top: 0 !important; /* Ce sera le point à partir duquel le panneau deviendra 'collant' */
+    width: 15% !important; /* Ajustez selon le besoin */
+    height: 120vh !important; /* S'étend sur toute la hauteur de la fenêtre d'affichage */
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 20px !important;
+    background-color: #4e5567 !important;
+    border-radius: 10px !important;
 }
 
 .right-panel{
@@ -175,10 +175,12 @@ Textes
 }
 
 .left-panel-metric{
-    color: white;
-    font-weight: normal;
-    font-size: 18px;
+    color: white ;
+    font-weight: bold;
+    font-size: 19px ;
+    text-align: center;
 }
+
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 Boutons
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -207,7 +209,40 @@ Boutons
     cursor: pointer; /* Style du curseur en forme de pointeur */
     display: block; /* Rendre le bouton block pour centrer */
     margin: auto;
-    width: 25%;
+    width: 30%;
+}
+
+.denot-button{
+    background-color: #B10031; /* Couleur de fond du bouton */
+    color: white; /* Couleur du texte du bouton */
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    display: block; /* Rendre le bouton block pour centrer */
+    margin: auto;
+    width: 15%;
+}
+
+.denot-button-clicked {
+    background-color: #808080;  /* Gris */
+    color: white;
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    display: block; /* Rendre le bouton block pour centrer */
+    margin: auto;
+    width: 15%;
+}
+
+.button-analyse-change{
+    background-color: #B10031; /* Couleur de fond du bouton */
+    color: white; /* Couleur du texte du bouton */
+    border: none; /* Aucune bordure */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Style du curseur en forme de pointeur */
+    display: block; /* Rendre le bouton block pour centrer */
+    margin: auto;
+    width: 100%;
 }
 
 .button-inline {
@@ -289,7 +324,9 @@ Tabs
 	justify-content: center;
 }
 
+#Control-chart-tab-2.custom-tab,
 #Specs-tab.custom-tab,
+#denotching-tab.custom-tab,
 #analyse-tab.custom-tab,
 #chat-tab.custom-tab,
 #Control-chart-tab.custom-tab {
@@ -307,6 +344,8 @@ Tabs
 	width: 94%;
 }
 
+#Control-chart-tab-2.custom-tab--selected,
+#denotching-tab.custom-tab--selected,
 #Specs-tab.custom-tab--selected,
 #chat-tab.custom-tab--selected,
 #analyse-tab.custom-tab--selected,
@@ -317,25 +356,47 @@ Tabs
 	justify-content: center;
 }
 
-#Specs-tab.custom-tab {
-	margin-right: 3px;
+#Control-chart-tab-2.custom-tab {
+	margin-left: 5px;
 }
 
-#Control-chart-tab.custom-tab {
-	margin-left: 3px;
+#denotching-tab.custom-tab {
+	margin-left: 5px;
+}
+
+#Specs-tab.custom-tab {
+	margin-right: 5px;
 }
 
 #chat-tab.custom-tab {
-	margin-left: 3px;
+	margin-left: 5px;
 }
 
 #analyse-tab.custom-tab {
-	margin-right: 3px;
+	margin-right: 5px;
 }
 
 
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 Widgets
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+
+
+.uploader{
+    color: white;
+    border: 2px solid #ffffff;
+	width: 50%;
+	border-width: 1px;
+	border-radius: 5px;
+	text-align: center;
+	margin: auto;
+	padding: 15px 10px;
+}
+
+
+/* ––––––––––––––––––––––––––––––––––––––––––––––––––
+Gauge
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #score-gauge>div,
@@ -352,17 +413,6 @@ Widgets
 #score-gauge>div>div>div>div {
 	color: #ffffff !important;
 	font-size: 20px;
-}
-
-.uploader{
-    color: white;
-    border: 2px solid #ffffff;
-	width: 50%;
-	border-width: 1px;
-	border-radius: 5px;
-	text-align: center;
-	margin: auto;
-	padding: 15px 10px;
 }
 
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -414,54 +464,97 @@ Slider
 /* ––––––––––––––––––––––––––––––––––––––––––––––––––
 chatbot
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.message-container, .radioitems-container {
-    border-radius: 15px; /* Forme ovale */
-    padding: 20px 30px;
-    font-size: 1.2em;
-    width: 35%; /* Réduire la largeur pour ne pas atteindre le milieu */
-    margin: auto; /* Ajouter automatiquement un espace autour de chaque conteneur */
+.message-container{
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    text-align: right;
+    background-image: url("/assets/images/bulle_bleu.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    border-radius: 20px;
+    width: fit-content;
+    min-width: 60%;
+    min-height: 60px;
+    margin: auto;
+    color: white;
+    padding: 20px;
+    padding-left: 70px;
+    margin-bottom: 70px;
+    font-size: 20px;
+    position: relative;
+    top: 55px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.message-container {
-    background-color: #007BFF; /* Blue background */
-    color: white;
+.score-result-container {
+    display: block;
+    justify-content: left;
+    align-items: center;
     text-align: left;
-    margin-left: 2%;
-    float: left; /* Align to the left */
-    margin-bottom: 75px;
-    font-size: 30px;
-    position: relative; /* Position relative pour utiliser le décalage top */
-    top: -35px; /* Décaler légèrement vers le haut */
+    width: 65%;
+    min-width: 500px;
+    padding: 10px 20px;
+    padding-left: 120px;
+    margin-bottom: 50px;
+    font-size: 20px;
+    position: relative;
+    background-image: url("/assets/images/bulle_bleu.png");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-radius: 20px;
+    min-height: 80px;
+    color: white;
+    margin-right: auto;
+    box-sizing: border-box;
+    margin-bottom: 90px;
+    top: 95px;
 }
 
-/* Stylisation générale des containers des RadioItems pour correspondre à l'esthétique des dropdowns */
 .radioitems-container {
-    background-color: #8B0000; /* Dark red background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: left;
+    background-image: url("/assets/images/bulle_rouge.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: fit-content;
+    padding: 20px;
+    min-width: 25%;
+    min-height: 60px;
+    margin: auto;
     color: white;
-    margin-right: 2%;
-    float: right; /* Aligné à droite */
+    padding: 20px;
     margin-bottom: 10px;
-    top: 15px; /* Légèrement décalé vers le bas */
+    font-size: 50px;
+    position: relative;
+    top: 95px;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 .radio-inline.selection-radio {
-    display: flex; /* Use flexbox for inner alignment */
-    flex-direction: row; /* Align items in a row */
-    justify-content: flex-end; /* Align items to the end (right) */
+    display: flex;
+    flex-direction: row;
+    padding-bottom: 20px;
+    justify-content: flex-end;
 }
 
 .radio-inline.selection-radio .Select-control, .radio-inline.selection-radio .Select-value, .radio-inline.selection-radio .Select-placeholder {
-    color: white; /* White text color for dropdown items */
+    color: white;
 }
 
 .radio-inline.selection-radio label {
-    display: block; /* Ensure labels are block level for better control */
-    margin-right: 40px; /* Space between radio buttons */
-    color: white; /* White text color for labels */
+    display: block;
+    margin-right: 80px;
+    color: white;
     font-size: 20px;
 }
 
 .radio-inline.selection-radio input[type="radio"] {
-    accent-color: white; /* White color for the radio button if supported */
+    accent-color: white;
 }
 
 .label-inline.message-label{

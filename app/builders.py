@@ -3,6 +3,7 @@ import sys
 sys.path.append("./script/")
 
 from dash import dcc, html, dash_table
+import dash_daq as daq
 from plot_utils import *
 from plot_analyse import *
 
@@ -24,12 +25,12 @@ def build_tabs():
                                                 dcc.Tab(id='analyse-tab',
                                                         label='Analyse',
                                                         className="custom-tab",
-                                                        value='tab0',
+                                                        value='tab1',
                                                         selected_className="custom-tab--selected",
                                                         children=analyse_layout()),
                                                 dcc.Tab(id="Specs-tab",
                                                         label="Modélisation",
-                                                        value="tab1",
+                                                        value="tab0",
                                                         className="custom-tab",
                                                         selected_className="custom-tab--selected",
                                                         children=create_layout(),
@@ -47,9 +48,14 @@ def build_tabs():
                                                         selected_className="custom-tab--selected"
                                                         ),
                                                 dcc.Tab(id='chat-tab',
-                                                        label='Calculateur d\'octroi',
+                                                        label='Chatbot',
                                                         className="custom-tab",
                                                         value='tab4',
+                                                        selected_className="custom-tab--selected"),
+                                                dcc.Tab(id='denotching-tab',
+                                                        label='Denotching',
+                                                        className="custom-tab",
+                                                        value='tab5',
                                                         selected_className="custom-tab--selected"),
                 ],
             )
@@ -57,11 +63,54 @@ def build_tabs():
     )
 ])
 
+################################################ ONGLET 5 : Denotching #################################################
+
+def layout_denot():
+    return html.Div( className='hub', children = [
+        html.Div(id='md_title_0', children=[
+            html.Label(className='md_title',
+                       children='Impact d\'une dénotation sur la Probabilité de Défaut',
+                       style={"textAlign" :"center"}),
+            html.Br()
+        ]),
+
+        html.Div(children=[
+            html.Label("Décalage des seuils :", className='label-inline'),
+            html.Button("-25", id='button-25', className='denot-button', n_clicks=0),
+            html.Button("-50", id='button-50', className='denot-button', n_clicks=0),
+            html.Button("-75", id='button-75', className='denot-button', n_clicks=0),
+            html.Button("-100", id='button-100', className='denot-button', n_clicks=0),
+        ], style={"display":"flex"}),
+
+        html.Br(),
+        html.Br(),
+
+        html.Div(id = "denotching-graph", children=[
+            html.Label(children="Comparaison de la Probabilité de défaut : Avant / Après",
+                       style={'font-size': "22px", "color": "#FFFFFF"}),
+            dcc.Graph(id = "compare_PD"),
+            html.Br(),
+            html.Div([
+                html.Div([
+                    html.Label(children = "Comparaison de la Monotonie : Avant / Après",
+                               style={'font-size':"22px", "color": "#FFFFFF"}),
+                    dcc.Graph(id="compare_monotonie")
+                ], style={'width': '50%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
+
+                html.Div([
+                    html.Label(children = "Comparaison de la Population : Avant / Après",
+                               style={'font-size': "22px", "color": "#FFFFFF"}),
+                    dcc.Graph(id="compare_pop")
+                ], style={'width': '50%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'})
+        ], style={'display' : "None"}),
+    ])
+
+
 ################################################ ONGLET 0 : Analyse #################################################
 
 def analyse_layout():
-
-    return html.Div(className='hub', children=[
+    return html.Div(className='hub', children = [
 
         html.Div([dcc.Upload(id='upload-data-analyse', className="uploader", children=html.Div(
             ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
@@ -101,40 +150,107 @@ def analyse_layout():
         ]),
 
         html.Br(),
-        html.Button('Lancer l\'analyse', id='launch-button-analyse',
-                    n_clicks=0,
-                    className='launch-button-mod'),
-
-        html.Div(id="Graph-Container", children=[])
+        html.Button('Lancer l\'analyse', id='launch-button-analyse', n_clicks=0, className='launch-button-mod'),
+        html.Br(),
+        html.Div(id = "analyze_glob_data", children=[], style={"display":'None'}),
+        html.Div(id="analyze_var_data", children=[], style={"display":'None'}),
 
     ])
 
-def build_analyse_panel():
-    return ([
-        html.Div(children=[
+def build_analyse_data():
+    return [html.Div(
+        children=[
             html.Br(),
-            html.H3("Graphiques généraux sur nos données",
-                    style={"marginBottom": "20px", 'color': "#ffffff"}),
-            dcc.Graph(id="missing-values-plot"),
-            dcc.Graph(id="plot_correlation_matrix"),
-            html.Br(),
-            html.Br(),
-            html.H3("Analyse spécifique des données",
-                    style={"marginBottom": "20px", 'color': "#ffffff"}),
-            dcc.Dropdown(
-                id='plot-stability-dropdown',
-                className='dropdown-results',
-                options=analyse.get_features(),
-                value=analyse.get_features()[2],
-                style={'marginBottom': '20px', "marginTop": '40px'}
-            ),
-
-            dcc.Graph(id='stability-animated-graph'),
-            html.Div(id="categorical-distribution-plot-container", children=[
-            dcc.Graph(id="categorical-distribution-plot")
+            html.Div(id='md_title_analyse_0', children=[
+                html.Label(className='md_title', children='1. Informations globale sur les données :')
             ]),
-        ])
-    ])
+            html.Br(),
+            html.Label("Extrait des données :", style={'color': '#FFFFFF', 'fontSize': "19px", "fontWeight":"bold"}),
+            html.Br(),
+            html.Div([
+                html.Div([
+                    dash_table.DataTable(
+                        data=analyse.df.iloc[:10,:10].round(2).to_dict('records'),
+                        columns=[{"name": i, "id": i} for i in analyse.df.iloc[:10,:10].columns],
+                        style_header={
+                            'backgroundColor': 'rgb(76, 82, 94)',
+                            'color': 'white',
+                            'fontSize': '15px',
+                            'height': '50px',
+                            'whiteSpace': 'normal',
+                            'padding': '10px',
+                            'fontWeight': 'bold'
+                        },
+                        style_data={
+                            'backgroundColor': 'rgb(78, 85, 103)',
+                            'color': 'white',
+                            'fontSize': '10px',
+                            'height': '25px',
+                            'whiteSpace': 'normal',
+                            'padding': '10px',
+                            'fontWeight': 'normal'
+                        },
+                        id="table-id-analyse",
+                        column_selectable="multi",
+                        page_action="native",  # Pagination activée
+                        page_size=10  # Nombre de lignes par page
+                    ),
+                ], style={'width': '70%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
+
+                html.Div([
+                    html.Div(className='variables-info', children=[
+                        dcc.Markdown(texte_analyse_globale())
+                    ])
+                ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'}),
+
+            html.Br(),
+            html.Div(id='md_title_analyse_1', children=[
+                html.Label(className='md_title', children='2. Valeurs Manquantes et Corrélation :')
+            ]),
+            html.Br(),
+
+            html.Div([
+                html.Div([
+                    dcc.Graph(figure=missing_values())
+                ], style={'width': '65%', 'display': 'inline-block'}),
+
+                html.Div([
+                    dcc.Graph(figure=plot_correlation_matrix(True))
+                ], style={'width': '35%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'}),
+
+            html.Button('Vers l\'analyse par variable', id="analyse-var-button", className='button-analyse-change'),
+
+        ]
+    )]
+
+def build_analyse_feature():
+    return [html.Div(
+        children=[
+            dcc.Dropdown(id='target-dropdown-analyse-var',
+                         options=analyse.df.columns.to_list(),
+                         value=analyse.df.columns[2],
+                         multi=False,
+                         placeholder="Choisir la cible",
+                         style={'background-color': '#4e5567'}),
+
+            html.Div([
+                html.Div([dcc.Graph(id = "plot_distrib"),
+                ], style={'width': '70%', 'display': 'inline-block', 'padding': '5px 50px 0 30px'}),
+
+                html.Div([
+                    html.Br(),
+                    html.Div(className='variables-info', id='variables-info-analyse', children=[])
+                ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'top'})
+            ], style={'display': 'flex', 'width': '100%'}),
+
+            dcc.Graph(id = "plot_stability"),
+
+            html.Button('Analyse globale', id="analyse-global-button", className='button-analyse-change'),
+
+        ]
+    )]
 
 ################################################ ONGLET 1 : PARAMÈTRES #################################################
 
@@ -240,7 +356,7 @@ def create_layout():
                      children=[html.Br(), dcc.Markdown(id='variables-info-markdown', children=''), html.Br()]),
 
             html.Div(className='form-input row', children=[
-                html.Div(id='predefined_vars_button', className='predefined-vars', children=[
+                html.Div(id = 'predefined_vars_button', className='predefined-vars', children=[
                     html.Button('Interprétabilité', id='interpretabilite-button', n_clicks=0,
                                 className='button-inline'),
                     html.Button('Performance', id='performance-button', n_clicks=0, className='button-inline'),
@@ -360,6 +476,10 @@ def table(model):
                                 },
                                 )
 
+def graph_dist(model):
+    return html.Div(className='graphpart',
+                    children = [dcc.Graph(figure=update_graph_dist_column("Score_ind", model))])
+
 
 def title_layout_3():
     return (html.Div(className='results-title',
@@ -430,29 +550,8 @@ def title_layout_4():
                      children=[html.Label("5. MOC")]))
 
 def default_proba(model):
-
-    return dash_table.DataTable(round(model.default_proba, 4).to_dict('records'), [{"name": i, "id": i} for i in model.default_proba.columns],
-                                style_header={
-                                    'backgroundColor': 'rgb(76, 82, 94)',
-                                    'color': 'white',
-                                    'fontSize': '20px',
-                                    'height': '50px',
-                                    'whiteSpace': 'normal',
-                                    'padding': '15px',
-                                    'fontWeight': 'bold'
-                                },
-                                style_data={
-                                    'backgroundColor': 'rgb(78, 85, 103)',
-                                    'color': 'white',
-                                    'fontSize': '16px',
-                                    'height': '40px',
-                                    'whiteSpace': 'normal',
-                                    'padding': '15px',
-                                    'fontWeight': 'normal'
-                                },
-                                )
-
-
+    return html.Div(className='graphpart',
+                    children=[dcc.Graph(figure=proba_defaut(model.default_proba))])
 
 
 def title_layout_5():
@@ -488,10 +587,53 @@ def title_layout_7():
     return (html.Div(className='left-title',
                      children=[html.Br(), html.Label("Métriques"), html.Br()]))
 
+def gauges_combined(model):
+    dic_metrics = model.get_segmentation_metrics(dataprep.target, dataprep.date)
+
+    return html.Div(className='metricspart',
+                    children=[
+                        html.Label("Segmentation", className='left-panel-metric'),
+                        daq.Gauge(
+                            id="score-gauge",
+                            max=100,
+                            min=0,
+                            size=130,
+                            color={
+                                "gradient": True,
+                                "ranges": {
+                                    "red": [0, 50],
+                                    "yellow": [50, 70],
+                                    "green": [70, 100],
+                                },
+                            },
+                            value=dic_metrics["count_seg"],
+                            showCurrentValue=True,
+                        ),
+                        html.Label("Monotonie", className='left-panel-metric'),
+                        daq.Gauge(
+                            id="score-gauge",
+                            max=100,
+                            min=0,
+                            size=130,
+                            color={
+                                "gradient": True,
+                                "ranges": {
+                                    "red": [0, 50],
+                                    "yellow": [50, 70],
+                                    "green": [70, 100],
+                                },
+                            },
+                            value=dic_metrics["count_monotonie"],
+                            showCurrentValue=True,
+                        )
+                    ]
+                    )
+
+
 def metrics(model):
     dic_metrics = model.get_segmentation_metrics(dataprep.target, dataprep.date)
     roc_auc = model.get_metrics()["roc_auc"]*100
-    return html.Div(className='graphpart',
+    return html.Div(className='dash-graph-container',
                     children=[
                         html.Label("ROC-AUC :", className='left-panel-metric'),
                         dcc.Graph(figure=plot_metrics_leftpanel(roc_auc)),
@@ -506,7 +648,7 @@ def metrics(model):
 
 def title_layout_8():
     return (html.Div(className='left-title',
-                     children=[html.Br(), html.Label("Artefacts")]))
+                     children=[html.Label("Artefacts")]))
 
 def download_df_score():
     return html.Div(
@@ -570,6 +712,10 @@ def setup_models_panels(model, left_list, right_list, model_name):
 
     @render_this(right_list)
     def render():
+        return graph_dist(model)
+
+    @render_this(right_list)
+    def render():
         return title_layout_3()
 
     @render_this(right_list)
@@ -600,7 +746,12 @@ def setup_models_panels(model, left_list, right_list, model_name):
 
     @render_this(left_list)
     def render():
-        return metrics(model)
+        return gauges_combined(model)
+
+    @render_this(left_list)
+    def render():
+        return title_layout_8()
+
     @render_this(left_list)
     def render():
         return download_df_score()
@@ -665,6 +816,22 @@ def build_xgboost_model():
     return layout_challenger
 
 ################################################ ONGLET 3 : Chatbot #################################################
+def format_option_label(value):
+    try:
+        value_clean = value.strip('[]')
+        if ';' in value_clean:
+            parts = value_clean.split(';')
+            formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
+        elif value_clean.replace('.', '', 1).isdigit():
+            formatted = f"{float(value_clean):.0f}"
+        else:
+            formatted = ' '.join(word.capitalize() for word in value.replace('_', ' ').split())
+        return formatted
+    except Exception as e:
+        print(f"Error formatting value {value}: {e}")
+        return value
+
+
 def chatbot():
     if dataprep.model_name == "logit":
         model = model_classique
@@ -689,13 +856,12 @@ def chatbot():
                 html.Div([
                     dcc.RadioItems(
                         id={'type': 'dynamic-radioitems', 'index': 0},
-                        options=[{'label': value, 'value': value} for value in df[dropdown_columns[0]].unique() if
-                                 pd.notnull(value)],
-                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},  # Espacement et alignement horizontal
+                        options=[{'label': format_option_label(str(value)), 'value': value} for value in
+                                 df[dropdown_columns[0]].dropna().unique()],
+                        labelStyle={'display': 'inline-block', 'margin-right': '20px'},
                         className='radio-inline selection-radio'
                     ),
-                ], className='radioitems-container',
-                    style={'background-color': '#8B0000', 'border-radius': '20px', 'color': 'white'}),
+                ], className='radioitems-container'),
             ], className='form-input row', style={'margin-bottom': '50px'})
         ]),
 
