@@ -777,7 +777,7 @@ def format_option_label(value):
         value_clean = value.strip('[]')
         if ';' in value_clean:
             parts = value_clean.split(';')
-            if parts[0].split(".")[0] == '0' :
+            if parts[0].split(".")[0] == '0' or parts[0].split(".")[0] == '-0':
                 formatted = f"[{float(parts[0])};{float(parts[1])}]"
             else :
                 formatted = f"[{int(float(parts[0]))};{int(float(parts[1]))}]"
@@ -791,9 +791,10 @@ def format_option_label(value):
         return value
 
 def format_option_column(column):
+    print(column)
     if column == 'AMT_CREDIT_SUM_DEBT_disc_int' :
         return("Quel est votre montant de dette en cours ?")
-    elif column == 'AMT_CREDIT_SUM_disc_int' :
+    if column == 'AMT_CREDIT_SUM_disc_int' :
         return ("Quel est votre montant de crédit en cours ?")
     if column == "DAYS_EMPLOYED_disc_int" :
         return("Depuis combien de jours êtes vous en emploi ?")
@@ -805,6 +806,17 @@ def format_option_column(column):
         return("Quel est votre score sur le score externe 3 ? ")
     if column == "NAME_INCOME_TYPE_discret" :
         return("Dans quelle catégorie de revenu vous situez vous ? ")
+    if column=="REGION_RATING_CLIENT_W_CITY":
+        return ("Dans quelle région habitez vous ? ")
+    if column=="DAYS_CREDIT_ENDDATE_disc_int":
+        return ("Quel est le nombre de jours restant de votre crédit ?")
+    if column=="RATE_DOWN_PAYMENT_disc_int":
+        return ("Quel est votre taux d’acompte ?")
+    if column=="AMT_PAYMENT_disc_int":
+        return ("Quel est le montant réellement payé sur votre crédit ? ")
+    if column=="OCCUPATION_TYPE_discret":
+        return ("Quel est votre occupation ?")
+
     return(f"Pour la variable {column} :")
 
 
