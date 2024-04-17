@@ -127,6 +127,22 @@ Textes
     font-size: 27px;
 }
 
+.md_title_denot{
+    color: white;
+    font-weight: bolder;
+    font-size: 22px;
+}
+
+.md_title_1{
+    color: white;
+    display: flex;
+    justify-content: center; /* Centrage horizontal */
+    align-items: center;
+    font-weight: bolder;
+    font-size: 30px;
+    padding-bottom: 40px;
+}
+
 .results-title{
     color: #ffffff;
     font-weight: bolder;
@@ -297,6 +313,12 @@ DropDowns
     width: 70%;
     float: right;
     color: white;
+}
+
+.dropdown-analyse-var{
+    background-color: #4e5567;
+    width: 30%;
+    margin-left: 80px;
 }
 
 #tabs {
@@ -483,9 +505,14 @@ chatbot
     margin-bottom: 70px;
     font-size: 20px;
     position: relative;
-    top: 55px;
+    top: 0px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.robot-img{
+    width: 140px;
+    padding-top: 50px;
 }
 
 .score-result-container {
@@ -508,8 +535,8 @@ chatbot
     color: white;
     margin-right: auto;
     box-sizing: border-box;
-    margin-bottom: 90px;
-    top: 95px;
+    margin-bottom: 100px;
+    top: 30px;
 }
 
 .radioitems-container {

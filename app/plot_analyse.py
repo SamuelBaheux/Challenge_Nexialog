@@ -112,7 +112,7 @@ def plot_correlation_matrix(top):
         ),
         )
     # fig.update_layout(**custom_layout)
-    fig.update_layout(width=600, height=800, **custom_layout)
+    fig.update_layout(width=550, height=550, **custom_layout)
 
     return fig
 

@@ -157,7 +157,7 @@ class DashDataPreparation():
         if "SK_ID_CURR" in self.train.columns :
             selected_vars.extend(["SK_ID_CURR"])
 
-        self.vars = selected_vars
+        self.vars = list(set(selected_vars))
 
         self.add_external_features(self.vars)
         self.train = self.train[self.vars]
@@ -264,7 +264,7 @@ class DashDataPreparation():
                       "YEARS_BEGINEXPLUATATION_MODE", "YEARS_BEGINEXPLUATATION_AVG", 'REGION_RATING_CLIENT_W_CITY',
                       'EXT_SOURCE_2', 'DAYS_CREDIT_ENDDATE', 'CNT_PAYMENT', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT',
                       'AMT_PAYMENT', 'DAYS_CREDIT_ENDDATE', 'DAYS_FIRST_DRAWING', 'RATE_DOWN_PAYMENT', 'AMT_PAYMENT',
-                      "AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "DAYS_EMPLOYED", "EXT_SOURCE_3"]
+                      "AMT_CREDIT_SUM", "AMT_CREDIT_SUM_DEBT", "DAYS_EMPLOYED", "EXT_SOURCE_3", "Reste_a_vivre"]
 
         dict_variable = {}
 
@@ -415,4 +415,4 @@ class ConstantFeatures():
                         'CODE_GENDER': 'F',     'REGION_RATING_CLIENT_W_CITY': "un_deux",
                         'OCCUPATION_TYPE_discret': "high_skilled",'NAME_CONTRACT_TYPE': "Revolving_loans",
                         'NAME_INCOME_TYPE_discret': "Low_income", 'DAYS_CREDIT_ENDDATE_disc_int' : 'min',
-                        'AMT_CREDIT_SUM_DEBT_disc_int': 'min','DAYS_EMPLOYED_disc_int': 'min'}
+                        'AMT_CREDIT_SUM_DEBT_disc_int': 'min','DAYS_EMPLOYED_disc_int': 'min', "Reste_a_vivre_disc_int":'min'}
