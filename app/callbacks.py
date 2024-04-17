@@ -405,6 +405,7 @@ def register_callbacks(app):
         next_index = len(values)
         if next_index < len(dropdown_columns):
             new_element = html.Div([
+                html.Img(src="./assets/images/robot.png", className="robot-img"),
                 html.Div([
                     html.Label(format_option_column(dropdown_columns[next_index]),
                                className='label-inline message-label'),
@@ -414,7 +415,7 @@ def register_callbacks(app):
                         id={'type': 'dynamic-radioitems', 'index': next_index},
                         options=[
                             {'label': format_option_label(v), 'value': v}
-                            for v in df[dropdown_columns[next_index]].dropna().unique()
+                            for v in df[dropdown_columns[next_index]].dropna().unique()[::-1]
                         ],
                         labelStyle={'display': 'inline-block', 'margin-right': '20px'},
                         className='radio-inline selection-radio'
@@ -463,8 +464,9 @@ def register_callbacks(app):
         message_divs = [html.Div(line, className='message-line') for line in message_lines]
 
         return html.Div([
+            html.Img(src="./assets/images/robot.png", className="robot-img"),
             html.Div(message_divs, className='score-result-container'),
-        ], style ={"color":"#FFFFFF"})
+        ], style ={"color":"#FFFFFF", "display" :"flex"})
 
     ####################################### DENOTCHING ########################################
 

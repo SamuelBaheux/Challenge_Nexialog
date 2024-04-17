@@ -65,7 +65,7 @@ class Modelization():
             self.breaks = [0.0, 106, 314, 434, 540, 685, 800]
 
         elif set(self.df_score.columns) == set(colonnes_perf) :
-            self.breaks = [0.0, 210, 360, 460, 580, 700, 850.0]
+            self.breaks = [0.0, 210, 360, 460, 580, 670, 850.0]
 
         self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(self.breaks))
 
@@ -177,7 +177,7 @@ class Modelization():
         self.default_proba_before = self.default_proba.copy()
         self.default_proba_before["Taux_Individus"] = self.resultats["Taux_Individus"]
 
-        new_breaks = [self.breaks[i] - [0,ampleur,ampleur,ampleur,ampleur,ampleur,ampleur][i] for i in range(len(self.breaks))]
+        new_breaks = [self.breaks[i] + [0,ampleur,ampleur,ampleur,ampleur,ampleur,ampleur][i] for i in range(len(self.breaks))]
 
         self.update_segmentation(new_breaks, target)
         self.get_default_proba(target, date)

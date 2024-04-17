@@ -48,7 +48,7 @@ def build_tabs():
                                                         selected_className="custom-tab--selected"
                                                         ),
                                                 dcc.Tab(id='chat-tab',
-                                                        label='Chatbot',
+                                                        label="Roxia",
                                                         className="custom-tab",
                                                         value='tab4',
                                                         selected_className="custom-tab--selected"),
@@ -519,7 +519,7 @@ def segmentation(model, model_name):
 
 def title_layout_4():
     return (html.Div(className='results-title',
-                     children=[html.Label("5. MOC")]))
+                     children=[html.Label("5. Probabilité de Défaut")]))
 
 def default_proba(model):
     return html.Div(className='graphpart',
@@ -845,15 +845,12 @@ def chatbot():
     df = model.df_score
     dropdown_columns = df.columns.difference(['Score_ind', 'Classes']).tolist()
     return html.Div([
-        html.Div([
-            html.Div(id='md_title_chatbot', style={'margin-bottom': '50px'}, children=[
-                html.Label('Quelle catégorie vous correspond le mieux ?', className='md_title'),
-            ]),
-            html.Br(),
-        ], className='container'),
+        html.Label('Roxia - l\'Assistant d\'Octroi', className='md_title_1'),
+        html.Br(),
 
         html.Div(id='dynamic-radioitems-container', children=[
             html.Div([
+                html.Img(src = "./assets/images/robot.png", className="robot-img"),
                 html.Div([
                     html.Label(format_option_column(dropdown_columns[0]), className='label-inline message-label'),
                 ], className='message-container'),
@@ -861,7 +858,7 @@ def chatbot():
                     dcc.RadioItems(
                         id={'type': 'dynamic-radioitems', 'index': 0},
                         options=[{'label': format_option_label(str(value)), 'value': value} for value in
-                                 df[dropdown_columns[0]].dropna().unique()],
+                                 df[dropdown_columns[0]].dropna().unique()[::-1]],
                         labelStyle={'display': 'inline-block', 'margin-right': '20px'},
                         className='radio-inline selection-radio'
                     ),
@@ -885,12 +882,19 @@ def layout_denot():
             html.Br()
         ]),
 
+        html.Div(id='md_title_denot', children=[
+            html.Label(className='md_title_denot',
+                       children= f"Seuils de segmentation : {', '.join(map(str, model_classique.breaks))}",
+                       style={"color":"#FFFFFF"}),
+            html.Br()
+        ]),
+
         html.Div(children=[
             html.Label("Décalage des seuils :", className='label-inline'),
-            html.Button("-25", id='button-25', className='denot-button', n_clicks=0),
-            html.Button("-50", id='button-50', className='denot-button', n_clicks=0),
-            html.Button("-75", id='button-75', className='denot-button', n_clicks=0),
-            html.Button("-100", id='button-100', className='denot-button', n_clicks=0),
+            html.Button("+25", id='button-25', className='denot-button', n_clicks=0),
+            html.Button("+50", id='button-50', className='denot-button', n_clicks=0),
+            html.Button("+75", id='button-75', className='denot-button', n_clicks=0),
+            html.Button("+100", id='button-100', className='denot-button', n_clicks=0),
         ], style={"display":"flex"}),
 
         html.Br(),
