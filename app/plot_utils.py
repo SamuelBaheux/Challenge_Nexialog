@@ -308,8 +308,9 @@ def update_graph_dist_column(selected_column, model):
 def proba_defaut(grouped):
     fig = go.Figure()
     grouped["Classes"] = range(1,grouped.shape[0]+1)
+    grouped["MOC_C"] = grouped["Moc_C"]
 
-    for component in ['LRA', 'MOC_A', 'Moc_C']:
+    for component in ['LRA', 'MOC_A', 'MOC_C']:
         fig.add_trace(go.Bar(
             x=grouped['Classes'],
             y=grouped[component],

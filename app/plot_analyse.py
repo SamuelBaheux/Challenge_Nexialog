@@ -26,7 +26,7 @@ def texte_analyse_globale():
     text = f"Informations globales sur les données : \n"
     text += f"- **Nombre de Lignes** : {analyse.df.shape[0]}\n"
     text += f"- **Nombre de Colonnes** : {analyse.df.shape[1]}\n"
-    text += f"- **Taux de défaut** : {round(analyse.df[analyse.target].mean(),2)}\n"
+    text += f"- **Taux de défaut** : {round(analyse.df[analyse.target].mean(), 2)*100}%\n"
 
     dtype_counts = analyse.df.dtypes.value_counts().to_dict()
 
@@ -39,7 +39,7 @@ def texte_analyse_globale():
     missing = analyse.df.isna().sum().sum()
     total_values = analyse.df.shape[0] * analyse.df.shape[1]
     missing_percent = (missing / total_values) * 100
-    text += f"- **Valeurs Manquantes** : {missing} ({missing_percent:.2f}%)\n"
+    text += f"- **Valeurs Manquantes** : {missing_percent:.2f}%\n"
 
     duplicates = analyse.df.duplicated().sum()
     text += f"- **Données Dupliquées** : {duplicates}\n"
@@ -112,7 +112,7 @@ def plot_correlation_matrix(top):
         ),
         )
 
-    fig.update_layout(**custom_layout)
+    fig.update_layout(width=750, height=600, **custom_layout)
 
     return fig
 
@@ -187,15 +187,11 @@ def plot_marginal_density(selected_column):
     print(column_data_type)
 
     if column_data_type in ['int64', 'float64']:
+        fig = px.histogram(df,
+                           x=selected_column,
+                           title=f"Distribution de la variable {selected_column}")
 
-        fig = ff.create_distplot(hist_data=[default, not_default],
-                                 group_labels=['Défaut', 'Non Défaut'],
-                                 bin_size=0.2,
-                                 show_rug=False,
-                                 show_hist=False)
-
-        fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
-        fig.update_traces(fill='tozeroy')
+        #fig.update_traces(fill='tozeroy')
         fig.update_layout(legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -228,50 +224,6 @@ def plot_marginal_density(selected_column):
         ))
 
         fig.update_layout(title=f'Distribution conditionnelle au défaut de la variable {selected_column}')
-        fig.update_layout(**custom_layout)
-
-    return fig
-
-def plot_density(var):
-    column_data_type = analyse.df[var].dtype
-    df = analyse.df[var].sample(1000)
-
-    if column_data_type in ['int64', 'float64']:
-        fig = go.Figure()
-        fig.add_trace(go.Histogram(x=df,
-                                   nbinsx=200,
-                                   name=var,
-                                   opacity=0.7))
-
-        fig.update_layout(legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ))
-
-        fig.update_layout(title=f'Distribution de la variable {var}')
-        fig.update_layout(**custom_layout)
-
-    else:
-        categories = sorted(set(analyse.df[var].unique()))
-        fig = go.Figure()
-
-        fig.add_trace(go.Histogram(x=df,
-                                   nbinsx=len(categories),
-                                   name='Défaut',
-                                   opacity=0.7))
-
-        fig.update_layout(legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ))
-
-        fig.update_layout(title=f'Distribution de la variable {var}')
         fig.update_layout(**custom_layout)
 
     return fig
