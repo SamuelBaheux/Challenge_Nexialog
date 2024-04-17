@@ -299,6 +299,12 @@ DropDowns
     color: white;
 }
 
+.dropdown-analyse-var{
+    background-color: #4e5567;
+    width: 30%;
+    margin-left: 80px;
+}
+
 #tabs {
 	width: 100%;
 }

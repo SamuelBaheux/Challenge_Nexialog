@@ -68,6 +68,12 @@ def build_tabs():
 def analyse_layout():
     return html.Div(className='hub', children = [
 
+        html.Br(),
+        html.Div(id='md_title_analyse_1', children=[
+            html.Label(className='md_title', children='Importer les données à analyser :', style={'marginLeft':"25px"})
+        ]),
+        html.Br(),
+
         html.Div([dcc.Upload(id='upload-data-analyse', className="uploader", children=html.Div(
             ['Glisser et déposer ou ', html.A('Sélectionner le fichier')]
         )), html.Div(id='output-data-upload-analyse', style={"color": "#ffffff", "textAlign": "center"}),
@@ -169,11 +175,11 @@ def build_analyse_data():
             html.Div([
                 html.Div([
                     dcc.Graph(figure=missing_values())
-                ], style={'width': '65%', 'display': 'inline-block'}),
+                ], style={'width': '60%', 'display': 'inline-block'}),
 
                 html.Div([
                     dcc.Graph(figure=plot_correlation_matrix(True))
-                ], style={'width': '35%', 'display': 'inline-block', 'verticalAlign': 'top'})
+                ], style={'width': '40%', 'display': 'inline-block', 'verticalAlign': 'top'})
             ], style={'display': 'flex', 'width': '100%'}),
 
             html.Button('Vers l\'analyse par variable', id="analyse-var-button", className='button-analyse-change'),
@@ -184,12 +190,17 @@ def build_analyse_data():
 def build_analyse_feature():
     return [html.Div(
         children=[
+            html.Br(),
+            html.Div(id='md_title_analyse_1', children=[
+                html.Label(className='md_title', children='1. Distribution :')
+            ]),
+            html.Br(),
             dcc.Dropdown(id='target-dropdown-analyse-var',
                          options=analyse.df.columns.to_list(),
                          value=analyse.df.columns[2],
                          multi=False,
                          placeholder="Choisir la cible",
-                         style={'background-color': '#4e5567'}),
+                         className="dropdown-analyse-var"),
 
             html.Div([
                 html.Div([dcc.Graph(id = "plot_distrib"),
@@ -201,10 +212,15 @@ def build_analyse_feature():
                 ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'top'})
             ], style={'display': 'flex', 'width': '100%'}),
 
+            html.Br(),
+            html.Div(id='md_title_analyse_1', children=[
+                html.Label(className='md_title', children='2. Stabilité Temporelle :')
+            ]),
+            html.Br(),
+
             dcc.Graph(id = "plot_stability"),
 
-            html.Button('Analyse globale', id="analyse-global-button", className='button-analyse-change'),
-
+            html.Button('Vers l\'analyse globale', id="analyse-global-button", className='button-analyse-change'),
         ]
     )]
 

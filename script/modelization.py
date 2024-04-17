@@ -41,6 +41,7 @@ class Modelization():
 
     def get_segmentation(self, target):
         scores_clients = self.df_score["Score_ind"].sample(30000, replace = False)
+        print(self.df_score.columns)
         nombre_de_classes = 6
 
         print("Segmentation en cours ... ")
@@ -49,7 +50,22 @@ class Modelization():
         self.breaks[-1] = self.breaks[-2] + 50
 
         print(self.breaks)
-        self.breaks = [0.0, 210, 360, 460, 580, 700, 850.0]
+
+        colonnes_int = ['date_mensuelle', 'TARGET', 'DAYS_CREDIT_ENDDATE_disc_int',
+                              'RATE_DOWN_PAYMENT_disc_int', 'AMT_PAYMENT_disc_int',
+                              'NAME_INCOME_TYPE_discret', 'OCCUPATION_TYPE_discret',
+                              'REGION_RATING_CLIENT_W_CITY', 'Score_ind']
+
+        colonnes_perf = ['date_mensuelle', 'TARGET', 'AMT_CREDIT_SUM_disc_int',
+                       'AMT_CREDIT_SUM_DEBT_disc_int', 'EXT_SOURCE_3_disc_int',
+                       'DAYS_EMPLOYED_disc_int', 'EXT_SOURCE_2_disc_int',
+                       'EXT_SOURCE_1_disc_int', 'NAME_INCOME_TYPE_discret', 'Score_ind']
+
+        if set(self.df_score.columns) == set(colonnes_int) :
+            self.breaks = [0.0, 106, 314, 434, 540, 685, 800]
+
+        elif set(self.df_score.columns) == set(colonnes_perf) :
+            self.breaks = [0.0, 210, 360, 460, 580, 700, 850.0]
 
         self.df_score["Classes"] = np.digitize(self.df_score["Score_ind"], bins=sorted(self.breaks))
 
