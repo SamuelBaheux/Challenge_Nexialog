@@ -56,13 +56,19 @@ class Modelization():
                               'NAME_INCOME_TYPE_discret', 'OCCUPATION_TYPE_discret',
                               'REGION_RATING_CLIENT_W_CITY', 'Score_ind']
 
+        colonnes_int_chal = ['date_mensuelle', 'TARGET', 'DAYS_CREDIT_ENDDATE_disc_int',
+       'RATE_DOWN_PAYMENT_disc_int', 'AMT_PAYMENT_disc_int',
+       'NAME_INCOME_TYPE_discret', 'OCCUPATION_TYPE_discret',
+       'REGION_RATING_CLIENT_W_CITY', 'RATE_DOWN_PAYMENT_disc_int_[0.2;4.48]',
+       'Score_ind']
+
         colonnes_perf = ['date_mensuelle', 'TARGET', 'AMT_CREDIT_SUM_disc_int',
                        'AMT_CREDIT_SUM_DEBT_disc_int', 'EXT_SOURCE_3_disc_int',
                        'DAYS_EMPLOYED_disc_int', 'EXT_SOURCE_2_disc_int',
                        'EXT_SOURCE_1_disc_int', 'NAME_INCOME_TYPE_discret', 'Score_ind']
 
-        if set(self.df_score.columns) == set(colonnes_int) :
-            self.breaks = [0.0, 106, 314, 434, 540, 685, 800]
+        if set(self.df_score.columns) == set(colonnes_int) or set(self.df_score.columns) == set(colonnes_int_chal):
+            self.breaks = [0.0, 110, 240, 340, 420, 550, 690]
 
         elif set(self.df_score.columns) == set(colonnes_perf) :
             self.breaks = [0.0, 210, 360, 460, 580, 670, 850.0]
